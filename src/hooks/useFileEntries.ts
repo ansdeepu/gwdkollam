@@ -49,9 +49,27 @@ export function useFileEntries() {
       setIsLoading(true);
 
       if (user.role === 'supervisor' && user.uid) {
-        const supervisorEntries = allFileEntries.filter(entry => 
-            entry.assignedSupervisorUids && entry.assignedSupervisorUids.includes(user.uid)
-        );
+        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
+        const pendingFileNos = new Set(pendingUpdates.filter(u => u.status === 'pending').map(u => u.fileNo));
+
+        const supervisorEntries = allFileEntries.filter(entry => {
+            if (!entry.assignedSupervisorUids?.includes(user.uid)) {
+                return false;
+            }
+            // The file is a candidate. Now check if it has at least one relevant site.
+            const hasRelevantSite = entry.siteDetails?.some(site => {
+                if (site.supervisorUid !== user.uid) return false;
+
+                const isOngoing = site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
+                if (isOngoing) return true;
+
+                const isCompletedAndPending = (site.workStatus === 'Work Completed' || site.workStatus === 'Work Failed') && pendingFileNos.has(entry.fileNo);
+                if (isCompletedAndPending) return true;
+
+                return false;
+            });
+            return hasRelevantSite;
+        });
         setFileEntries(supervisorEntries);
       } else {
         // For editors and viewers, show all entries
@@ -64,7 +82,7 @@ export function useFileEntries() {
     if (!dataStoreLoading) {
       processEntries();
     }
-  }, [user, allFileEntries, dataStoreLoading]);
+  }, [user, allFileEntries, dataStoreLoading, getPendingUpdatesForFile]);
 
     const addFileEntry = useCallback(async (entryData: DataEntryFormData): Promise<string> => {
         if (!user) throw new Error("User must be logged in to add an entry.");

@@ -292,6 +292,9 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
   const startEntryNum = (currentPage - 1) * ITEMS_PER_PAGE + 1;
   const endEntryNum = Math.min(currentPage * ITEMS_PER_PAGE, displayedEntries.length);
 
+  const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
+
+
   return (
     <TooltipProvider>
       <Card className="shadow-lg">
@@ -324,12 +327,14 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   let sitesToDisplay: SiteDetailFormData[] = entry.siteDetails || [];
                   
                   if (user?.role === 'supervisor') {
-                      const ongoingStatuses: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
                       const isFilePending = pendingUpdatesMap[entry.fileNo];
                       sitesToDisplay = sitesToDisplay.filter(site => {
-                          const isOngoing = site.workStatus && ongoingStatuses.includes(site.workStatus as SiteWorkStatus);
-                          const isCompletedAndPending = isFilePending && site.workStatus && ['Work Completed', 'Work Failed'].includes(site.workStatus as SiteWorkStatus);
-                          return isOngoing || isCompletedAndPending;
+                          if (site.supervisorUid !== user.uid) return false;
+                          const isOngoing = site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
+                          if (isOngoing) return true;
+                          const isCompletedAndPending = (site.workStatus === 'Work Completed' || site.workStatus === 'Work Failed') && isFilePending;
+                          if (isCompletedAndPending) return true;
+                          return false;
                       });
                   }
                   
