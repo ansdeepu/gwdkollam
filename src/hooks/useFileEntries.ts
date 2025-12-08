@@ -38,12 +38,12 @@ export function useFileEntries() {
   const [fileEntries, setFileEntries] = useState<DataEntryFormData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const { getPendingUpdatesForFile } = usePendingUpdates();
+  const { getPendingUpdates } = usePendingUpdates();
   const [pendingUpdatesMap, setPendingUpdatesMap] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (user?.role === 'supervisor' && user.uid) {
-        getPendingUpdatesForFile(null, user.uid).then(updates => {
+        getPendingUpdates(null, user.uid).then(updates => {
             const map: Record<string, boolean> = {};
             updates.forEach(u => {
                 if(u.fileNo && u.status === 'pending') {
@@ -53,7 +53,7 @@ export function useFileEntries() {
             setPendingUpdatesMap(map);
         });
     }
-  }, [user, getPendingUpdatesForFile]);
+  }, [user, getPendingUpdates]);
 
   useEffect(() => {
     const processEntries = async () => {
@@ -65,21 +65,10 @@ export function useFileEntries() {
       setIsLoading(true);
 
       if (user.role === 'supervisor' && user.uid) {
-        // For supervisors, filter to show only files with sites they are assigned to AND that are in an ongoing state or have a pending update.
-        const supervisorEntries: DataEntryFormData[] = [];
-        for (const entry of allFileEntries) {
-            const hasRelevantSite = entry.siteDetails?.some(site => {
-                if (site.supervisorUid !== user.uid) return false;
-                const isOngoing = site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
-                if (isOngoing) return true;
-                // Also show the file if there's a pending update for it from this supervisor
-                return pendingUpdatesMap[entry.fileNo];
-            });
-
-            if(hasRelevantSite) {
-                supervisorEntries.push(entry);
-            }
-        }
+        // For supervisors, filter to show only files with sites they are assigned to AND that are in an ongoing state.
+        const supervisorEntries: DataEntryFormData[] = allFileEntries.filter(entry => 
+            entry.siteDetails?.some(site => site.supervisorUid === user.uid && site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus))
+        );
         setFileEntries(supervisorEntries);
       } else {
         // For other roles, show all entries.
@@ -92,7 +81,7 @@ export function useFileEntries() {
     if (!dataStoreLoading) {
       processEntries();
     }
-  }, [user, allFileEntries, dataStoreLoading, pendingUpdatesMap]);
+  }, [user, allFileEntries, dataStoreLoading]);
 
     const addFileEntry = useCallback(async (entryData: DataEntryFormData): Promise<string> => {
         if (!user) throw new Error("User must be logged in to add an entry.");
