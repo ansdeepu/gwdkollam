@@ -94,7 +94,7 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
   const { toast } = useToast();
   const { deleteFileEntry, addFileEntry } = useFileEntries(); 
   const { user, isLoading: authIsLoading } = useAuth();
-  const { getPendingUpdatesForFile } = usePendingUpdates();
+  const { getPendingUpdates } = usePendingUpdates();
 
   const [deleteItem, setDeleteItem] = useState<DataEntryFormData | null>(null);
   const [itemToCopy, setItemToCopy] = useState<DataEntryFormData | null>(null);
@@ -110,7 +110,7 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
 
   useEffect(() => {
     if (user?.role === 'supervisor' && user.uid) {
-        getPendingUpdatesForFile(null, user.uid).then(updates => {
+        getPendingUpdates(null, user.uid).then(updates => {
             const map: Record<string, boolean> = {};
             updates.forEach(u => {
                 if(u.fileNo && u.status === 'pending') {
@@ -120,7 +120,7 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
             setPendingUpdatesMap(map);
         });
     }
-  }, [user, fileEntries, getPendingUpdatesForFile]);
+  }, [user, fileEntries, getPendingUpdates]);
 
   useEffect(() => {
     const pageFromUrl = searchParams.get('page');
