@@ -24,7 +24,7 @@ export type ArsEntry = ArsEntryFormData & {
   isPending?: boolean;
 };
 
-const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
+const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
 
 export function useArsEntries() {
   const { user } = useAuth();
@@ -44,14 +44,14 @@ export function useArsEntries() {
       let finalEntries;
   
       if (user.role === 'supervisor' && user.uid) {
-        const pendingArsIds = new Set(pendingUpdates.filter(u => u.arsId).map(u => u.arsId));
+        const pendingArsIds = new Set(pendingUpdates.filter(u => u.arsId && u.submittedByUid === user.uid).map(u => u.arsId));
         
         finalEntries = allArsEntries.filter(entry => {
           const isAssigned = entry.supervisorUid === user.uid;
           const hasPendingUpdate = pendingArsIds.has(entry.id);
           const isOngoing = entry.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(entry.workStatus as SiteWorkStatus);
   
-          // Show if assigned AND ongoing, OR if there's a pending update from the supervisor
+          // Show if it's an ongoing assigned task OR if there's a pending update from the supervisor
           return (isAssigned && isOngoing) || hasPendingUpdate;
         });
       } else {
