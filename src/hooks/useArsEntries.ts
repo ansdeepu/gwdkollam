@@ -54,6 +54,7 @@ export function useArsEntries() {
             if (entry.supervisorUid !== user.uid) return false;
             
             const isOngoing = entry.workStatus && ONGOING_ARS_STATUSES.includes(entry.workStatus as SiteWorkStatus);
+            // A site is also visible if its completion is pending review
             const isPendingCompletion = entry.workStatus && ['Work Completed', 'Work Failed'].includes(entry.workStatus as SiteWorkStatus) && pendingArsIds.has(entry.id);
             
             return isOngoing || isPendingCompletion;

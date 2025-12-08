@@ -58,22 +58,21 @@ export function useFileEntries() {
         entries = allFileEntries
           .map(entry => {
             const supervisedSites = (entry.siteDetails || []).filter(
-              site => {
-                  if (site.supervisorUid !== user.uid) return false;
-
-                  const isOngoing = site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
-                  // A site is also visible if its completion is pending review
-                  const isPendingCompletion = site.workStatus && ['Work Completed', 'Work Failed'].includes(site.workStatus as SiteWorkStatus) && pendingFileNumbers.has(entry.fileNo);
-                  
-                  return isOngoing || isPendingCompletion;
-              }
+              site => site.supervisorUid === user.uid
             );
 
             if (supervisedSites.length === 0) return null;
-            
+
+            // This is the dashboard/list view. It should show the file, but only display the *active* sites within it.
+            const activeSitesForDisplay = supervisedSites.filter(site =>
+                SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus)
+            );
+
             return {
               ...entry,
-              siteDetails: supervisedSites,
+              // For the list view, we replace the siteDetails with ONLY the active ones.
+              // The full list will be fetched on the edit page.
+              siteDetails: activeSitesForDisplay,
               isPending: pendingFileNumbers.has(entry.fileNo),
             };
           })
@@ -176,8 +175,8 @@ export function useFileEntries() {
       
       let entry = { id: docSnap.id, ...(docSnap.data()) } as DataEntryFormData;
 
-      // For supervisors, we still need to attach the pending status for the UI
-      // AND crucially, we filter the siteDetails to ONLY what they are assigned to.
+      // For supervisors, we filter the siteDetails to ONLY what they are assigned to,
+      // but we do NOT filter by status on the edit page.
       if (user && user.role === 'supervisor' && user.uid) {
          const supervisedSites = (entry.siteDetails || []).filter(site => site.supervisorUid === user.uid);
          
@@ -189,6 +188,7 @@ export function useFileEntries() {
          const pendingUpdates = await getPendingUpdatesForFile(entry.fileNo, user.uid);
          const isFilePending = pendingUpdates.some(u => u.status === 'pending');
          
+         // On the edit page, we return ALL supervised sites, just with a pending flag.
          const sitesWithPendingStatus = supervisedSites.map(site => ({...site, isPending: isFilePending}));
          
          entry = { ...entry, siteDetails: sitesWithPendingStatus };
