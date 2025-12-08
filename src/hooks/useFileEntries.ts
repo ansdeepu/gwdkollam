@@ -1,3 +1,4 @@
+
 // src/hooks/useFileEntries.ts
 "use client";
 
@@ -57,33 +58,21 @@ export function useFileEntries() {
             entry.assignedSupervisorUids && entry.assignedSupervisorUids.includes(user.uid)
           )
           .map(entry => {
-            const isFilePending = pendingFileNos.has(entry.fileNo);
-            
-            const visibleSites = (entry.siteDetails || []).filter(site => {
+            // Determine which sites are "active" from the supervisor's perspective for the list view
+            const activeSites = (entry.siteDetails || []).filter(site => {
               if (site.supervisorUid !== user.uid) return false;
-
-              // If the work is ongoing, show it.
               if (site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus)) {
                 return true;
               }
-
-              // If work is completed or failed, show it ONLY if there's a pending update for the file.
-              if (site.workStatus && (site.workStatus === 'Work Failed' || site.workStatus === 'Work Completed')) {
-                return isFilePending;
-              }
-
               return false;
             });
-
-            // Return a new entry object with only the visible sites for the list view
+            
             return {
               ...entry,
-              siteDetails: visibleSites,
+              siteDetails: activeSites, // Only show active sites in the list view
             };
-          })
-          // Only include files that still have visible sites for the supervisor
-          .filter(entry => entry.siteDetails.length > 0);
-
+          });
+        
         setFileEntries(supervisorEntries);
       } else {
         // For editors and viewers, show all entries
