@@ -26,32 +26,58 @@ export type ArsEntry = ArsEntryFormData & {
 
 const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
 
+const processArsDoc = (docSnap: DocumentData): ArsEntry => {
+    const data = docSnap.data();
+    const processed: { [key: string]: any } = { id: docSnap.id };
+
+    for (const key in data) {
+        const value = data[key];
+        if (value instanceof Timestamp) {
+            processed[key] = value.toDate();
+        } else {
+            processed[key] = value;
+        }
+    }
+    return processed as ArsEntry;
+};
+
 export function useArsEntries() {
   const { user } = useAuth();
   const { allArsEntries, isLoading: dataStoreLoading, refetchArsEntries } = useDataStore(); // Use the central store
-  const { subscribeToPendingUpdates } = usePendingUpdates();
+  const { subscribeToPendingUpdates, getPendingUpdates } = usePendingUpdates();
   const [arsEntries, setArsEntries] = useState<ArsEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Wait until both user and datastore are ready
     if (dataStoreLoading || !user) {
-      setIsLoading(dataStoreLoading);
-      return;
+        setIsLoading(dataStoreLoading);
+        return;
     }
-  
+    
     setIsLoading(true);
-  
-    let finalEntries = allArsEntries;
-  
-    // Apply strict supervisor filter
-    if (user.role === "supervisor") {
-      finalEntries = allArsEntries.filter(entry => !!entry.supervisorUid && entry.supervisorUid === user.uid);
-    }
-  
-    setArsEntries(finalEntries);
-    setIsLoading(false);
-  }, [user, allArsEntries, dataStoreLoading]);
+
+    const getSupervisorFilteredEntries = async () => {
+        if (user.role === 'supervisor' && user.uid) {
+            const pending = await getPendingUpdates(null, user.uid);
+            const pendingFileNos = new Set(pending.filter(p => p.isArsUpdate).map(p => p.fileNo));
+
+            const filtered = allArsEntries.filter(entry => {
+                const isAssigned = !!entry.supervisorUid && entry.supervisorUid === user.uid;
+                const isOngoing = entry.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(entry.workStatus as SiteWorkStatus);
+                const hasPending = pendingFileNos.has(entry.fileNo);
+
+                return (isAssigned && isOngoing) || hasPending;
+            });
+            setArsEntries(filtered);
+        } else {
+            setArsEntries(allArsEntries);
+        }
+        setIsLoading(false);
+    };
+
+    getSupervisorFilteredEntries();
+
+  }, [user, allArsEntries, dataStoreLoading, getPendingUpdates]);
 
 
   const addArsEntry = useCallback(async (entryData: ArsEntryFormData) => {
@@ -105,7 +131,7 @@ export function useArsEntries() {
         const docRef = doc(db, ARS_COLLECTION, id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-            return { id: docSnap.id, ...docSnap.data() } as ArsEntry;
+            return processArsDoc(docSnap);
         }
         return null;
     } catch (error) {
