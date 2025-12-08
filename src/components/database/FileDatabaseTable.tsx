@@ -255,7 +255,7 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
   const startEntryNum = (currentPage - 1) * ITEMS_PER_PAGE + 1;
   const endEntryNum = Math.min(currentPage * ITEMS_PER_PAGE, fileEntries.length);
 
-  const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
+  const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
 
 
   return (
@@ -291,15 +291,12 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
                   
                   if (user?.role === 'supervisor') {
                       sitesToDisplay = sitesToDisplay.filter(site => {
-                          if (site.supervisorUid !== user.uid) return false;
+                          const isAssigned = site.supervisorUid === user.uid;
                           const isOngoing = site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
-                          if (isOngoing) return true;
+                          const hasPendingUpdate = pendingUpdatesMap[entry.fileNo];
                           
-                          // Also show if the file has a pending update from this supervisor
-                          if(pendingUpdatesMap[entry.fileNo]) {
-                              return true;
-                          }
-                          return false; 
+                          // A site should be displayed if it's assigned to the supervisor AND it's either ongoing OR the file has a pending update from them.
+                          return isAssigned && (isOngoing || hasPendingUpdate);
                       });
                   }
                   
