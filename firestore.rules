@@ -48,14 +48,17 @@ service cloud.firestore {
 
     // === Main File Entries (Deposit Works) ===
     match /fileEntries/{docId} {
-      allow get: if canReadCollection() || (isSupervisor() && request.auth.uid in resource.data.assignedSupervisorUids);
-      allow list: if canReadCollection() || isSupervisor();
+      // Supervisors can read a file if their UID is in the assigned list.
+      // Editors and Viewers can read all files.
+      allow read: if canReadCollection() || (isSupervisor() && request.auth.uid in resource.data.assignedSupervisorUids);
       allow create, delete: if canWriteCollection();
+      // Updates are handled through the 'pendingUpdates' collection workflow.
       allow update: if isEditor();
     }
 
     // === ARS Entries ===
     match /arsEntries/{docId} {
+      // Supervisors can get an ARS entry if their UID matches.
       allow get: if canReadCollection() || (isSupervisor() && resource.data.supervisorUid == request.auth.uid);
       allow list: if canReadCollection() || isSupervisor();
       allow create, update, delete: if canWriteCollection();
@@ -65,7 +68,7 @@ service cloud.firestore {
     match /pendingUpdates/{docId} {
       allow create: if isSupervisor() || isEditor();
       allow read, delete: if (isSupervisor() && request.auth.uid == resource.data.submittedByUid) || isEditor();
-      allow update: if isEditor();
+      allow update: if isEditor(); // Editors approve/reject by updating status
     }
 
     // === Staff Members (Establishment) ===
