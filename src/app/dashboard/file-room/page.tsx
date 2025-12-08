@@ -69,7 +69,9 @@ export default function FileManagerPage() {
     if (user?.role === 'supervisor' && user.uid) {
         entries = entries.map(entry => {
             const ongoingSites = (entry.siteDetails || []).filter(site =>
-                site.workStatus && ONGOING_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus)
+                site.supervisorUid === user.uid &&
+                site.workStatus &&
+                ONGOING_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus)
             );
             if (ongoingSites.length > 0) {
                 return { ...entry, siteDetails: ongoingSites };
@@ -90,7 +92,7 @@ export default function FileManagerPage() {
       if (!dateA) return 1; 
       if (!dateB) return -1;
       
-      return dateB.getTime() - a.getTime();
+      return dateB.getTime() - dateA.getTime();
     });
 
     const totalSiteCount = entries.reduce((acc, entry) => acc + (entry.siteDetails?.length || 0), 0);
