@@ -29,43 +29,49 @@ const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Wor
 export function useArsEntries() {
   const { user } = useAuth();
   const { allArsEntries, isLoading: dataStoreLoading, refetchArsEntries } = useDataStore(); // Use the central store
-  const { getPendingUpdates } = usePendingUpdates();
+  const { subscribeToPendingUpdates } = usePendingUpdates();
   const [arsEntries, setArsEntries] = useState<ArsEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const processEntries = async () => {
-      if (!user || dataStoreLoading) {
-        setIsLoading(dataStoreLoading);
-        return;
-      }
-      setIsLoading(true);
+    if (!user || dataStoreLoading) {
+      setIsLoading(dataStoreLoading);
+      return;
+    }
 
+    const processEntries = (updates: any[]) => {
+      setIsLoading(true);
       if (user.role === 'supervisor' && user.uid) {
-        const pendingUpdates = await getPendingUpdates(null, user.uid);
-        const pendingArsIds = new Set(pendingUpdates.filter(p => p.isArsUpdate).map(p => p.arsId));
-        
+        const pendingArsIds = new Set(updates.map(u => u.arsId));
         const supervisorEntries = allArsEntries.filter(entry => {
           const isAssigned = entry.supervisorUid === user.uid;
           const hasPendingUpdate = pendingArsIds.has(entry.id);
-          return isAssigned || hasPendingUpdate;
+          const isOngoing = entry.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(entry.workStatus as SiteWorkStatus);
+          
+          return hasPendingUpdate || (isAssigned && isOngoing);
         });
         setArsEntries(supervisorEntries);
       } else {
-        // For editor/viewer, show all entries
         setArsEntries(allArsEntries);
       }
       setIsLoading(false);
     };
 
-    processEntries();
-  }, [user, allArsEntries, dataStoreLoading, getPendingUpdates]);
+    const unsubscribe = subscribeToPendingUpdates((updates) => {
+        processEntries(updates);
+    });
+
+    return () => unsubscribe();
+  }, [user, allArsEntries, dataStoreLoading, subscribeToPendingUpdates]);
+
 
   const addArsEntry = useCallback(async (entryData: ArsEntryFormData) => {
     if (!user || user.role !== 'editor') throw new Error("Permission denied.");
     
     const payload = {
         ...entryData,
+        supervisorUid: entryData.supervisorUid ?? null,
+        supervisorName: entryData.supervisorName ?? null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     };
