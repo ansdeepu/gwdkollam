@@ -103,7 +103,7 @@ export default function DataEntryPage() {
   const { user, isLoading: authIsLoading, fetchAllUsers } = useAuth();
   const { fetchEntryForEditing } = useFileEntries();
   const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
-  const { getPendingUpdateById, hasPendingUpdateForFile } = usePendingUpdates();
+  const { getPendingUpdateById } = usePendingUpdates();
   const { toast } = useToast();
   const { setHeader } = usePageHeader();
   
@@ -149,15 +149,6 @@ export default function DataEntryPage() {
                 return;
             }
             
-            // Supervisor Permission Check: must be assigned to at least one site within the file.
-            if (user.role === 'supervisor') {
-                const isAssigned = originalEntry.siteDetails?.some(site => site.supervisorUid === user.uid);
-                if (!isAssigned) {
-                    setErrorState("You do not have permission to view this file.");
-                    return;
-                }
-            }
-
             let dataForForm: DataEntryFormData = originalEntry;
 
             if (isApprovingUpdate && approveUpdateId) {
@@ -169,15 +160,6 @@ export default function DataEntryPage() {
                     mergedData.siteDetails = mergedData.siteDetails?.map((originalSite: any) => updatedSitesMap.get(originalSite.nameOfSite) || originalSite) || [];
                     dataForForm = mergedData;
                     toast({ title: "Reviewing Update", description: `Loading changes from ${pendingUpdate.submittedByName}. Please review and save.` });
-                }
-            } else if (user.role === 'supervisor') {
-                const hasActivePendingUpdate = await hasPendingUpdateForFile(originalEntry.fileNo, user.uid);
-                if (hasActivePendingUpdate) {
-                    dataForForm.siteDetails?.forEach(site => {
-                        if (site.supervisorUid === user.uid) {
-                            site.isPending = true;
-                        }
-                    });
                 }
             }
 
@@ -194,7 +176,7 @@ export default function DataEntryPage() {
     };
     
     loadAllData();
-  }, [fileIdToEdit, approveUpdateId, user, authIsLoading, fetchAllUsers, fetchEntryForEditing, getPendingUpdateById, hasPendingUpdateForFile, toast, isApprovingUpdate]);
+  }, [fileIdToEdit, approveUpdateId, user, authIsLoading, fetchAllUsers, fetchEntryForEditing, getPendingUpdateById, toast, isApprovingUpdate]);
 
   useEffect(() => {
     let title = "Loading...";
