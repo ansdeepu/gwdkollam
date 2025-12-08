@@ -66,20 +66,15 @@ export function useFileEntries() {
 
       if (user.role === 'supervisor' && user.uid) {
         const supervisorEntries = allFileEntries.filter(entry => {
-            // A file is relevant to a supervisor if they are assigned to it.
             if (!entry.assignedSupervisorUids?.includes(user.uid)) {
                 return false;
             }
             
-            // And if it contains at least one site that they should see.
             const hasVisibleSite = entry.siteDetails?.some(site => {
                 if (site.supervisorUid !== user.uid) return false;
-
-                // Condition 1: Site has an ongoing status.
                 const isOngoing = site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
                 if (isOngoing) return true;
                 
-                // Condition 2: Site is marked 'Completed' or 'Failed' AND has a pending update from the current supervisor.
                 const hasPending = pendingUpdatesMap[entry.fileNo];
                 const isCompletedOrFailedWithPendingUpdate = 
                     (site.workStatus === 'Work Completed' || site.workStatus === 'Work Failed') && hasPending;
@@ -91,7 +86,6 @@ export function useFileEntries() {
         });
         setFileEntries(supervisorEntries);
       } else {
-        // For editors and viewers, show all entries
         setFileEntries(allFileEntries);
       }
 
