@@ -64,35 +64,26 @@ export function useFileEntries() {
                 return null;
             }
 
-            // For the dashboard list, we only want to show sites that are currently ongoing.
-            const supervisedSites = (entry.siteDetails || []).filter(
-              site => site.supervisorUid === user.uid
-            );
+            // The file is assigned. Now, determine which of its sites are visible in the LIST view.
+            const visibleSites = (entry.siteDetails || []).filter(site => {
+                const isAssignedToSite = site.supervisorUid === user.uid;
+                if (!isAssignedToSite) return false;
 
-            // Determine if any of the supervisor's sites are in a state that should make the file visible.
-            const hasVisibleSite = supervisedSites.some(site => {
                 const isOngoing = SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
                 const isPendingCompletion = (site.workStatus === 'Work Failed' || site.workStatus === 'Work Completed') && pendingFileNumbers.has(entry.fileNo);
+                
                 return isOngoing || isPendingCompletion;
             });
-
-            // If the supervisor has no sites in a visible state in this file, don't show the file.
-            if (!hasVisibleSite) {
-                return null;
-            }
-
-            // Return the entry, but replace siteDetails with only the ones relevant for the list view
+            
+            // The file should be shown if the supervisor is assigned, regardless of whether there are "active" sites for the list view.
+            // We just replace the siteDetails with the ones relevant for the list view.
             return {
               ...entry,
-              siteDetails: supervisedSites.filter(site => {
-                  const isOngoing = SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
-                  const isPendingCompletion = (site.workStatus === 'Work Failed' || site.workStatus === 'Work Completed') && pendingFileNumbers.has(entry.fileNo);
-                  return isOngoing || isPendingCompletion;
-              }),
+              siteDetails: visibleSites, // This might be an empty array, which is fine for the list view.
               isPending: pendingFileNumbers.has(entry.fileNo),
             };
           })
-          .filter((entry): entry is DataEntryFormData => entry !== null && entry.siteDetails!.length > 0);
+          .filter((entry): entry is DataEntryFormData => entry !== null);
 
       } else {
         // For editors and viewers, use the complete list.

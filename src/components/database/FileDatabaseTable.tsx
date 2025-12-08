@@ -121,8 +121,6 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
     const pageNum = pageFromUrl ? parseInt(pageFromUrl, 10) : 1;
     if (!isNaN(pageNum) && pageNum > 0) {
       setCurrentPage(pageNum);
-    } else {
-      setCurrentPage(1);
     }
   }, [searchParams]);
 
