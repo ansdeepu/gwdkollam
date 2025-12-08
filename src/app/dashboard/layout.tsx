@@ -34,7 +34,6 @@ const sections = [
   { id: 'rig-registration', title: 'Rig Registration' },
   { id: 'rig-financials', title: 'Rig Financials' },
   { id: 'work-progress', title: 'Work Progress' },
-  { id: 'supervisor-work', title: 'Supervisor Work' },
 ];
 
 const sectionColors = [
@@ -89,7 +88,7 @@ function HeaderContent() {
   
   const navSections = sections.filter(section => {
     if (user?.role === 'supervisor') {
-      return !['finance', 'ars', 'rig-registration', 'rig-financials', 'supervisor-work'].includes(section.id);
+      return !['finance', 'ars', 'rig-registration', 'rig-financials'].includes(section.id);
     }
     return true;
   });

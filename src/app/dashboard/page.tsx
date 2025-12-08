@@ -274,13 +274,7 @@ export default function DashboardPage() {
         </div>
 
         {currentUser?.role !== 'supervisor' && (
-          <div id="supervisor-work" className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <SupervisorWork 
-              allFileEntries={dashboardData.allFileEntries}
-              allUsers={allUsers}
-              staffMembers={staffMembers}
-              onOpenDialog={handleOpenDialog}
-            />
+          <div className="grid grid-cols-1 gap-6">
             <UserActivity 
               allUsers={allUsers}
               staffMembers={staffMembers}
