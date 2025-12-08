@@ -1,3 +1,4 @@
+
 // src/components/database/FileDatabaseTable.tsx
 "use client";
 
@@ -402,8 +403,7 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                               </Button>
                             </TooltipTrigger>
                             <TooltipContent>
-                              <p>Delete Entry</p>
-                            </TooltipContent>
+                              <p>Delete Entry</p></TooltipContent>
                           </Tooltip>
                         )}
                       </div>
