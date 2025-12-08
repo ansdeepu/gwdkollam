@@ -51,6 +51,11 @@ export function useFileEntries() {
       let entries: DataEntryFormData[];
 
       if (user.role === 'supervisor' && user.uid) {
+        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
+        const pendingFileNumbers = new Set(
+            pendingUpdates.filter(u => u.status === 'pending').map(u => u.fileNo)
+        );
+
         entries = allFileEntries
           .map(entry => {
             const supervisedSites = (entry.siteDetails || []).filter(
@@ -58,13 +63,14 @@ export function useFileEntries() {
             );
       
             if (supervisedSites.length > 0) {
+              // Show file if supervisor is assigned, but only show ongoing sites in the list view
               const visibleSites = supervisedSites.filter(site =>
                 site.workStatus &&
                 SUPERVISOR_VISIBLE_STATUSES.includes(site.workStatus as SiteWorkStatus)
               );
-      
-              // For the main list view, we only want to show files with active work.
-              // We return a modified entry that ONLY contains these visible sites.
+              
+              // We return the entry with ONLY the visible sites for the list view.
+              // fetchEntryForEditing will handle getting all supervised sites for the detail view.
               if (visibleSites.length > 0) {
                  return {
                     ...entry,
@@ -76,11 +82,7 @@ export function useFileEntries() {
           })
           .filter((entry): entry is DataEntryFormData => entry !== null);
       
-        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
-        const pendingFileNumbers = new Set(
-          pendingUpdates.filter(u => u.status === 'pending').map(u => u.fileNo)
-        );
-
+        // Add pending status to the displayed entries
         entries = entries.map(entry => ({
           ...entry,
           isPending: pendingFileNumbers.has(entry.fileNo),
@@ -98,7 +100,7 @@ export function useFileEntries() {
     if (!dataStoreLoading) {
       processEntries();
     }
-  }, [user, allFileEntries, dataStoreLoading, getPendingUpdatesForFile]);
+  }, [user, allFileEntries, dataStoreLoading]);
 
     const addFileEntry = useCallback(async (entryData: DataEntryFormData): Promise<string> => {
         if (!user) throw new Error("User must be logged in to add an entry.");
