@@ -1,4 +1,3 @@
-
 // src/hooks/useArsEntries.ts
 "use client";
 
@@ -43,13 +42,7 @@ export function useArsEntries() {
       setIsLoading(true);
       let entries = allArsEntries;
 
-      if (user.role === 'supervisor') {
-        entries = allArsEntries.filter(entry => 
-            entry.supervisorUid === user.uid && 
-            entry.workStatus &&
-            ONGOING_ARS_STATUSES.includes(entry.workStatus as SiteWorkStatus)
-        );
-        
+      if (user.role === 'supervisor' && user.uid) {
         const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
         const pendingArsIds = new Set(
           pendingUpdates
@@ -57,12 +50,17 @@ export function useArsEntries() {
             .map(u => u.arsId)
         );
 
-        if (pendingArsIds.size > 0) {
-            entries = entries.map(entry => ({
-                ...entry,
-                isPending: pendingArsIds.has(entry.id),
-            }));
-        }
+        entries = allArsEntries.filter(entry => {
+            if (entry.supervisorUid !== user.uid) return false;
+            
+            const isOngoing = entry.workStatus && ONGOING_ARS_STATUSES.includes(entry.workStatus as SiteWorkStatus);
+            const isPendingCompletion = entry.workStatus && ['Work Completed', 'Work Failed'].includes(entry.workStatus as SiteWorkStatus) && pendingArsIds.has(entry.id);
+            
+            return isOngoing || isPendingCompletion;
+        }).map(entry => ({
+            ...entry,
+            isPending: pendingArsIds.has(entry.id),
+        }));
       }
 
       setArsEntries(entries);

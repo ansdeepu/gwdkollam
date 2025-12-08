@@ -27,7 +27,7 @@ const db = getFirestore(app);
 const FILE_ENTRIES_COLLECTION = 'fileEntries';
 
 // This list defines which statuses are considered "active" or relevant for a supervisor's main view.
-const SUPERVISOR_VISIBLE_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
+const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
 
 
 export function useFileEntries() {
@@ -58,21 +58,21 @@ export function useFileEntries() {
         entries = allFileEntries
           .map(entry => {
             const supervisedSites = (entry.siteDetails || []).filter(
-              site => site.supervisorUid === user.uid
+              site => {
+                  if (site.supervisorUid !== user.uid) return false;
+
+                  const isOngoing = site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
+                  const isPendingCompletion = site.workStatus && ['Work Completed', 'Work Failed'].includes(site.workStatus as SiteWorkStatus) && pendingFileNumbers.has(entry.fileNo);
+                  
+                  return isOngoing || isPendingCompletion;
+              }
             );
 
             if (supervisedSites.length === 0) return null;
-
-            // Filter only for dashboard display
-            const activeSites = supervisedSites.filter(site =>
-              site.workStatus &&
-              SUPERVISOR_VISIBLE_STATUSES.includes(site.workStatus as SiteWorkStatus)
-            );
-
+            
             return {
               ...entry,
-              // For dashboard list: show only active sites, but if none are active, show all supervised sites to ensure file is visible
-              siteDetails: activeSites.length > 0 ? activeSites : supervisedSites,
+              siteDetails: supervisedSites,
               isPending: pendingFileNumbers.has(entry.fileNo),
             };
           })

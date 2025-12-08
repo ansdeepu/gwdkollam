@@ -1,4 +1,3 @@
-
 // src/app/dashboard/data-entry/page.tsx
 "use client";
 import DataEntryFormComponent from "@/components/shared/DataEntryForm";
@@ -103,7 +102,7 @@ export default function DataEntryPage() {
   const { user, isLoading: authIsLoading, fetchAllUsers } = useAuth();
   const { fetchEntryForEditing } = useFileEntries();
   const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
-  const { getPendingUpdateById } = usePendingUpdates();
+  const { getPendingUpdateById, hasPendingUpdateForFile } = usePendingUpdates();
   const { toast } = useToast();
   const { setHeader } = usePageHeader();
   
@@ -111,12 +110,13 @@ export default function DataEntryPage() {
   const [dataLoading, setDataLoading] = useState(true);
   const [errorState, setErrorState] = useState<string | null>(null);
   const [fileNoForHeader, setFileNoForHeader] = useState<string | null>(null);
+  const [isFormDisabledForSupervisor, setIsFormDisabledForSupervisor] = useState(false);
   
   const isApprovingUpdate = !!(user?.role === 'editor' && approveUpdateId);
   
   const returnPath = useMemo(() => {
     let base = '/dashboard/file-room';
-    if (workType === 'private') base = '/dashboard/private-deposit-works';
+    if (workTypeContext === 'private') base = '/dashboard/private-deposit-works';
     if (isApprovingUpdate) base = '/dashboard/pending-updates';
     
     return pageToReturnTo ? `${base}?page=${pageToReturnTo}` : base;
@@ -148,6 +148,14 @@ export default function DataEntryPage() {
                 setErrorState("Could not find the requested file. It may have been deleted or you may not have permission.");
                 return;
             }
+
+            if (user.role === 'supervisor' && user.uid) {
+                const hasPending = await hasPendingUpdateForFile(originalEntry.fileNo, user.uid);
+                if (hasPending) {
+                    setIsFormDisabledForSupervisor(true);
+                    toast({ title: "Edits Locked", description: "This file has a pending update and cannot be edited until reviewed by an admin.", duration: 6000 });
+                }
+            }
             
             let dataForForm: DataEntryFormData = originalEntry;
 
@@ -176,7 +184,7 @@ export default function DataEntryPage() {
     };
     
     loadAllData();
-  }, [fileIdToEdit, approveUpdateId, user, authIsLoading, fetchAllUsers, fetchEntryForEditing, getPendingUpdateById, toast, isApprovingUpdate]);
+  }, [fileIdToEdit, approveUpdateId, user, authIsLoading, fetchAllUsers, fetchEntryForEditing, getPendingUpdateById, toast, isApprovingUpdate, hasPendingUpdateForFile]);
 
   useEffect(() => {
     let title = "Loading...";
@@ -323,6 +331,7 @@ export default function DataEntryPage() {
                 userRole={user?.role}
                 workTypeContext={workType}
                 pageToReturnTo={pageToReturnTo}
+                isFormDisabled={isFormDisabledForSupervisor}
              />
           ) : (
             <div className="flex h-64 items-center justify-center">
