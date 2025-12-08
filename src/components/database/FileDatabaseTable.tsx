@@ -328,14 +328,16 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                   const canSupervisorEdit = user?.role === 'supervisor' && (entry.siteDetails || []).length > 0;
                   const isEditDisabled = isFilePendingForSupervisor || (user?.role === 'supervisor' && !canSupervisorEdit);
                   
+                  const hasActiveSites = entry.siteDetails && entry.siteDetails.length > 0;
+
                   return (
                   <TableRow key={entry.id}>
                     <TableCell className="w-[5%] px-2 py-2 text-sm text-center">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                     <TableCell className="font-medium w-[10%] px-2 py-2 text-sm">{entry.fileNo}</TableCell>
                     <TableCell className="w-[15%] px-2 py-2 text-sm">{entry.applicantName}</TableCell>
                     <TableCell className="w-[25%] px-2 py-2 text-sm">
-                      {(entry.siteDetails && entry.siteDetails.length > 0) ? (
-                        entry.siteDetails.map((site, idx) => {
+                      {hasActiveSites ? (
+                        entry.siteDetails!.map((site, idx) => {
                           const isFinal = site.workStatus && FINAL_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus);
                           return (
                             <span key={idx} className={cn("font-semibold", isFinal ? 'text-red-600' : 'text-green-600')}>
@@ -348,8 +350,8 @@ export default function FileDatabaseTable({ searchTerm = "", fileEntries }: File
                       )}
                     </TableCell>
                     <TableCell className="w-[10%] px-2 py-2 text-sm">
-                      {entry.siteDetails && entry.siteDetails.length > 0
-                        ? entry.siteDetails.map(site => site.purpose).filter(Boolean).join(', ') || "N/A"
+                      {hasActiveSites
+                        ? entry.siteDetails!.map(site => site.purpose).filter(Boolean).join(', ')
                         : "N/A"}
                     </TableCell>
                     <TableCell className="w-[10%] px-2 py-2 text-sm">
