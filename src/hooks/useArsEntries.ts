@@ -34,44 +34,24 @@ export function useArsEntries() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Wait until both user and datastore are ready
     if (dataStoreLoading || !user) {
       setIsLoading(dataStoreLoading);
       return;
     }
   
-    // This function will be called both on initial load and when updates change
-    const processEntries = (pendingUpdates: any[]) => {
-      let finalEntries;
+    setIsLoading(true);
   
-      if (user.role === 'supervisor' && user.uid) {
-        const pendingArsIds = new Set(pendingUpdates.filter(u => u.arsId && u.submittedByUid === user.uid).map(u => u.arsId));
-        
-        finalEntries = allArsEntries.filter(entry => {
-          const isAssigned = entry.supervisorUid === user.uid;
-          const hasPendingUpdate = pendingArsIds.has(entry.id);
-          const isOngoing = entry.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(entry.workStatus as SiteWorkStatus);
+    let finalEntries = allArsEntries;
   
-          // Show if it's an ongoing assigned task OR if there's a pending update from the supervisor
-          return (isAssigned && isOngoing) || hasPendingUpdate;
-        });
-      } else {
-        finalEntries = allArsEntries;
-      }
-      
-      setArsEntries(finalEntries);
-      setIsLoading(false);
-    };
+    // Apply strict supervisor filter
+    if (user.role === "supervisor") {
+      finalEntries = allArsEntries.filter(entry => entry.supervisorUid === user.uid);
+    }
   
-    // Subscribe to real-time updates and re-process when they change
-    const unsubscribe = subscribeToPendingUpdates((updates) => {
-        processEntries(updates);
-    });
-  
-    // Initial processing with an empty updates array to filter the initial data load
-    processEntries([]);
-  
-    return () => unsubscribe();
-  }, [user, allArsEntries, dataStoreLoading, subscribeToPendingUpdates]);
+    setArsEntries(finalEntries);
+    setIsLoading(false);
+  }, [user, allArsEntries, dataStoreLoading]);
 
 
   const addArsEntry = useCallback(async (entryData: ArsEntryFormData) => {
