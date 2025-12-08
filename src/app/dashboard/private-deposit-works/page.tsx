@@ -45,7 +45,7 @@ const safeParseDate = (dateValue: any): Date | null => {
 export default function PrivateDepositWorksPage() {
   const { setHeader } = usePageHeader();
   const { user } = useAuth();
-  const { allFileEntries } = useDataStore();
+  const { fileEntries } = useFileEntries(); // Use the hook which handles filtering
   
   useEffect(() => {
     const description = user?.role === 'supervisor'
@@ -61,35 +61,11 @@ export default function PrivateDepositWorksPage() {
   const canCreate = user?.role === 'editor';
 
   const { privateDepositWorkEntries, totalSites, lastCreatedDate } = useMemo(() => {
-    let entries: DataEntryFormData[];
-
-    if (user?.role === 'supervisor') {
-      // Supervisors only see files where they have at least one ONGOING private site.
-      entries = allFileEntries.map(entry => {
-        if (!entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)) {
-          return null;
-        }
-
-        const supervisedOngoingSites = (entry.siteDetails || []).filter(site =>
-          site.supervisorUid === user.uid &&
-          site.workStatus &&
-          ONGOING_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus)
-        );
-        
-        if (supervisedOngoingSites.length > 0) {
-          return { ...entry, siteDetails: supervisedOngoingSites };
-        }
-        return null;
-      }).filter((e): e is DataEntryFormData => e !== null);
-
-    } else {
-      // For other roles, filter for private application types from the global list.
-      entries = allFileEntries.filter(entry => 
+    const privateEntries = fileEntries.filter(entry => 
         !!entry.applicationType && PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
-      );
-    }
-
-    const sortedEntries = [...entries];
+    );
+    
+    const sortedEntries = [...privateEntries];
 
     // Sort all entries by the first remittance date, newest first.
     sortedEntries.sort((a, b) => {
@@ -117,7 +93,7 @@ export default function PrivateDepositWorksPage() {
     }, null as Date | null);
     
     return { privateDepositWorkEntries: sortedEntries, totalSites: totalSiteCount, lastCreatedDate: lastCreated };
-  }, [allFileEntries, user?.role, user?.uid]);
+  }, [fileEntries]);
 
 
   const handleAddNewClick = () => {

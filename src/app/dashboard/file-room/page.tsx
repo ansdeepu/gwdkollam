@@ -46,8 +46,7 @@ const safeParseDate = (dateValue: any): Date | null => {
 export default function FileManagerPage() {
   const { setHeader } = usePageHeader();
   const { user } = useAuth();
-  const searchParams = useSearchParams();
-  const { allFileEntries } = useDataStore();
+  const { fileEntries, isLoading } = useFileEntries(); // Use the hook which handles filtering
   
   useEffect(() => {
     const description = user?.role === 'supervisor'
@@ -63,37 +62,11 @@ export default function FileManagerPage() {
   const canCreate = user?.role === 'editor';
   
   const { depositWorkEntries, totalSites, lastCreatedDate } = useMemo(() => {
-    let entries: DataEntryFormData[] = [];
+    const nonPrivateEntries = fileEntries.filter(entry => 
+        !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
+    );
 
-    if (user?.role === 'supervisor' && user.uid) {
-        // Filter from the global store to find all files with at least one ongoing site for the supervisor.
-        entries = allFileEntries.map(entry => {
-            if (!entry.applicationType || PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)) {
-              return null; // Skip private works
-            }
-
-            const supervisedOngoingSites = (entry.siteDetails || []).filter(site =>
-                site.supervisorUid === user.uid &&
-                site.workStatus &&
-                ONGOING_WORK_STATUSES.includes(site.workStatus as SiteWorkStatus)
-            );
-            
-            // Only include the file if there's at least one ongoing site for this supervisor.
-            // Return the entry with its siteDetails filtered to ONLY those sites.
-            if (supervisedOngoingSites.length > 0) {
-              return { ...entry, siteDetails: supervisedOngoingSites };
-            }
-            return null;
-        }).filter((e): e is DataEntryFormData => e !== null);
-
-    } else {
-        // For editors/viewers, show all non-private works.
-        entries = allFileEntries.filter(entry => 
-            !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
-        );
-    }
-    
-    const sortedEntries = [...entries];
+    const sortedEntries = [...nonPrivateEntries];
 
     // Sort all entries by the first remittance date, newest first.
     sortedEntries.sort((a, b) => {
@@ -121,7 +94,7 @@ export default function FileManagerPage() {
     }, null as Date | null);
     
     return { depositWorkEntries: sortedEntries, totalSites: totalSiteCount, lastCreatedDate: lastCreated };
-  }, [allFileEntries, user?.role, user?.uid]);
+  }, [fileEntries]);
 
 
   const handleAddNewClick = () => {

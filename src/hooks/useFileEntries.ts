@@ -61,32 +61,25 @@ export function useFileEntries() {
             const supervisedSites = (entry.siteDetails || []).filter(
               site => site.supervisorUid === user.uid
             );
-      
+
             if (supervisedSites.length > 0) {
-              // Show file if supervisor is assigned, but only show ongoing sites in the list view
               const visibleSites = supervisedSites.filter(site =>
                 site.workStatus &&
                 SUPERVISOR_VISIBLE_STATUSES.includes(site.workStatus as SiteWorkStatus)
               );
-              
-              // We return the entry with ONLY the visible sites for the list view.
-              // fetchEntryForEditing will handle getting all supervised sites for the detail view.
+
+              // Only include the file in the "Deposit Works" list if it has at least one ONGOING site.
               if (visibleSites.length > 0) {
-                 return {
-                    ...entry,
-                    siteDetails: visibleSites
+                return {
+                  ...entry,
+                  siteDetails: visibleSites, // Show only the ongoing sites in the list view
+                  isPending: pendingFileNumbers.has(entry.fileNo),
                 };
               }
             }
             return null;
           })
           .filter((entry): entry is DataEntryFormData => entry !== null);
-      
-        // Add pending status to the displayed entries
-        entries = entries.map(entry => ({
-          ...entry,
-          isPending: pendingFileNumbers.has(entry.fileNo),
-        }));
 
       } else {
         // For editors and viewers, use the complete list.
@@ -100,7 +93,7 @@ export function useFileEntries() {
     if (!dataStoreLoading) {
       processEntries();
     }
-  }, [user, allFileEntries, dataStoreLoading]);
+  }, [user, allFileEntries, dataStoreLoading, getPendingUpdatesForFile]);
 
     const addFileEntry = useCallback(async (entryData: DataEntryFormData): Promise<string> => {
         if (!user) throw new Error("User must be logged in to add an entry.");
