@@ -22,6 +22,8 @@ import { useDataStore } from '@/hooks/use-data-store';
 export const dynamic = 'force-dynamic';
 
 const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
+const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
+
 
 // Helper function to safely parse dates, whether they are strings or Date objects
 const safeParseDate = (dateValue: any): Date | null => {
@@ -90,7 +92,15 @@ export default function PrivateDepositWorksPage() {
       return 0;
     });
 
-    const totalSiteCount = sortedEntries.reduce((acc, entry) => acc + (entry.siteDetails?.length || 0), 0);
+    let totalSiteCount = 0;
+    if (user?.role === 'supervisor' && user.uid) {
+        totalSiteCount = sortedEntries.reduce((acc, entry) => {
+            const supervisorSites = entry.siteDetails?.filter(site => site.supervisorUid === user.uid && site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus)) || [];
+            return acc + supervisorSites.length;
+        }, 0);
+    } else {
+        totalSiteCount = sortedEntries.reduce((acc, entry) => acc + (entry.siteDetails?.length || 0), 0);
+    }
 
     const lastCreated = sortedEntries.reduce((latest, entry) => {
         const createdAt = (entry as any).createdAt ? safeParseDate((entry as any).createdAt) : null;
@@ -101,7 +111,7 @@ export default function PrivateDepositWorksPage() {
     }, null as Date | null);
     
     return { privateDepositWorkEntries: sortedEntries, totalSites: totalSiteCount, lastCreatedDate: lastCreated };
-  }, [fileEntries]);
+  }, [fileEntries, user]);
   
   const filteredEntries = useMemo(() => {
     if (!searchTerm) {
