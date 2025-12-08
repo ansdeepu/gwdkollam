@@ -34,33 +34,28 @@ export function useArsEntries() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!user || dataStoreLoading) {
+    if (dataStoreLoading || !user) {
       setIsLoading(dataStoreLoading);
       return;
     }
 
     // This function will be called both on initial load and when updates change
-    const processEntries = (updates: any[]) => {
+    const processEntries = (pendingUpdates: any[]) => {
+      let finalEntries = allArsEntries;
+
       if (user.role === 'supervisor' && user.uid) {
-        const pendingArsIds = new Set(updates.map(u => u.arsId));
-        const supervisorEntries = allArsEntries.filter(entry => {
+        const pendingArsIds = new Set(pendingUpdates.filter(u => u.arsId).map(u => u.arsId));
+        
+        finalEntries = allArsEntries.filter(entry => {
           const isAssigned = entry.supervisorUid === user.uid;
           const hasPendingUpdate = pendingArsIds.has(entry.id);
-          return hasPendingUpdate || isAssigned;
+          return isAssigned || hasPendingUpdate;
         });
-        setArsEntries(supervisorEntries);
-      } else {
-        setArsEntries(allArsEntries);
       }
+      
+      setArsEntries(finalEntries);
       setIsLoading(false);
     };
-
-    // Initial processing when the hook loads or dependencies change
-    // We pass an empty array initially because the subscription will provide the first real set of updates
-    if (!dataStoreLoading) {
-        // Run initial processing with no pending updates known, which will filter by assignment
-        processEntries([]);
-    }
 
     // Subscribe to real-time updates and re-process when they change
     const unsubscribe = subscribeToPendingUpdates((updates) => {
