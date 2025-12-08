@@ -58,17 +58,24 @@ export function useFileEntries() {
 
         entries = allFileEntries
           .map(entry => {
-            const isAssigned = (entry.siteDetails || []).some(
+            const supervisedSites = (entry.siteDetails || []).filter(
               site => site.supervisorUid === user.uid
             );
 
-            if (isAssigned) {
-              return {
-                ...entry,
-                isPending: pendingFileNumbers.has(entry.fileNo),
-              };
-            }
-            return null;
+            if (supervisedSites.length === 0) return null;
+
+            // Filter for dashboard display only
+            const activeSites = supervisedSites.filter(site =>
+              site.workStatus &&
+              SUPERVISOR_VISIBLE_STATUSES.includes(site.workStatus as SiteWorkStatus)
+            );
+
+            return {
+              ...entry,
+              // For dashboard list: show only active sites if they exist, otherwise show all their supervised sites
+              siteDetails: activeSites.length > 0 ? activeSites : supervisedSites,
+              isPending: pendingFileNumbers.has(entry.fileNo),
+            };
           })
           .filter((entry): entry is DataEntryFormData => entry !== null);
 
