@@ -1,4 +1,3 @@
-
 // src/app/dashboard/pending-updates/page.tsx
 "use client";
 
@@ -20,7 +19,7 @@ import type { SiteDetailFormData, ArsEntryFormData, DataEntryFormData } from '@/
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardHeader, CardTitle, CardContent } from '../ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 const toDateOrNull = (value: any): Date | null => {
   if (!value) return null;
