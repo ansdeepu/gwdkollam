@@ -75,6 +75,7 @@ export function useFileEntries() {
                 const isOngoing = site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
                 if (isOngoing) return true;
                 
+                // If not ongoing, check if it's completed/failed but has a pending update from this user
                 const hasPending = pendingUpdatesMap[entry.fileNo];
                 const isCompletedOrFailedWithPendingUpdate = 
                     (site.workStatus === 'Work Completed' || site.workStatus === 'Work Failed') && hasPending;
@@ -95,7 +96,7 @@ export function useFileEntries() {
     if (!dataStoreLoading) {
       processEntries();
     }
-  }, [user, allFileEntries, dataStoreLoading, getPendingUpdatesForFile, pendingUpdatesMap]);
+  }, [user, allFileEntries, dataStoreLoading, pendingUpdatesMap]);
 
     const addFileEntry = useCallback(async (entryData: DataEntryFormData): Promise<string> => {
         if (!user) throw new Error("User must be logged in to add an entry.");
