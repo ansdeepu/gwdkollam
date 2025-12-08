@@ -38,6 +38,22 @@ export function useFileEntries() {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { getPendingUpdatesForFile } = usePendingUpdates();
+  const [pendingUpdatesMap, setPendingUpdatesMap] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (user?.role === 'supervisor' && user.uid) {
+        getPendingUpdatesForFile(null, user.uid).then(updates => {
+            const map: Record<string, boolean> = {};
+            updates.forEach(u => {
+                if(u.fileNo && u.status === 'pending') {
+                    map[u.fileNo] = true;
+                }
+            });
+            setPendingUpdatesMap(map);
+        });
+    }
+  }, [user, getPendingUpdatesForFile]);
+
 
   useEffect(() => {
     const processEntries = async () => {
@@ -49,27 +65,24 @@ export function useFileEntries() {
       setIsLoading(true);
 
       if (user.role === 'supervisor' && user.uid) {
-        const pendingUpdates = await getPendingUpdatesForFile(null, user.uid);
-        const pendingFileNos = new Set(pendingUpdates.filter(u => u.status === 'pending').map(u => u.fileNo));
-
         const supervisorEntries = allFileEntries.filter(entry => {
             // A file is relevant to a supervisor if they are assigned to it.
             if (!entry.assignedSupervisorUids?.includes(user.uid)) {
                 return false;
             }
             
-            // And if it contains at least one site they should see.
+            // And if it contains at least one site that they should see.
             const hasVisibleSite = entry.siteDetails?.some(site => {
                 if (site.supervisorUid !== user.uid) return false;
 
                 // Condition 1: Site has an ongoing status.
                 const isOngoing = site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus);
                 if (isOngoing) return true;
-
+                
                 // Condition 2: Site is marked 'Completed' or 'Failed' AND has a pending update from the current supervisor.
+                const hasPending = pendingUpdatesMap[entry.fileNo];
                 const isCompletedOrFailedWithPendingUpdate = 
-                    (site.workStatus === 'Work Completed' || site.workStatus === 'Work Failed') && 
-                    pendingFileNos.has(entry.fileNo);
+                    (site.workStatus === 'Work Completed' || site.workStatus === 'Work Failed') && hasPending;
 
                 return isCompletedOrFailedWithPendingUpdate;
             });
@@ -88,7 +101,7 @@ export function useFileEntries() {
     if (!dataStoreLoading) {
       processEntries();
     }
-  }, [user, allFileEntries, dataStoreLoading, getPendingUpdatesForFile]);
+  }, [user, allFileEntries, dataStoreLoading, getPendingUpdatesForFile, pendingUpdatesMap]);
 
     const addFileEntry = useCallback(async (entryData: DataEntryFormData): Promise<string> => {
         if (!user) throw new Error("User must be logged in to add an entry.");
