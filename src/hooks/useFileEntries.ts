@@ -29,7 +29,7 @@ const FILE_ENTRIES_COLLECTION = 'fileEntries';
 const PENDING_UPDATES_COLLECTION = 'pendingUpdates';
 
 // Statuses that are considered "ongoing" for a supervisor
-const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig"];
+const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig", "Work Initiated"];
 
 
 export function useFileEntries() {
