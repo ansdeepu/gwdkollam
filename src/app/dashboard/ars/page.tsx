@@ -1,3 +1,4 @@
+
 // src/app/dashboard/ars/page.tsx
 "use client";
 
@@ -630,7 +631,7 @@ export default function ArsPage() {
                                               {site.arsTypeOfScheme || 'N/A'}
                                             </TableCell>
                                             <TableCell className="whitespace-normal break-words">{site.localSelfGovt || 'N/A'}</TableCell>
-                                            <TableCell>{site.arsStatus ?? 'N/A'}</TableCell>
+                                            <TableCell>{site.arsStatus ?? 'Payment Completed'}</TableCell>
                                             <TableCell>{formatDateSafe(site.dateOfCompletion)}</TableCell>
                                             <TableCell className="text-center w-[120px]">
                                                 <div className="flex items-center justify-center space-x-1">
