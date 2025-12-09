@@ -33,7 +33,7 @@ const db = getFirestore(app);
 const SUPERVISOR_EDITABLE_FIELDS: (keyof ArsEntryFormData)[] = [
   'latitude', 'longitude', 'arsStatus', 'dateOfCompletion', 'noOfBeneficiary', 'workRemarks'
 ];
-const SUPERVISOR_EDITABLE_STATUSES: (typeof arsStatusOptions)[number][] = ["Work Order Issued"];
+const SUPERVISOR_EDITABLE_STATUSES: (typeof arsStatusOptions)[number][] = ["Work Order Issued", "Work in Progress", "Work Completed", "Work Failed"];
 
 
 const toDateOrNull = (value: any): Date | null => {
@@ -140,15 +140,37 @@ export default function ArsEntryPage() {
     
     const [isFormDisabledForSupervisor, setIsFormDisabledForSupervisor] = useState(false);
     
+    const form = useForm<ArsEntryFormData>({
+        resolver: zodResolver(ArsEntrySchema),
+        defaultValues: {
+          fileNo: "", nameOfSite: "", localSelfGovt: "", constituency: undefined, arsTypeOfScheme: undefined,
+          arsBlock: "", latitude: undefined, longitude: undefined, arsNumberOfStructures: undefined,
+          arsStorageCapacity: undefined, arsNumberOfFillings: undefined, estimateAmount: undefined,
+          arsAsTsDetails: "", tsAmount: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined,
+          arsAwardedAmount: undefined, arsStatus: undefined, dateOfCompletion: undefined,
+          totalExpenditure: undefined, noOfBeneficiary: "", workRemarks: "",
+          supervisorUid: null,
+          supervisorName: null,
+        },
+    });
+
+    const watchedArsStatus = useWatch({ control: form.control, name: 'arsStatus' });
+
     const isFieldReadOnly = (fieldName: keyof ArsEntryFormData): boolean => {
-      if (canEdit) return false;
-      if (isViewer) return true;
-      if (isSupervisor) {
-        if (!isEditing || isFormDisabledForSupervisor) return true;
-        
-        return !SUPERVISOR_EDITABLE_FIELDS.includes(fieldName);
-      }
-      return true;
+        if (canEdit) return false;
+        if (isViewer) return true;
+        if (isSupervisor) {
+            if (!isEditing || isFormDisabledForSupervisor) return true;
+            
+            const isCompletedOrFailed = watchedArsStatus === 'Work Completed' || watchedArsStatus === 'Work Failed';
+            if (isCompletedOrFailed) {
+                // Only allow editing remarks and beneficiary count when completed/failed
+                return !['workRemarks', 'noOfBeneficiary'].includes(fieldName);
+            }
+    
+            return !SUPERVISOR_EDITABLE_FIELDS.includes(fieldName);
+        }
+        return true;
     };
 
 
@@ -192,23 +214,8 @@ export default function ArsEntryPage() {
             })
             .filter((s): s is StaffMember & { id: string; name: string } => s !== null);
     }, [allUsers, staffMembers, canEdit]);
-
-    const form = useForm<ArsEntryFormData>({
-        resolver: zodResolver(ArsEntrySchema),
-        defaultValues: {
-          fileNo: "", nameOfSite: "", localSelfGovt: "", constituency: undefined, arsTypeOfScheme: undefined,
-          arsBlock: "", latitude: undefined, longitude: undefined, arsNumberOfStructures: undefined,
-          arsStorageCapacity: undefined, arsNumberOfFillings: undefined, estimateAmount: undefined,
-          arsAsTsDetails: "", tsAmount: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined,
-          arsAwardedAmount: undefined, arsStatus: undefined, dateOfCompletion: undefined,
-          totalExpenditure: undefined, noOfBeneficiary: "", workRemarks: "",
-          supervisorUid: null,
-          supervisorName: null,
-        },
-    });
     
     const watchedLsg = useWatch({ control: form.control, name: "localSelfGovt" });
-    const watchedArsStatus = useWatch({ control: form.control, name: 'arsStatus' });
     const isSupervisorDropdownDisabled = watchedArsStatus !== 'Work Order Issued';
 
     const constituencyOptionsForLsg = useMemo(() => {
@@ -364,8 +371,7 @@ export default function ArsEntryPage() {
 
     const supervisorWorkStatusOptions = isSupervisor
         ? arsStatusOptions.filter(status =>
-            SUPERVISOR_EDITABLE_STATUSES.includes(status as (typeof arsStatusOptions)[number]) ||
-            ["Work Completed", "Work Failed"].includes(status)
+            SUPERVISOR_EDITABLE_STATUSES.includes(status as (typeof arsStatusOptions)[number])
           )
         : arsStatusOptions;
 
