@@ -65,10 +65,16 @@ export function useFileEntries() {
       setIsLoading(true);
 
       if (user.role === 'supervisor' && user.uid) {
-        // For supervisors, filter to show only files with sites they are assigned to AND that are in an ongoing state.
-        const supervisorEntries: DataEntryFormData[] = allFileEntries.filter(entry => 
-            entry.siteDetails?.some(site => site.supervisorUid === user.uid && site.workStatus && SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus))
-        );
+        // For supervisors, filter to show only files that are either assigned and ongoing OR have a pending update from them.
+        const supervisorEntries: DataEntryFormData[] = allFileEntries.filter(entry => {
+            const isAssignedAndOngoing = entry.siteDetails?.some(site => 
+                site.supervisorUid === user.uid && 
+                site.workStatus && 
+                SUPERVISOR_ONGOING_STATUSES.includes(site.workStatus as SiteWorkStatus)
+            );
+            const hasPendingUpdate = pendingUpdatesMap[entry.fileNo];
+            return isAssignedAndOngoing || hasPendingUpdate;
+        });
         setFileEntries(supervisorEntries);
       } else {
         // For other roles, show all entries.
@@ -81,7 +87,7 @@ export function useFileEntries() {
     if (!dataStoreLoading) {
       processEntries();
     }
-  }, [user, allFileEntries, dataStoreLoading]);
+  }, [user, allFileEntries, dataStoreLoading, pendingUpdatesMap]);
 
     const addFileEntry = useCallback(async (entryData: DataEntryFormData): Promise<string> => {
         if (!user) throw new Error("User must be logged in to add an entry.");
