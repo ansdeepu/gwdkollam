@@ -307,8 +307,8 @@ export default function ArsEntryPage() {
         
         const payload: ArsEntryFormData = {
             ...data,
-            arsSanctionedDate: data.arsSanctionedDate || undefined,
-            dateOfCompletion: data.dateOfCompletion || undefined,
+            arsSanctionedDate: data.arsSanctionedDate || null,
+            dateOfCompletion: data.dateOfCompletion || null,
         };
 
         try {
