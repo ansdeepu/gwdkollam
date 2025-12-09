@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useArsEntries } from "@/hooks/useArsEntries"; // Updated hook
-import { arsWorkStatusOptions, ArsEntrySchema, type ArsEntryFormData, constituencyOptions, arsTypeOfSchemeOptions, type StaffMember, type SiteWorkStatus, type Constituency } from "@/lib/schemas";
+import { arsWorkStatusOptions, ArsEntrySchema, type ArsEntryFormData, constituencyOptions, arsTypeOfSchemeOptions, type StaffMember, type SiteWorkStatus, type Constituency, siteWorkStatusOptions } from "@/lib/schemas";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save, X, ArrowLeft, ShieldAlert } from "lucide-react";
@@ -33,7 +33,7 @@ const db = getFirestore(app);
 const SUPERVISOR_EDITABLE_FIELDS: (keyof ArsEntryFormData)[] = [
   'latitude', 'longitude', 'workStatus', 'dateOfCompletion', 'noOfBeneficiary', 'workRemarks'
 ];
-const SUPERVISOR_EDITABLE_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Tendered", "Selection Notice Issued"];
+const SUPERVISOR_EDITABLE_STATUSES: SiteWorkStatus[] = ["Tendered", "Selection Notice Issued", "Work Order Issued", "Work in Progress", "Work Initiated", "Work Failed", "Work Completed", "Bill Prepared", "Payment Completed"];
 
 
 const toDateOrNull = (value: any): Date | null => {
@@ -514,7 +514,7 @@ export default function ArsEntryPage() {
                         </div>
                         <div className="flex justify-end pt-8 space-x-3">
                            <Button type="button" variant="outline" onClick={() => router.push(returnPath)} disabled={isSubmitting}><X className="mr-2 h-4 w-4" />Cancel</Button>
-                           {!(isViewer || isFormDisabled) && <Button type="submit" disabled={isSubmitting}> {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} {isEditing ? "Save Changes" : "Create Entry"} </Button>}
+                           {!(isViewer || isFormDisabledForSupervisor) && <Button type="submit" disabled={isSubmitting}> {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />} {isEditing ? "Save Changes" : "Create Entry"} </Button>}
                         </div>
                       </form>
                     </FormProvider>
