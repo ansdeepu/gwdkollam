@@ -1,8 +1,10 @@
+
+      
 // src/app/dashboard/help/page.tsx
 "use client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { HelpCircle, LifeBuoy, Building, Server, LayoutDashboard, ScrollText, MapPin, ImageUp, Hammer } from "lucide-react";
+import { HelpCircle, LifeBuoy, Building, Server, LayoutDashboard, ScrollText, MapPin, ImageUp, Hammer, Code, Bot, Palette } from "lucide-react";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
@@ -44,6 +46,41 @@ export default function HelpPage() {
               This digital dashboard is designed to streamline the operations of the Ground Water Department, Kollam. It serves as a centralized platform for managing file entries, tracking the progress of various projects from application to completion, overseeing staff and user accounts, and generating detailed reports. By digitizing these workflows, the application aims to enhance efficiency, improve data accuracy, and provide a clear, real-time overview of all departmental activities.
             </p>
           </div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+           <div className="flex items-center space-x-3">
+            <Code className="h-6 w-6 text-primary" />
+            <CardTitle>Technology Stack</CardTitle>
+          </div>
+          <CardDescription>
+            This application is built with a modern, high-performance tech stack.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30">
+                <Code className="h-6 w-6 text-sky-600"/>
+                <div>
+                    <h4 className="font-semibold">Next.js & React</h4>
+                    <p className="text-xs text-muted-foreground">For a fast, server-rendered user interface.</p>
+                </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30">
+                <Palette className="h-6 w-6 text-teal-600"/>
+                <div>
+                    <h4 className="font-semibold">Tailwind & ShadCN</h4>
+                    <p className="text-xs text-muted-foreground">For modern styling and accessible components.</p>
+                </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30">
+                <Bot className="h-6 w-6 text-purple-600"/>
+                <div>
+                    <h4 className="font-semibold">Genkit AI</h4>
+                    <p className="text-xs text-muted-foreground">Powers intelligent features like report suggestions.</p>
+                </div>
+            </div>
         </CardContent>
       </Card>
 
@@ -201,3 +238,5 @@ export default function HelpPage() {
     </div>
   );
 }
+
+    
