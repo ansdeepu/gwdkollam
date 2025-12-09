@@ -124,10 +124,10 @@ export const arsWorkStatusOptions = [
   "Work Order Issued",
   "Work Initiated",
   "Work in Progress",
+  "Work Failed",
   "Work Completed",
   "Bill Prepared",
   "Payment Completed",
-  "Work Failed",
 ] as const;
 
 export const arsTypeOfSchemeOptions = [
