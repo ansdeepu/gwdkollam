@@ -76,7 +76,7 @@ export function useArsEntries() {
                 entry.arsStatus === "Work Completed" ||
                 entry.arsStatus === "Work Failed";
     
-            // Supervisor should ALWAYS see:
+            // Supervisor should ALWAYS see file if ANY of these are true:
             return (
                 isAssigned ||
                 supervisorSubmittedUpdate ||
