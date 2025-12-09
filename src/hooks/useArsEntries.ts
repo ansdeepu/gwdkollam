@@ -63,19 +63,25 @@ export function useArsEntries() {
     
         const fileNosWithSupervisorUpdates = new Set(
             updates
-                .filter(u => u.submittedByUid === user.uid)  
+                .filter(u => u.submittedByUid === user.uid && u.status === 'pending')
                 .map(u => u.fileNo)
         );
     
         finalEntries = allArsEntries.filter(entry => {
             const isAssigned = entry.supervisorUid === user.uid;
+            const hasPendingUpdateBySupervisor = fileNosWithSupervisorUpdates.has(entry.fileNo);
     
-            const supervisorSubmittedUpdate = fileNosWithSupervisorUpdates.has(entry.fileNo);
+            if (hasPendingUpdateBySupervisor) {
+                return true; // Always show if there's a pending update from them.
+            }
+            
+            // If not pending, only show if it's assigned AND NOT in a final state.
+            if (isAssigned) {
+                const isFinalState = entry.workStatus === "Work Completed" || entry.workStatus === "Work Failed";
+                return !isFinalState;
+            }
     
-            return (
-                isAssigned || 
-                supervisorSubmittedUpdate
-            );
+            return false;
         });
       }
       
