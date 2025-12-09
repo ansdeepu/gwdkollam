@@ -1,3 +1,4 @@
+
 // src/hooks/useArsEntries.ts
 "use client";
 
@@ -43,7 +44,6 @@ const processArsDoc = (docSnap: DocumentData): ArsEntry => {
 export function useArsEntries() {
   const { user } = useAuth();
   const { allArsEntries, isLoading: dataStoreLoading, refetchArsEntries } = useDataStore(); // Use the central store
-  const { subscribeToPendingUpdates, getPendingUpdates } = usePendingUpdates();
   const [arsEntries, setArsEntries] = useState<ArsEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -58,15 +58,15 @@ export function useArsEntries() {
     
     let finalEntries = allArsEntries;
 
-    // If the user is a supervisor, apply a strict filter.
+    // If the user is a supervisor, apply a strict filter for ongoing, assigned work.
     if (user.role === "supervisor") {
-        finalEntries = allArsEntries.filter(entry => 
-            // The entry MUST have a supervisorUid that EXACTLY matches the current user's uid.
-            entry.supervisorUid && entry.supervisorUid === user.uid
-        );
+        finalEntries = allArsEntries.filter(entry => {
+            const isAssigned = entry.supervisorUid === user.uid;
+            const isOngoing = entry.workStatus && SUPERVISOR_EDITABLE_STATUSES.includes(entry.workStatus as SiteWorkStatus);
+            return isAssigned && isOngoing;
+        });
     }
     
-    // Set the (potentially filtered) list of entries.
     setArsEntries(finalEntries);
     setIsLoading(false);
 }, [user, allArsEntries, dataStoreLoading]); // Re-run this effect whenever user or data changes.
