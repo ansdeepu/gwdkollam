@@ -24,7 +24,7 @@ export type ArsEntry = ArsEntryFormData & {
   isPending?: boolean;
 };
 
-const SUPERVISOR_EDITABLE_STATUSES: ArsStatus[] = ["Work Order Issued", "Work in Progress"];
+const SUPERVISOR_EDITABLE_STATUSES: ArsStatus[] = ["Work Order Issued", "Work in Progress", "Work Completed", "Work Failed"];
 
 const processArsDoc = (docSnap: DocumentData): ArsEntry => {
     const data = docSnap.data();
@@ -69,19 +69,19 @@ export function useArsEntries() {
     
         finalEntries = allArsEntries.filter(entry => {
             const isAssigned = entry.supervisorUid === user.uid;
-            const hasPendingUpdateBySupervisor = fileNosWithSupervisorUpdates.has(entry.fileNo);
-    
-            if (hasPendingUpdateBySupervisor) {
-                return true; // Always show if there's a pending update from them.
+
+            if (!isAssigned) return false;
+
+            const hasPendingUpdate = fileNosWithSupervisorUpdates.has(entry.fileNo);
+            const isCompletedOrFailed = entry.workStatus === "Work Completed" || entry.workStatus === "Work Failed";
+
+            // If the status is final, only show if there's a pending update from this supervisor.
+            if (isCompletedOrFailed) {
+                return hasPendingUpdate;
             }
-            
-            // If not pending, only show if it's assigned AND NOT in a final state.
-            if (isAssigned) {
-                const isFinalState = entry.workStatus === "Work Completed" || entry.workStatus === "Work Failed";
-                return !isFinalState;
-            }
-    
-            return false;
+
+            // Otherwise (for ongoing statuses), always show if assigned.
+            return true;
         });
       }
       
