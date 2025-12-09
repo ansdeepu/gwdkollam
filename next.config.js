@@ -8,7 +8,7 @@ const nextConfig = {
   },
   eslint: {
     // Set to false to ignore linting errors during build.
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   images: {
     remotePatterns: [
