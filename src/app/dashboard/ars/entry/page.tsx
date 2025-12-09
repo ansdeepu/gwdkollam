@@ -21,7 +21,7 @@ import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { cn } from "@/lib/utils";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { usePendingUpdates } from "@/hooks/usePendingUpdates";
-import { useDataStore } from "@/hooks/use-data-store";
+import { useDataStore } from '@/hooks/use-data-store';
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import { app } from "@/lib/firebase";
 import { useArsEntries } from "@/hooks/useArsEntries";
@@ -214,7 +214,7 @@ export default function ArsEntryPage() {
     }, [allUsers, staffMembers, canEdit]);
     
     const watchedLsg = useWatch({ control: form.control, name: "localSelfGovt" });
-    const isSupervisorDropdownDisabled = watchedArsStatus !== 'Work Order Issued';
+    const isSupervisorDropdownDisabled = false;
 
     const constituencyOptionsForLsg = useMemo(() => {
         if (!watchedLsg) return [...constituencyOptions].sort((a, b) => a.localeCompare(b));
