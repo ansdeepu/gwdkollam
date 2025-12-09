@@ -33,7 +33,7 @@ const db = getFirestore(app);
 const SUPERVISOR_EDITABLE_FIELDS: (keyof ArsEntryFormData)[] = [
   'latitude', 'longitude', 'arsStatus', 'dateOfCompletion', 'noOfBeneficiary', 'workRemarks'
 ];
-const SUPERVISOR_EDITABLE_STATUSES: (typeof arsStatusOptions)[number][] = ["Tendered", "Selection Notice Issued", "Work Order Issued", "Work in Progress", "Work Initiated", "Work Failed", "Work Completed", "Bill Prepared", "Payment Completed"];
+const SUPERVISOR_EDITABLE_STATUSES: (typeof arsStatusOptions)[number][] = ["Work Order Issued"];
 
 
 const toDateOrNull = (value: any): Date | null => {
@@ -208,6 +208,8 @@ export default function ArsEntryPage() {
     });
     
     const watchedLsg = useWatch({ control: form.control, name: "localSelfGovt" });
+    const watchedArsStatus = useWatch({ control: form.control, name: 'arsStatus' });
+    const isSupervisorDropdownDisabled = watchedArsStatus !== 'Work Order Issued';
 
     const constituencyOptionsForLsg = useMemo(() => {
         if (!watchedLsg) return [...constituencyOptions].sort((a, b) => a.localeCompare(b));
@@ -499,7 +501,9 @@ export default function ArsEntryPage() {
                                                 form.setValue('supervisorUid', selectedStaff?.id || null);
                                                 form.setValue('supervisorName', selectedStaff?.name || null);
                                             }}
-                                            value={field.value || ''}>
+                                            value={field.value || ''}
+                                            disabled={isSupervisorDropdownDisabled}
+                                        >
                                         <FormControl><SelectTrigger><SelectValue placeholder="Assign a Supervisor" /></SelectTrigger></FormControl>
                                         <SelectContent>
                                             <SelectItem value="_unassign_" onSelect={(e) => { e.preventDefault(); form.setValue('supervisorUid', null); form.setValue('supervisorName', null); }}>-- Unassign --</SelectItem>
