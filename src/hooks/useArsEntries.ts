@@ -24,7 +24,7 @@ export type ArsEntry = ArsEntryFormData & {
   isPending?: boolean;
 };
 
-const SUPERVISOR_EDITABLE_STATUSES: ArsStatus[] = ["Work Order Issued"];
+const SUPERVISOR_EDITABLE_STATUSES: ArsStatus[] = ["Work Order Issued", "Work in Progress", "Work Failed", "Work Completed"];
 
 const processArsDoc = (docSnap: DocumentData): ArsEntry => {
     const data = docSnap.data();
@@ -62,7 +62,7 @@ export function useArsEntries() {
     if (user.role === "supervisor") {
         finalEntries = allArsEntries.filter(entry => {
             const isAssigned = entry.supervisorUid === user.uid;
-            const isActionable = entry.arsStatus === "Work Order Issued";
+            const isActionable = SUPERVISOR_EDITABLE_STATUSES.includes(entry.arsStatus as ArsStatus);
             return isAssigned && isActionable;
         });
     }
@@ -82,8 +82,9 @@ export function useArsEntries() {
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     };
-    await addDoc(collection(db, ARS_COLLECTION), payload);
+    const docRef = await addDoc(collection(db, ARS_COLLECTION), payload);
     refetchArsEntries(); // Trigger refetch
+    return docRef.id;
   }, [user, refetchArsEntries]);
 
   const updateArsEntry = useCallback(async (id: string, entryData: Partial<ArsEntryFormData>, approveUpdateId?: string, approvingUser?: UserProfile) => {
