@@ -24,6 +24,7 @@ import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 import { useDataStore } from "@/hooks/use-data-store";
 import { getFirestore, collection, query, where, getDocs } from "firebase/firestore";
 import { app } from "@/lib/firebase";
+import { useArsEntries } from "@/hooks/useArsEntries";
 
 
 export const dynamic = 'force-dynamic';
