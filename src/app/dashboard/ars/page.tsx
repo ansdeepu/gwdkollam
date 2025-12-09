@@ -100,8 +100,7 @@ export default function ArsPage() {
     setHeader('Artificial Recharge Schemes (ARS)', 'A dedicated module for managing all ARS sites, including data entry, reporting, and bulk imports.');
   }, [setHeader]);
   
-  const { allArsEntries, isLoading: entriesLoading, refetchArsEntries, deleteArsEntry } = useDataStore();
-  const { addArsEntry, clearAllArsData } = useArsEntries();
+  const { arsEntries, isLoading: entriesLoading, refreshArsEntries, deleteArsEntry, clearAllArsData, addArsEntry } = useArsEntries();
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
@@ -146,21 +145,7 @@ export default function ArsPage() {
   };
 
   const { filteredSites, lastCreatedDate } = useMemo(() => {
-    if (!user) return { filteredSites: [], lastCreatedDate: null };
-
-    // ROLE-BASED FILTER
-    let sites: ArsEntry[] = [...allArsEntries];
-
-    if (user) {
-        if (user.role === "supervisor") {
-            sites = sites.filter(site => {
-                const isAssigned = site.supervisorUid === user.uid;
-                // Note: The logic for pending updates is not available here.
-                // This will correctly show assigned sites.
-                return isAssigned;
-            });
-        }
-    }
+    let sites: ArsEntry[] = [...arsEntries];
     
     if (schemeTypeFilter !== 'all') {
       sites = sites.filter(site => site.arsTypeOfScheme === schemeTypeFilter);
@@ -231,7 +216,7 @@ export default function ArsPage() {
     }, null as Date | null);
 
     return { filteredSites: sites, lastCreatedDate: lastCreated };
-  }, [allArsEntries, searchTerm, startDate, endDate, schemeTypeFilter, constituencyFilter, user]);
+  }, [arsEntries, searchTerm, startDate, endDate, schemeTypeFilter, constituencyFilter, user]);
 
   useEffect(() => {
     const pageFromUrl = searchParams.get('page');
@@ -265,7 +250,7 @@ export default function ArsPage() {
     try {
       await deleteArsEntry(deletingSite.id);
       toast({ title: "ARS Site Deleted", description: `Site "${deletingSite.nameOfSite}" has been removed.` });
-      refetchArsEntries();
+      refreshArsEntries();
     } catch (error: any) {
       toast({ title: "Deletion Failed", description: error.message, variant: "destructive" });
     } finally {
@@ -279,7 +264,7 @@ export default function ArsPage() {
     try {
         await clearAllArsData();
         toast({ title: "All ARS Data Cleared", description: "All ARS sites have been removed from the database."});
-        refetchArsEntries();
+        refreshArsEntries();
     } catch (error: any) {
         toast({ title: "Clearing Failed", description: error.message, variant: "destructive" });
     } finally {
@@ -507,7 +492,7 @@ export default function ArsPage() {
         }
         
         toast({ title: "Import Complete", description: `${successCount} sites imported successfully. ${errorCount} rows failed.` });
-        refetchArsEntries();
+        refreshArsEntries();
       } catch (error: any) {
         toast({ title: "Import Failed", description: error.message, variant: "destructive" });
       } finally {
@@ -548,7 +533,7 @@ export default function ArsPage() {
                           {isUploading ? 'Importing...' : 'Import Excel'}
                       </Button> 
                       <Button variant="outline" onClick={handleDownloadTemplate} size="sm"> <Download className="mr-2 h-4 w-4" /> Template </Button> 
-                      <Button variant="destructive" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || allArsEntries.length === 0} size="sm"> <Trash2 className="mr-2 h-4 w-4" /> Clear All</Button> 
+                      <Button variant="destructive" onClick={() => setIsClearAllDialogOpen(true)} disabled={isClearingAll || arsEntries.length === 0} size="sm"> <Trash2 className="mr-2 h-4 w-4" /> Clear All</Button> 
                   </> )}
                 </div>
             </div>
