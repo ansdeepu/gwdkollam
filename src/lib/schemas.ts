@@ -117,17 +117,17 @@ const optionalNumber = (errorMessage: string = "Must be a valid number.") =>
 
 // ARS Schemas
 export const arsWorkStatusOptions = [
-  "Proposal Submitted", 
-  "AS & TS Issued", 
-  "Tendered", 
-  "Selection Notice Issued", 
-  "Work Order Issued", 
-  "Work Initiated", 
-  "Work in Progress", 
-  "Work Failed", 
-  "Work Completed", 
-  "Bill Prepared", 
-  "Payment Completed"
+  "Proposal Submitted",
+  "AS & TS Issued",
+  "Tendered",
+  "Selection Notice Issued",
+  "Work Order Issued",
+  "Work Initiated",
+  "Work in Progress",
+  "Work Failed",
+  "Work Completed",
+  "Bill Prepared",
+  "Payment Completed",
 ] as const;
 
 export const arsTypeOfSchemeOptions = [
