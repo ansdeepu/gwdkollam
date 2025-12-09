@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useArsEntries } from "@/hooks/useArsEntries"; // Updated hook
-import { arsWorkStatusOptions, ArsEntrySchema, type ArsEntryFormData, constituencyOptions, arsTypeOfSchemeOptions, type StaffMember, type SiteWorkStatus, type Constituency, siteWorkStatusOptions } from "@/lib/schemas";
+import { ArsEntrySchema, type ArsEntryFormData, constituencyOptions, arsTypeOfSchemeOptions, type StaffMember, type SiteWorkStatus, type Constituency, arsStatusOptions } from "@/lib/schemas";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save, X, ArrowLeft, ShieldAlert } from "lucide-react";
@@ -31,9 +31,9 @@ export const dynamic = 'force-dynamic';
 const db = getFirestore(app);
 
 const SUPERVISOR_EDITABLE_FIELDS: (keyof ArsEntryFormData)[] = [
-  'latitude', 'longitude', 'workStatus', 'dateOfCompletion', 'noOfBeneficiary', 'workRemarks'
+  'latitude', 'longitude', 'arsStatus', 'dateOfCompletion', 'noOfBeneficiary', 'workRemarks'
 ];
-const SUPERVISOR_EDITABLE_STATUSES: SiteWorkStatus[] = ["Tendered", "Selection Notice Issued", "Work Order Issued", "Work in Progress", "Work Initiated", "Work Failed", "Work Completed", "Bill Prepared", "Payment Completed"];
+const SUPERVISOR_EDITABLE_STATUSES: (typeof arsStatusOptions)[number][] = ["Tendered", "Selection Notice Issued", "Work Order Issued", "Work in Progress", "Work Initiated", "Work Failed", "Work Completed", "Bill Prepared", "Payment Completed"];
 
 
 const toDateOrNull = (value: any): Date | null => {
@@ -81,8 +81,8 @@ const processDataForForm = (data: any): any => {
 
 const CompletionDateField = ({ isFieldReadOnly }: { isFieldReadOnly: (fieldName: keyof ArsEntryFormData) => boolean }) => {
     const { control } = useFormContext<ArsEntryFormData>();
-    const workStatus = useWatch({ control, name: 'workStatus' });
-    const isRequired = workStatus === 'Work Completed' || workStatus === 'Work Failed';
+    const arsStatus = useWatch({ control, name: 'arsStatus' });
+    const isRequired = arsStatus === 'Work Completed' || arsStatus === 'Work Failed';
 
     return (
         <FormField
@@ -200,7 +200,7 @@ export default function ArsEntryPage() {
           arsBlock: "", latitude: undefined, longitude: undefined, arsNumberOfStructures: undefined,
           arsStorageCapacity: undefined, arsNumberOfFillings: undefined, estimateAmount: undefined,
           arsAsTsDetails: "", tsAmount: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined,
-          arsAwardedAmount: undefined, workStatus: undefined, dateOfCompletion: undefined,
+          arsAwardedAmount: undefined, arsStatus: undefined, dateOfCompletion: undefined,
           totalExpenditure: undefined, noOfBeneficiary: "", workRemarks: "",
           supervisorUid: null,
           supervisorName: null,
@@ -268,7 +268,7 @@ export default function ArsEntryPage() {
             
              if (isSupervisor && user) {
                 const hasPending = await hasPendingUpdateForFile(originalEntry.fileNo, user.uid);
-                const isEditableStatus = originalEntry.workStatus && SUPERVISOR_EDITABLE_STATUSES.includes(originalEntry.workStatus as SiteWorkStatus);
+                const isEditableStatus = originalEntry.arsStatus && SUPERVISOR_EDITABLE_STATUSES.includes(originalEntry.arsStatus as (typeof arsStatusOptions)[number]);
                 
                 if (hasPending || !isEditableStatus) {
                     setIsFormDisabledForSupervisor(true);
@@ -361,11 +361,11 @@ export default function ArsEntryPage() {
     const isConstituencyDisabled = isFieldReadOnly('constituency') || constituencyOptionsForLsg.length <= 1;
 
     const supervisorWorkStatusOptions = isSupervisor
-        ? siteWorkStatusOptions.filter(status =>
-            SUPERVISOR_EDITABLE_STATUSES.includes(status as SiteWorkStatus) ||
+        ? arsStatusOptions.filter(status =>
+            SUPERVISOR_EDITABLE_STATUSES.includes(status as (typeof arsStatusOptions)[number]) ||
             ["Work Completed", "Work Failed"].includes(status)
           )
-        : siteWorkStatusOptions;
+        : arsStatusOptions;
 
     return (
         <div className="space-y-6">
@@ -463,10 +463,10 @@ export default function ArsEntryPage() {
                             />
                           <FormField name="arsTenderedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Tendered Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('arsTenderedAmount')}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsAwardedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Awarded Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('arsAwardedAmount')}/></FormControl><FormMessage /></FormItem>)} />
-                           <FormField name="workStatus" control={form.control} render={({ field }) => (
+                           <FormField name="arsStatus" control={form.control} render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Present Status <span className="text-destructive">*</span></FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value} disabled={isFieldReadOnly('workStatus')}>
+                                    <FormLabel>ARS Status <span className="text-destructive">*</span></FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value} disabled={isFieldReadOnly('arsStatus')}>
                                         <FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl>
                                         <SelectContent>
                                             {supervisorWorkStatusOptions.map(o => (

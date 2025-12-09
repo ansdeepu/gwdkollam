@@ -116,7 +116,20 @@ const optionalNumber = (errorMessage: string = "Must be a valid number.") =>
 }, z.coerce.number({ invalid_type_error: errorMessage }).min(0, "Cannot be negative.").optional());
 
 // ARS Schemas
-export const arsWorkStatusOptions = [] as const;
+export const arsStatusOptions = [
+    "Proposal Submitted", 
+    "AS & TS Issued", 
+    "Tendered", 
+    "Selection Notice Issued", 
+    "Work Order Issued", 
+    "Work Initiated", 
+    "Work in Progress", 
+    "Work Failed", 
+    "Work Completed", 
+    "Bill Prepared", 
+    "Payment Completed"
+] as const;
+
 
 export const arsTypeOfSchemeOptions = [
   "Dugwell Recharge",
@@ -148,7 +161,7 @@ export const ArsEntrySchema = z.object({
   arsSanctionedDate: optionalDateSchema,
   arsTenderedAmount: optionalNumber(),
   arsAwardedAmount: optionalNumber(),
-  workStatus: z.enum(arsWorkStatusOptions, { required_error: "Present status is required." }),
+  arsStatus: z.enum(arsStatusOptions, { required_error: "ARS status is required." }),
   dateOfCompletion: optionalDateSchema,
   totalExpenditure: optionalNumber(),
   noOfBeneficiary: z.string().optional(),
@@ -157,7 +170,7 @@ export const ArsEntrySchema = z.object({
   supervisorName: z.string().optional().nullable(),
   isPending: z.boolean().optional(),
 }).superRefine((data, ctx) => {
-    if ((data.workStatus === 'Work Completed' || data.workStatus === 'Work Failed') && !data.dateOfCompletion) {
+    if ((data.arsStatus === 'Work Completed' || data.arsStatus === 'Work Failed') && !data.dateOfCompletion) {
         ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: "Completion Date is required for this status.",
