@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import type { ArsEntryFormData, SiteWorkStatus } from "@/lib/schemas";
-import { arsTypeOfSchemeOptions, constituencyOptions } from "@/lib/schemas";
+import { arsTypeOfSchemeOptions, constituencyOptions, arsWorkStatusOptions } from "@/lib/schemas";
 import { usePageNavigation } from "@/hooks/usePageNavigation";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -101,6 +101,7 @@ export default function ArsPage() {
   }, [setHeader]);
   
   const { allArsEntries, isLoading: entriesLoading, refetchArsEntries, deleteArsEntry } = useDataStore();
+  const { addArsEntry, clearAllArsData } = useArsEntries();
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
@@ -109,7 +110,6 @@ export default function ArsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setIsNavigating } = usePageNavigation();
-  const { addArsEntry, clearAllArsData } = useArsEntries();
   
   const [currentPage, setCurrentPage] = useState(1);
   useEffect(() => {

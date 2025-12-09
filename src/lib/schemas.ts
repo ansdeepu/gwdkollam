@@ -129,6 +129,7 @@ export const arsStatusOptions = [
     "Bill Prepared", 
     "Payment Completed"
 ] as const;
+export type ArsStatus = typeof arsStatusOptions[number];
 
 
 export const arsTypeOfSchemeOptions = [
@@ -140,6 +141,7 @@ export const arsTypeOfSchemeOptions = [
   "Pond Renovation",
   "Percolation Ponds",
 ] as const;
+
 
 import { SiteDetailSchema, fileStatusOptions, constituencyOptions } from './schemas/DataEntrySchema';
 
@@ -490,4 +492,19 @@ export interface LsgConstituencyMap {
   constituencies: string[]; // Array of associated constituencies
 }
 
+export const arsWorkStatusOptions = [
+    "Proposal Submitted",
+    "AS & TS Issued",
+    "Tendered",
+    "Selection Notice Issued",
+    "Work Order Issued",
+    "Work Initiated",
+    "Work in Progress",
+    "Work Failed",
+    "Work Completed",
+    "Bill Prepared",
+    "Payment Completed"
+] as const;
+
     
+
