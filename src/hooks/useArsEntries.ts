@@ -48,7 +48,6 @@ export function useArsEntries() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Wait until both the user profile and the main data from the store are loaded.
     if (dataStoreLoading || !user) {
         setIsLoading(dataStoreLoading);
         return;
@@ -58,18 +57,14 @@ export function useArsEntries() {
     
     let finalEntries = allArsEntries;
 
-    // If the user is a supervisor, apply a strict filter for ongoing, assigned work.
+    // If the user is a supervisor, filter to show only entries assigned to them.
     if (user.role === "supervisor") {
-        finalEntries = allArsEntries.filter(entry => {
-            const isAssigned = entry.supervisorUid === user.uid;
-            const isActionable = SUPERVISOR_EDITABLE_STATUSES.includes(entry.arsStatus as ArsStatus);
-            return isAssigned && isActionable;
-        });
+        finalEntries = allArsEntries.filter(entry => entry.supervisorUid === user.uid);
     }
     
     setArsEntries(finalEntries);
     setIsLoading(false);
-}, [user, allArsEntries, dataStoreLoading]); // Re-run this effect whenever user or data changes.
+}, [user, allArsEntries, dataStoreLoading]);
 
 
   const addArsEntry = useCallback(async (entryData: ArsEntryFormData) => {
@@ -98,11 +93,9 @@ export function useArsEntries() {
 
     if (approveUpdateId && approvingUser && user.role === 'editor') {
         const batch = writeBatch(db);
-        // Correctly update the main ARS entry with the new data
         batch.update(docRef, payload);
         
         const updateRef = doc(db, PENDING_UPDATES_COLLECTION, approveUpdateId);
-        // Mark the pending update as approved
         batch.update(updateRef, { 
             status: 'approved', 
             reviewedByUid: approvingUser.uid, 
