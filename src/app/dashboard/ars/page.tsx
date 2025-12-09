@@ -146,7 +146,14 @@ export default function ArsPage() {
   };
 
   const { filteredSites, lastCreatedDate } = useMemo(() => {
-    let sites = [...allArsEntries];
+    if (!user) return { filteredSites: [], lastCreatedDate: null };
+
+    let sites: ArsEntry[] = [];
+    if (user.role === 'editor' || user.role === 'viewer') {
+        sites = [...allArsEntries];
+    } else if (user.role === 'supervisor') {
+        sites = allArsEntries.filter(entry => entry.supervisorUid === user.uid);
+    }
     
     if (schemeTypeFilter !== 'all') {
       sites = sites.filter(site => site.arsTypeOfScheme === schemeTypeFilter);
@@ -217,7 +224,7 @@ export default function ArsPage() {
     }, null as Date | null);
 
     return { filteredSites: sites, lastCreatedDate: lastCreated };
-  }, [allArsEntries, searchTerm, startDate, endDate, schemeTypeFilter, constituencyFilter]);
+  }, [allArsEntries, searchTerm, startDate, endDate, schemeTypeFilter, constituencyFilter, user]);
 
   useEffect(() => {
     const pageFromUrl = searchParams.get('page');
@@ -582,7 +589,7 @@ export default function ArsPage() {
                   <p className="text-xs text-muted-foreground">Filter by completion date, scheme, and/or constituency</p>
                    <div className="flex items-center gap-4">
                         <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
-                            Total Sites: <span className="font-bold text-primary">{allArsEntries.length}</span>
+                            Total Sites: <span className="font-bold text-primary">{filteredSites.length}</span>
                         </div>
                         {lastCreatedDate && (
                             <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
