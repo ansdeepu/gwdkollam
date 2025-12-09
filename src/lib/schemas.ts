@@ -116,7 +116,19 @@ const optionalNumber = (errorMessage: string = "Must be a valid number.") =>
 }, z.coerce.number({ invalid_type_error: errorMessage }).min(0, "Cannot be negative.").optional());
 
 // ARS Schemas
-export const arsWorkStatusOptions = [] as const;
+export const arsWorkStatusOptions = [
+  "Proposal Submitted", 
+  "AS & TS Issued", 
+  "Tendered", 
+  "Selection Notice Issued", 
+  "Work Order Issued", 
+  "Work Initiated", 
+  "Work in Progress", 
+  "Work Failed", 
+  "Work Completed", 
+  "Bill Prepared", 
+  "Payment Completed"
+] as const;
 
 export const arsTypeOfSchemeOptions = [
   "Dugwell Recharge",
