@@ -97,9 +97,17 @@ export function useArsEntries() {
 
     if (approveUpdateId && approvingUser && user.role === 'editor') {
         const batch = writeBatch(db);
+        // Correctly update the main ARS entry with the new data
         batch.update(docRef, payload);
+        
         const updateRef = doc(db, PENDING_UPDATES_COLLECTION, approveUpdateId);
-        batch.update(updateRef, { status: 'approved', reviewedByUid: approvingUser.uid, reviewedAt: serverTimestamp() });
+        // Mark the pending update as approved
+        batch.update(updateRef, { 
+            status: 'approved', 
+            reviewedByUid: approvingUser.uid, 
+            reviewedAt: serverTimestamp() 
+        });
+        
         await batch.commit();
     } else if (user.role === 'editor') {
         await updateDoc(docRef, payload);
