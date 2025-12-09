@@ -61,14 +61,30 @@ export function useArsEntries() {
       // Supervisors should see ALL sites assigned to them, regardless of work status.
       // The logic for what they can *edit* is handled on the entry form page itself.
       if (user.role === "supervisor") {
-        const pendingUpdates = await getPendingUpdates(null, user.uid);
-        const pendingFileNos = new Set(pendingUpdates.map(p => p.fileNo));
+        const updates = await getPendingUpdates(null, user.uid);
 
+        // includes both pending & approved updates
+        const fileNosWithTheirUpdates = new Set(
+            updates
+                .filter(u => u.submittedByUid === user.uid)
+                .map(u => u.fileNo)
+        );
+    
         finalEntries = allArsEntries.filter(entry => {
             const isAssigned = entry.supervisorUid === user.uid;
-            const hasPendingUpdate = pendingFileNos.has(entry.fileNo);
-            // A supervisor sees an entry if it's assigned to them OR they have submitted an update for it.
-            return isAssigned || hasPendingUpdate;
+    
+            const hasTheirUpdate = fileNosWithTheirUpdates.has(entry.fileNo);
+    
+            const isCompletedOrFailed =
+                entry.arsStatus === "Work Completed" ||
+                entry.arsStatus === "Work Failed";
+    
+            // Supervisor sees file if ANY of these are true:
+            return (
+                isAssigned ||
+                hasTheirUpdate ||
+                (isAssigned && isCompletedOrFailed)
+            );
         });
       }
       
