@@ -164,13 +164,6 @@ export default function ArsEntryPage() {
         if (isSupervisor) {
             if (!isEditing || isFormDisabledForSupervisor) return true;
     
-            const isCompletedOrFailed = watchedArsStatus === 'Work Completed' || watchedArsStatus === 'Work Failed';
-    
-            if (isCompletedOrFailed) {
-                // When status is 'Work Completed' or 'Work Failed', only allow editing these two fields
-                return !['workRemarks', 'noOfBeneficiary'].includes(fieldName);
-            }
-    
             // For other editable statuses, use the standard editable fields list
             return !SUPERVISOR_EDITABLE_FIELDS.includes(fieldName);
         }
@@ -513,7 +506,7 @@ export default function ArsEntryPage() {
                                         >
                                         <FormControl><SelectTrigger><SelectValue placeholder="Assign a Supervisor" /></SelectTrigger></FormControl>
                                         <SelectContent>
-                                            <SelectItem value="_unassign_" onSelect={(e) => { e.preventDefault(); form.setValue('supervisorUid', null); form.setValue('supervisorName', null); }}>-- Unassign --</SelectItem>
+                                            <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); form.setValue('supervisorUid', null); form.setValue('supervisorName', null); }}>-- Unassign --</SelectItem>
                                             {supervisorList.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.designation})</SelectItem>)}
                                         </SelectContent>
                                         </Select>
