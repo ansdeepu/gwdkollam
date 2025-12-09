@@ -1,4 +1,3 @@
-
 // src/app/dashboard/ars/page.tsx
 "use client";
 
@@ -148,11 +147,18 @@ export default function ArsPage() {
   const { filteredSites, lastCreatedDate } = useMemo(() => {
     if (!user) return { filteredSites: [], lastCreatedDate: null };
 
-    let sites: ArsEntry[] = [];
-    if (user.role === 'editor' || user.role === 'viewer') {
-        sites = [...allArsEntries];
-    } else if (user.role === 'supervisor') {
-        sites = allArsEntries.filter(entry => entry.supervisorUid === user.uid);
+    // ROLE-BASED FILTER
+    let sites: ArsEntry[] = [...allArsEntries];
+
+    if (user) {
+        if (user.role === "supervisor") {
+            sites = sites.filter(site => {
+                const isAssigned = site.supervisorUid === user.uid;
+                // Note: The logic for pending updates is not available here.
+                // This will correctly show assigned sites.
+                return isAssigned;
+            });
+        }
     }
     
     if (schemeTypeFilter !== 'all') {
