@@ -5,7 +5,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc, serverTimestamp, getDoc, type DocumentData, Timestamp, writeBatch, query, getDocs, where } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import type { ArsEntryFormData, SiteWorkStatus } from '@/lib/schemas';
+import type { ArsEntryFormData, SiteWorkStatus, ArsStatus } from '@/lib/schemas';
 import { useAuth, type UserProfile } from './useAuth';
 import { toast } from './use-toast';
 import { parse, isValid } from 'date-fns';
@@ -24,7 +24,7 @@ export type ArsEntry = ArsEntryFormData & {
   isPending?: boolean;
 };
 
-const SUPERVISOR_EDITABLE_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated"];
+const SUPERVISOR_EDITABLE_STATUSES: ArsStatus[] = ["Work Order Issued"];
 
 const processArsDoc = (docSnap: DocumentData): ArsEntry => {
     const data = docSnap.data();
@@ -62,7 +62,7 @@ export function useArsEntries() {
     if (user.role === "supervisor") {
         finalEntries = allArsEntries.filter(entry => {
             const isAssigned = entry.supervisorUid === user.uid;
-            const isOngoing = entry.workStatus && SUPERVISOR_EDITABLE_STATUSES.includes(entry.workStatus as SiteWorkStatus);
+            const isOngoing = entry.arsStatus && SUPERVISOR_EDITABLE_STATUSES.includes(entry.arsStatus as ArsStatus);
             return isAssigned && isOngoing;
         });
     }
