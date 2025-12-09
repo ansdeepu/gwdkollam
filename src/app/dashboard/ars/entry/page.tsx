@@ -1,9 +1,9 @@
+
 // src/app/dashboard/ars/entry/page.tsx
 "use client";
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useArsEntries } from "@/hooks/useArsEntries"; // Updated hook
 import { ArsEntrySchema, type ArsEntryFormData, constituencyOptions, arsTypeOfSchemeOptions, type StaffMember, type SiteWorkStatus, type Constituency, arsStatusOptions } from "@/lib/schemas";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -121,13 +121,13 @@ export default function ArsEntryPage() {
     const { user, fetchAllUsers } = useAuth();
     const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
     const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
-    const { allLsgConstituencyMaps, allArsEntries } = useDataStore();
+    const { allLsgConstituencyMaps, allArsEntries, addArsEntry, deleteArsEntry } = useDataStore();
     
     const entryIdToEdit = searchParams.get('id');
     const approveUpdateId = searchParams.get("approveUpdateId");
     const pageToReturnTo = searchParams.get('page');
     
-    const { isLoading: entriesLoading, addArsEntry, getArsEntryById, updateArsEntry } = useArsEntries();
+    const { isLoading: entriesLoading, getArsEntryById, updateArsEntry } = useArsEntries();
     const { createArsPendingUpdate, getPendingUpdateById, hasPendingUpdateForFile } = usePendingUpdates();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
@@ -157,20 +157,24 @@ export default function ArsEntryPage() {
     const watchedArsStatus = useWatch({ control: form.control, name: 'arsStatus' });
 
     const isFieldReadOnly = (fieldName: keyof ArsEntryFormData): boolean => {
-        if (canEdit) return false;
-        if (isViewer) return true;
+        if (canEdit) return false; // Editor can edit everything
+        if (isViewer) return true; // Viewer can edit nothing
+    
         if (isSupervisor) {
             if (!isEditing || isFormDisabledForSupervisor) return true;
-            
+    
             const isCompletedOrFailed = watchedArsStatus === 'Work Completed' || watchedArsStatus === 'Work Failed';
+    
             if (isCompletedOrFailed) {
-                // Only allow editing remarks and beneficiary count when completed/failed
+                // When status is 'Work Completed' or 'Work Failed', only allow editing these two fields
                 return !['workRemarks', 'noOfBeneficiary'].includes(fieldName);
             }
     
+            // For other editable statuses, use the standard editable fields list
             return !SUPERVISOR_EDITABLE_FIELDS.includes(fieldName);
         }
-        return true;
+    
+        return true; // Default to read-only for any other unhandled case
     };
 
 
@@ -279,13 +283,9 @@ export default function ArsEntryPage() {
                 const hasPending = await hasPendingUpdateForFile(originalEntry.fileNo, user.uid);
                 const isEditableStatus = originalEntry.arsStatus && SUPERVISOR_EDITABLE_STATUSES.includes(originalEntry.arsStatus as (typeof arsStatusOptions)[number]);
                 
-                if (hasPending || !isEditableStatus) {
+                if (hasPending) {
                     setIsFormDisabledForSupervisor(true);
-                    if (hasPending) {
-                        toast({ title: "Edits Locked", description: "This site has a pending update and cannot be edited until reviewed.", duration: 6000 });
-                    } else if (!isEditableStatus) {
-                        toast({ title: "Edits Locked", description: "This site is no longer in an editable status.", duration: 6000, variant: 'destructive' });
-                    }
+                    toast({ title: "Edits Locked", description: "This site has a pending update and cannot be edited until reviewed.", duration: 6000 });
                 }
             }
 
