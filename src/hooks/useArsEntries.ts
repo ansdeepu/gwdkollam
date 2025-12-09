@@ -24,7 +24,7 @@ export type ArsEntry = ArsEntryFormData & {
   isPending?: boolean;
 };
 
-const SUPERVISOR_EDITABLE_STATUSES: ArsStatus[] = ["Work Order Issued", "Work in Progress", "Work Failed", "Work Completed"];
+const SUPERVISOR_EDITABLE_STATUSES: ArsStatus[] = ["Work Order Issued", "Work in Progress"];
 
 const processArsDoc = (docSnap: DocumentData): ArsEntry => {
     const data = docSnap.data();
@@ -73,7 +73,7 @@ export function useArsEntries() {
             const supervisorSubmittedUpdate = fileNosWithSupervisorUpdates.has(entry.fileNo);
     
             return (
-                isAssigned ||
+                isAssigned || 
                 supervisorSubmittedUpdate
             );
         });
