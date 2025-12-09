@@ -117,7 +117,6 @@ const optionalNumber = (errorMessage: string = "Must be a valid number.") =>
 
 // ARS Schemas
 export const arsWorkStatusOptions = [
-  "Under Process",
   "Proposal Submitted",
   "AS & TS Issued",
   "Tendered",
