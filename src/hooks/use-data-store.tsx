@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { getFirestore, collection, onSnapshot, query, Timestamp, DocumentData, orderBy, getDocs, type QuerySnapshot, where } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, Timestamp, DocumentData, orderBy, getDocs, type QuerySnapshot, where, deleteDoc, doc } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 import type { DataEntryFormData } from '@/lib/schemas/DataEntrySchema';
@@ -74,6 +74,7 @@ interface DataStoreContextType {
     isLoading: boolean;
     refetchFileEntries: () => void;
     refetchArsEntries: () => void;
+    deleteArsEntry: (id: string) => Promise<void>;
     refetchStaffMembers: () => void;
     refetchAgencyApplications: () => void;
     refetchLsgConstituencyMaps: () => void;
@@ -122,6 +123,15 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
     const refetchLsgConstituencyMaps = useCallback(() => setRefetchCounters(c => ({ ...c, lsg: c.lsg + 1 })), []);
     const refetchRateDescriptions = useCallback(() => setRefetchCounters(c => ({ ...c, rates: c.rates + 1 })), []);
     const refetchBidders = useCallback(() => setRefetchCounters(c => ({ ...c, bidders: c.bidders + 1 })), []);
+
+     const deleteArsEntry = useCallback(async (id: string) => {
+        if (!user || user.role !== 'editor') {
+            toast({ title: "Permission Denied", description: "You don't have permission to delete entries.", variant: "destructive" });
+            return;
+        }
+        await deleteDoc(doc(db, 'arsEntries', id));
+        refetchArsEntries(); // This will trigger the listener to refetch
+    }, [user, refetchArsEntries]);
 
 
     useEffect(() => {
@@ -242,6 +252,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             isLoading,
             refetchFileEntries,
             refetchArsEntries,
+            deleteArsEntry,
             refetchStaffMembers,
             refetchAgencyApplications,
             refetchLsgConstituencyMaps,

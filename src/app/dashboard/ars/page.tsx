@@ -100,7 +100,7 @@ export default function ArsPage() {
     setHeader('Artificial Recharge Schemes (ARS)', 'A dedicated module for managing all ARS sites, including data entry, reporting, and bulk imports.');
   }, [setHeader]);
   
-  const { allArsEntries, isLoading: entriesLoading, refetchArsEntries, deleteArsEntry, clearAllArsData, addArsEntry } = useDataStore();
+  const { allArsEntries, isLoading: entriesLoading, refetchArsEntries, deleteArsEntry } = useDataStore();
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
@@ -109,6 +109,7 @@ export default function ArsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setIsNavigating } = usePageNavigation();
+  const { addArsEntry, clearAllArsData } = useArsEntries();
   
   const [currentPage, setCurrentPage] = useState(1);
   useEffect(() => {
@@ -199,7 +200,7 @@ export default function ArsPage() {
           site.arsTypeOfScheme,
           site.localSelfGovt,
           site.arsBlock,
-          site.workStatus,
+          site.arsStatus,
           site.supervisorName,
           site.workRemarks
         ].filter(Boolean).map(String).join(' ').toLowerCase();
@@ -321,7 +322,7 @@ export default function ArsPage() {
       "Sanctioned Date": formatDateSafe(site.arsSanctionedDate),
       "Tendered Amount (₹)": site.arsTenderedAmount ?? 'N/A',
       "Awarded Amount (₹)": site.arsAwardedAmount ?? 'N/A',
-      "Present Status": site.workStatus || 'N/A',
+      "Present Status": site.arsStatus || 'N/A',
       "Completion Date": formatDateSafe(site.dateOfCompletion),
       "No. of Beneficiaries": site.noOfBeneficiary || 'N/A',
       "Remarks": site.workRemarks || 'N/A',
@@ -488,7 +489,7 @@ export default function ArsPage() {
               arsSanctionedDate: parseDate((rowData as any)['Sanctioned Date']),
               arsTenderedAmount: Number((rowData as any)['Tendered Amount']) || undefined,
               arsAwardedAmount: Number((rowData as any)['Awarded Amount']) || undefined,
-              workStatus: (rowData as any)['Present Status'] || undefined,
+              arsStatus: (rowData as any)['Present Status'] || undefined,
               dateOfCompletion: parseDate((rowData as any)['Completion Date']),
               totalExpenditure: cleanedExpenditure ? Number(cleanedExpenditure) : undefined,
               noOfBeneficiary: String((rowData as any)['No. of Beneficiaries'] || ''),
@@ -637,14 +638,14 @@ export default function ArsPage() {
                                         <TableRow key={site.id}>
                                             <TableCell className="w-[80px]">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                                             <TableCell className="w-[150px]">{site.fileNo}</TableCell>
-                                            <TableCell className={cn("font-medium whitespace-normal break-words", getStatusColorClass(site.workStatus as SiteWorkStatus))}>
+                                            <TableCell className={cn("font-medium whitespace-normal break-words", getStatusColorClass(site.arsStatus as SiteWorkStatus))}>
                                               {site.nameOfSite}
                                             </TableCell>
-                                            <TableCell className={cn("whitespace-normal break-words", getStatusColorClass(site.workStatus as SiteWorkStatus))}>
+                                            <TableCell className={cn("whitespace-normal break-words", getStatusColorClass(site.arsStatus as SiteWorkStatus))}>
                                               {site.arsTypeOfScheme || 'N/A'}
                                             </TableCell>
                                             <TableCell className="whitespace-normal break-words">{site.localSelfGovt || 'N/A'}</TableCell>
-                                            <TableCell>{site.workStatus ?? 'N/A'}</TableCell>
+                                            <TableCell>{site.arsStatus ?? 'N/A'}</TableCell>
                                             <TableCell>{formatDateSafe(site.dateOfCompletion)}</TableCell>
                                             <TableCell className="text-center w-[120px]">
                                                 <div className="flex items-center justify-center space-x-1">
@@ -730,7 +731,7 @@ export default function ArsPage() {
                     <DetailRow label="AS/TS Amount (₹)" value={viewingSite.tsAmount} />
                     <DetailRow label="Tendered Amount (₹)" value={viewingSite.arsTenderedAmount} />
                     <DetailRow label="Awarded Amount (₹)" value={viewingSite.arsAwardedAmount} />
-                    <DetailRow label="Present Status" value={viewingSite.workStatus} />
+                    <DetailRow label="Present Status" value={viewingSite.arsStatus} />
                     <DetailRow label="Completion Date" value={viewingSite.dateOfCompletion} />
                     <DetailRow label="Expenditure (₹)" value={viewingSite.totalExpenditure} />
                     <DetailRow label="Remarks" value={viewingSite.workRemarks} />
