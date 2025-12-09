@@ -490,7 +490,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                       render={({ field }) => (
                                           <FormItem>
                                               <FormLabel>Supervisor</FormLabel>
-                                              {isFieldReadOnly(false) ? ( // Use "false" for supervisor because this is a primary editable field for them.
+                                              {isFieldReadOnly(false) ? ( 
                                                   <Input
                                                       readOnly
                                                       value={getValues('supervisorName') || "Not Assigned"}
@@ -498,16 +498,22 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                                   />
                                               ) : (
                                                   <Select
-                                                      onValueChange={(uid) => {
-                                                          const staff = supervisorList.find((s) => s.uid === uid);
-                                                          field.onChange(uid === '_clear_' ? undefined : uid);
-                                                          setValue("supervisorName", staff?.name || "");
-                                                          setValue("supervisorDesignation", staff?.designation || undefined);
+                                                      onValueChange={(value) => {
+                                                          if (value === '_clear_') {
+                                                              field.onChange(undefined);
+                                                              setValue("supervisorName", "");
+                                                              setValue("supervisorDesignation", undefined);
+                                                          } else {
+                                                              const staff = supervisorList.find((s) => s.uid === value);
+                                                              field.onChange(value);
+                                                              setValue("supervisorName", staff?.name || "");
+                                                              setValue("supervisorDesignation", staff?.designation || undefined);
+                                                          }
                                                       }}
                                                       value={field.value || ""}>
                                                       <FormControl><SelectTrigger><SelectValue placeholder="Assign a Supervisor" /></SelectTrigger></FormControl>
                                                       <SelectContent>
-                                                          <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); setValue("supervisorName", ""); setValue("supervisorDesignation", undefined); }}>-- Clear Selection --</SelectItem>
+                                                          <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
                                                           {supervisorList.map((s) => (<SelectItem key={s.uid} value={s.uid}>{s.name} ({s.designation})</SelectItem>))}
                                                       </SelectContent>
                                                   </Select>
