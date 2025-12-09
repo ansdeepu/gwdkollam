@@ -59,25 +59,24 @@ export function useArsEntries() {
       let finalEntries = allArsEntries;
   
       if (user.role === "supervisor") {
-          const updates = await getPendingUpdates(null, user.uid);
-      
-          const fileNosWithSupervisorUpdates = new Set(
-              updates
-                  .filter(u => u.submittedByUid === user.uid)  
-                  .map(u => u.fileNo)
-          );
-      
-          finalEntries = allArsEntries.filter(entry => {
-              const isAssigned = entry.supervisorUid === user.uid;
-      
-              const supervisorSubmittedUpdate = fileNosWithSupervisorUpdates.has(entry.fileNo);
-      
-              // Once admin approves, supervisorSubmittedUpdate becomes FALSE → should disappear
-              return (
-                  isAssigned || 
-                  supervisorSubmittedUpdate
-              );
-          });
+        const updates = await getPendingUpdates(null, user.uid);
+    
+        const fileNosWithSupervisorUpdates = new Set(
+            updates
+                .filter(u => u.submittedByUid === user.uid)  
+                .map(u => u.fileNo)
+        );
+    
+        finalEntries = allArsEntries.filter(entry => {
+            const isAssigned = entry.supervisorUid === user.uid;
+    
+            const supervisorSubmittedUpdate = fileNosWithSupervisorUpdates.has(entry.fileNo);
+    
+            return (
+                isAssigned ||
+                supervisorSubmittedUpdate
+            );
+        });
       }
       
       setArsEntries(finalEntries);
@@ -90,7 +89,7 @@ export function useArsEntries() {
   }, [user, allArsEntries, dataStoreLoading, getPendingUpdates]);
 
 
-  const addArsEntry = useCallback(async (entryData: ArsEntryFormData) => {
+  const addArsEntry = useCallback(async (entryData: ArsEntryFormData): Promise<string> => {
     if (!user || user.role !== 'editor') throw new Error("Permission denied.");
     
     const payload = {
