@@ -24,7 +24,7 @@ export type ArsEntry = ArsEntryFormData & {
   isPending?: boolean;
 };
 
-const SUPERVISOR_EDITABLE_STATUSES: ArsStatus[] = ["Work Order Issued"];
+const SUPERVISOR_EDITABLE_STATUSES: ArsStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Work Failed", "Work Completed"];
 
 const processArsDoc = (docSnap: DocumentData): ArsEntry => {
     const data = docSnap.data();
@@ -62,8 +62,8 @@ export function useArsEntries() {
     if (user.role === "supervisor") {
         finalEntries = allArsEntries.filter(entry => {
             const isAssigned = entry.supervisorUid === user.uid;
-            const isOngoing = entry.arsStatus && SUPERVISOR_EDITABLE_STATUSES.includes(entry.arsStatus as ArsStatus);
-            return isAssigned && isOngoing;
+            const isActionable = entry.arsStatus === "Work Order Issued";
+            return isAssigned && isActionable;
         });
     }
     
