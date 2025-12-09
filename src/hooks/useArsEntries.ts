@@ -59,29 +59,25 @@ export function useArsEntries() {
       let finalEntries = allArsEntries;
   
       if (user.role === "supervisor") {
-        const updates = await getPendingUpdates(null, user.uid);
-    
-        const fileNosWithSupervisorUpdates = new Set(
-            updates
-                .filter(u => u.submittedByUid === user.uid)  
-                .map(u => u.fileNo)
-        );
-    
-        finalEntries = allArsEntries.filter(entry => {
-            const isAssigned = entry.supervisorUid === user.uid;
-    
-            const supervisorSubmittedUpdate = fileNosWithSupervisorUpdates.has(entry.fileNo);
-    
-            const isCompletedOrFailed =
-                entry.arsStatus === "Work Completed" ||
-                entry.arsStatus === "Work Failed";
-    
-            return (
-                isAssigned ||
-                supervisorSubmittedUpdate ||
-                isCompletedOrFailed
-            );
-        });
+          const updates = await getPendingUpdates(null, user.uid);
+      
+          const fileNosWithSupervisorUpdates = new Set(
+              updates
+                  .filter(u => u.submittedByUid === user.uid)  
+                  .map(u => u.fileNo)
+          );
+      
+          finalEntries = allArsEntries.filter(entry => {
+              const isAssigned = entry.supervisorUid === user.uid;
+      
+              const supervisorSubmittedUpdate = fileNosWithSupervisorUpdates.has(entry.fileNo);
+      
+              // Once admin approves, supervisorSubmittedUpdate becomes FALSE → should disappear
+              return (
+                  isAssigned || 
+                  supervisorSubmittedUpdate
+              );
+          });
       }
       
       setArsEntries(finalEntries);
