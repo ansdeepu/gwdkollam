@@ -58,36 +58,19 @@ export function useArsEntries() {
       setIsLoading(true);
       let finalEntries = allArsEntries;
   
-      if (user.role === "supervisor") {
-          const updates = await getPendingUpdates(null, user.uid);
-      
-          const pendingFileNos = new Set(
-              updates
-                  .filter(u => u.submittedByUid === user.uid && u.status === 'pending')
-                  .map(u => u.fileNo)
-          );
-      
-          finalEntries = allArsEntries.filter(entry => {
-              const isAssigned = entry.supervisorUid === user.uid;
-              if (!isAssigned) return false;
-      
-              const isCompletedOrFailed =
-                  entry.workStatus === "Work Completed" ||
-                  entry.workStatus === "Work Failed";
-      
-              const isPendingSupervisorUpdate = pendingFileNos.has(entry.fileNo);
-      
-              // RULE 1: If supervisor submitted update and admin approval is pending -> show
-              if (isPendingSupervisorUpdate) return true;
-      
-              // RULE 2: If work is completed/failed and admin has approved (i.e., no longer pending) -> hide
-              if (isCompletedOrFailed && !isPendingSupervisorUpdate) {
-                  return false;
-              }
-      
-              // RULE 3: Ongoing work always visible
-              return true;
-          });
+      // SUPERVISOR VISIBILITY LOGIC
+      if (user?.role === "supervisor") {
+        finalEntries = finalEntries.filter((entry) => {
+            // Supervisor should only see files assigned to them
+            const isAssigned = entry.supervisorUid === user.uid;
+    
+            // Hide after admin marks Work Completed / Work Failed
+            const hiddenStatuses = ["Work Completed", "Work Failed"];
+    
+            const shouldHide = hiddenStatuses.includes(entry.arsStatus ?? "");
+    
+            return isAssigned && !shouldHide;
+        });
       }
       
       setArsEntries(finalEntries);
@@ -97,7 +80,7 @@ export function useArsEntries() {
     if (!dataStoreLoading) {
       processEntries();
     }
-  }, [user, allArsEntries, dataStoreLoading, getPendingUpdates]);
+  }, [user, allArsEntries, dataStoreLoading]);
 
 
   const addArsEntry = useCallback(async (entryData: ArsEntryFormData): Promise<string> => {
