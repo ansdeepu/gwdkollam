@@ -63,7 +63,7 @@ export default function HelpPage() {
             <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/30">
                 <Code className="h-6 w-6 text-sky-600"/>
                 <div>
-                    <h4 className="font-semibold">Next.js & React</h4>
+                    <h4 className="font-semibold">Next.js (v14.2.5) & React (v18.3.1)</h4>
                     <p className="text-xs text-muted-foreground">For a fast, server-rendered user interface.</p>
                 </div>
             </div>
