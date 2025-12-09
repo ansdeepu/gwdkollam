@@ -46,26 +46,40 @@ export function useArsEntries() {
   const { allArsEntries, isLoading: dataStoreLoading, refetchArsEntries } = useDataStore(); // Use the central store
   const [arsEntries, setArsEntries] = useState<ArsEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { getPendingUpdates } = usePendingUpdates();
 
   useEffect(() => {
-    if (dataStoreLoading || !user) {
+    const processEntries = async () => {
+      if (dataStoreLoading || !user) {
         setIsLoading(dataStoreLoading);
         return;
-    }
+      }
+  
+      setIsLoading(true);
+      let finalEntries = allArsEntries;
+  
+      // Supervisors should see ALL sites assigned to them, regardless of work status.
+      // The logic for what they can *edit* is handled on the entry form page itself.
+      if (user.role === "supervisor") {
+        const pendingUpdates = await getPendingUpdates(null, user.uid);
+        const pendingFileNos = new Set(pendingUpdates.map(p => p.fileNo));
 
-    setIsLoading(true);
-    
-    let finalEntries = allArsEntries;
+        finalEntries = allArsEntries.filter(entry => {
+            const isAssigned = entry.supervisorUid === user.uid;
+            const hasPendingUpdate = pendingFileNos.has(entry.fileNo);
+            // A supervisor sees an entry if it's assigned to them OR they have submitted an update for it.
+            return isAssigned || hasPendingUpdate;
+        });
+      }
+      
+      setArsEntries(finalEntries);
+      setIsLoading(false);
+    };
 
-    // Supervisors should see ALL sites assigned to them, regardless of work status.
-    // The logic for what they can *edit* is handled on the entry form page itself.
-    if (user.role === "supervisor") {
-        finalEntries = allArsEntries.filter(entry => entry.supervisorUid === user.uid);
+    if (!dataStoreLoading) {
+      processEntries();
     }
-    
-    setArsEntries(finalEntries);
-    setIsLoading(false);
-}, [user, allArsEntries, dataStoreLoading]);
+  }, [user, allArsEntries, dataStoreLoading, getPendingUpdates]);
 
 
   const addArsEntry = useCallback(async (entryData: ArsEntryFormData) => {
@@ -91,6 +105,10 @@ export function useArsEntries() {
         ...entryData,
         updatedAt: serverTimestamp(),
     };
+    
+    delete (payload as any).id;
+    delete (payload as any).createdAt;
+
 
     if (approveUpdateId && approvingUser && user.role === 'editor') {
         const batch = writeBatch(db);
