@@ -64,12 +64,11 @@ export function useArsEntries() {
             // Supervisor should only see files assigned to them
             const isAssigned = entry.supervisorUid === user.uid;
     
-            // Hide after admin marks Work Completed / Work Failed
-            const hiddenStatuses = ["Work Completed", "Work Failed"];
+            // Supervisor should only see files that are actionable for them
+            const actionableStatuses: ArsStatus[] = ["Work Order Issued", "Work in Progress"];
+            const isActionable = actionableStatuses.includes(entry.arsStatus ?? "");
     
-            const shouldHide = hiddenStatuses.includes(entry.arsStatus ?? "");
-    
-            return isAssigned && !shouldHide;
+            return isAssigned && isActionable;
         });
       }
       
