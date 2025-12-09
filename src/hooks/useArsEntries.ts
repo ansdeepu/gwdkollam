@@ -57,7 +57,8 @@ export function useArsEntries() {
     
     let finalEntries = allArsEntries;
 
-    // If the user is a supervisor, filter to show only entries assigned to them.
+    // Supervisors should see ALL sites assigned to them, regardless of work status.
+    // The logic for what they can *edit* is handled on the entry form page itself.
     if (user.role === "supervisor") {
         finalEntries = allArsEntries.filter(entry => entry.supervisorUid === user.uid);
     }
@@ -93,8 +94,10 @@ export function useArsEntries() {
 
     if (approveUpdateId && approvingUser && user.role === 'editor') {
         const batch = writeBatch(db);
+        // Apply the actual changes to the ARS entry
         batch.update(docRef, payload);
         
+        // Mark the pending update as approved
         const updateRef = doc(db, PENDING_UPDATES_COLLECTION, approveUpdateId);
         batch.update(updateRef, { 
             status: 'approved', 
