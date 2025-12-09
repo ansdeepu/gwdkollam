@@ -59,30 +59,35 @@ export function useArsEntries() {
       let finalEntries = allArsEntries;
   
       if (user.role === "supervisor") {
-        const updates = await getPendingUpdates(null, user.uid);
-    
-        const fileNosWithSupervisorUpdates = new Set(
-            updates
-                .filter(u => u.submittedByUid === user.uid && u.status === 'pending')
-                .map(u => u.fileNo)
-        );
-    
-        finalEntries = allArsEntries.filter(entry => {
-            const isAssigned = entry.supervisorUid === user.uid;
-
-            if (!isAssigned) return false;
-
-            const hasPendingUpdate = fileNosWithSupervisorUpdates.has(entry.fileNo);
-            const isCompletedOrFailed = entry.workStatus === "Work Completed" || entry.workStatus === "Work Failed";
-
-            // If the status is final, only show if there's a pending update from this supervisor.
-            if (isCompletedOrFailed) {
-                return hasPendingUpdate;
-            }
-
-            // Otherwise (for ongoing statuses), always show if assigned.
-            return true;
-        });
+          const updates = await getPendingUpdates(null, user.uid);
+      
+          const pendingFileNos = new Set(
+              updates
+                  .filter(u => u.submittedByUid === user.uid && u.status === 'pending')
+                  .map(u => u.fileNo)
+          );
+      
+          finalEntries = allArsEntries.filter(entry => {
+              const isAssigned = entry.supervisorUid === user.uid;
+              if (!isAssigned) return false;
+      
+              const isCompletedOrFailed =
+                  entry.workStatus === "Work Completed" ||
+                  entry.workStatus === "Work Failed";
+      
+              const isPendingSupervisorUpdate = pendingFileNos.has(entry.fileNo);
+      
+              // RULE 1: If supervisor submitted update and admin approval is pending -> show
+              if (isPendingSupervisorUpdate) return true;
+      
+              // RULE 2: If work is completed/failed and admin has approved (i.e., no longer pending) -> hide
+              if (isCompletedOrFailed && !isPendingSupervisorUpdate) {
+                  return false;
+              }
+      
+              // RULE 3: Ongoing work always visible
+              return true;
+          });
       }
       
       setArsEntries(finalEntries);
