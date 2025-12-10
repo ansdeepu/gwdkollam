@@ -230,40 +230,36 @@ export default function DashboardPage() {
           />
         </div>
         
-        {currentUser?.role !== 'supervisor' && (
-          <>
-            <div id="finance">
-              <FinanceOverview 
-                allFileEntries={dashboardData.allFileEntries}
-                onOpenDialog={handleOpenDialog}
-                dates={financeDates}
-                onSetDates={setFinanceDates}
-              />
-            </div>
-            
-            <div id="ars">
-              <ArsStatusOverview 
-                onOpenDialog={handleOpenDialog}
-                dates={arsDates}
-                onSetDates={setArsDates}
-              />
-            </div>
-            
-            <div id="rig-registration">
-              <RigRegistrationOverview 
-                agencyApplications={agencyApplications}
-                onOpenDialog={handleOpenDialog}
-              />
-            </div>
-            
-            <div id="rig-financials">
-              <RigFinancialSummary
-                  applications={agencyApplications}
-                  onCellClick={handleOpenDialog}
-                />
-            </div>
-          </>
-        )}
+        <div id="finance">
+          <FinanceOverview 
+            allFileEntries={dashboardData.allFileEntries}
+            onOpenDialog={handleOpenDialog}
+            dates={financeDates}
+            onSetDates={setFinanceDates}
+          />
+        </div>
+        
+        <div id="ars">
+          <ArsStatusOverview 
+            onOpenDialog={handleOpenDialog}
+            dates={arsDates}
+            onSetDates={setArsDates}
+          />
+        </div>
+        
+        <div id="rig-registration">
+          <RigRegistrationOverview 
+            agencyApplications={agencyApplications}
+            onOpenDialog={handleOpenDialog}
+          />
+        </div>
+        
+        <div id="rig-financials">
+          <RigFinancialSummary
+              applications={agencyApplications}
+              onCellClick={handleOpenDialog}
+            />
+        </div>
         
         <div id="work-progress">
           <WorkProgress
@@ -273,14 +269,18 @@ export default function DashboardPage() {
           />
         </div>
 
-        {currentUser?.role !== 'supervisor' && (
-          <div className="grid grid-cols-1 gap-6">
-            <UserActivity 
-              allUsers={allUsers}
-              staffMembers={staffMembers}
-            />
-          </div>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <SupervisorWork
+            allFileEntries={dashboardData.allFileEntries}
+            allUsers={allUsers}
+            staffMembers={staffMembers}
+            onOpenDialog={handleOpenDialog}
+          />
+          <UserActivity 
+            allUsers={allUsers}
+            staffMembers={staffMembers}
+          />
+        </div>
 
         <DashboardDialogs 
           dialogState={dialogState}
