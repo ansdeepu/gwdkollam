@@ -269,7 +269,7 @@ export default function DashboardPage() {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div id="supervisor-work" className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <SupervisorWork
             allFileEntries={dashboardData.allFileEntries}
             allUsers={allUsers}

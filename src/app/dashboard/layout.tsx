@@ -33,6 +33,7 @@ const sections = [
   { id: 'ars', title: 'ARS' },
   { id: 'rig-registration', title: 'Rig Registration' },
   { id: 'rig-financials', title: 'Rig Financials' },
+  { id: 'supervisor-work', title: "Supervisor's Ongoing Work" },
   { id: 'work-progress', title: 'Work Progress' },
 ];
 
