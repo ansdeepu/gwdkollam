@@ -28,19 +28,19 @@ const getStatusRowClass = (status?: E_tenderStatus): string => {
     if (!status) return "";
     switch (status) {
         case 'Tender Process':
-            return "text-gray-600";
+            return "bg-gray-500/5 hover:bg-gray-500/10 text-gray-700";
         case 'Bid Opened':
-            return "text-orange-600";
+            return "bg-orange-500/5 hover:bg-orange-500/10 text-orange-700";
         case 'Retender':
-            return "text-yellow-600";
+            return "bg-yellow-500/5 hover:bg-yellow-500/10 text-yellow-700";
         case 'Tender Cancelled':
-            return "text-red-600";
+            return "bg-red-500/5 hover:bg-red-500/10 text-red-700 line-through";
         case 'Selection Notice Issued':
-            return "text-blue-600";
+            return "bg-blue-500/5 hover:bg-blue-500/10 text-blue-700";
         case 'Work Order Issued':
-            return "text-green-600";
+            return "bg-green-500/5 hover:bg-green-500/10 text-green-700";
         case 'Supply Order Issued':
-            return "text-purple-600";
+            return "bg-purple-500/5 hover:bg-purple-500/10 text-purple-700";
         default:
             return "";
     }
@@ -376,3 +376,5 @@ export default function ETenderListPage() {
         </div>
     );
 }
+
+    

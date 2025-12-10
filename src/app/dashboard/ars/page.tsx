@@ -57,20 +57,20 @@ const formatDateSafe = (dateInput: any): string => {
 };
 
 // New helper function for color coding
-const getStatusColorClass = (status: SiteWorkStatus | undefined | null): string => {
-    if (!status) return 'text-muted-foreground';
+const getStatusRowClass = (status: SiteWorkStatus | undefined | null): string => {
+    if (!status) return "";
     
     const completedOrFailed: SiteWorkStatus[] = ["Work Completed", "Bill Prepared", "Payment Completed", "Utilization Certificate Issued", "Work Failed"];
     if (completedOrFailed.includes(status as SiteWorkStatus)) {
-        return 'text-red-600';
+        return 'bg-red-500/10 hover:bg-red-500/20 text-red-700';
     }
     
     if (status === 'To be Refunded') {
-        return 'text-yellow-600';
+        return 'bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-700';
     }
     
     // For all other statuses, including ongoing ones
-    return 'text-green-600';
+    return 'bg-green-500/5 hover:bg-green-500/15 text-green-700';
 };
 
 
@@ -621,13 +621,13 @@ export default function ArsPage() {
                             {paginatedSites.length > 0 ? (
                                 paginatedSites.map((site, index) => {
                                     return (
-                                        <TableRow key={site.id}>
+                                        <TableRow key={site.id} className={getStatusRowClass(site.arsStatus as SiteWorkStatus)}>
                                             <TableCell className="w-[80px]">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
-                                            <TableCell className="w-[150px]">{site.fileNo}</TableCell>
-                                            <TableCell className={cn("font-medium whitespace-normal break-words", getStatusColorClass(site.arsStatus as SiteWorkStatus))}>
+                                            <TableCell className="w-[150px] font-medium">{site.fileNo}</TableCell>
+                                            <TableCell className="font-semibold whitespace-normal break-words">
                                               {site.nameOfSite}
                                             </TableCell>
-                                            <TableCell className={cn("whitespace-normal break-words", getStatusColorClass(site.arsStatus as SiteWorkStatus))}>
+                                            <TableCell className="whitespace-normal break-words">
                                               {site.arsTypeOfScheme || 'N/A'}
                                             </TableCell>
                                             <TableCell className="whitespace-normal break-words">{site.localSelfGovt || 'N/A'}</TableCell>
@@ -763,5 +763,7 @@ export default function ArsPage() {
     </div>
   );
 }
+
+    
 
     
