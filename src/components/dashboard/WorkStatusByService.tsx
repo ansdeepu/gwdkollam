@@ -1,4 +1,3 @@
-
 // src/components/dashboard/WorkStatusByService.tsx
 "use client";
 
@@ -9,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Activity } from "lucide-react";
 import type { DataEntryFormData, SitePurpose, SiteWorkStatus, UserRole } from '@/lib/schemas';
 import { cn } from '@/lib/utils';
-import { ScrollArea } from '../ui/scroll-area';
 
 const dashboardWorkStatusOrder: SiteWorkStatus[] = ["Under Process", "Addl. AS Awaited", "To be Refunded", "Awaiting Dept. Rig", "To be Tendered", "TS Pending", "Tendered", "Selection Notice Issued", "Work Order Issued", "Work in Progress", "Work Failed", "Work Completed"];
 const dashboardServiceOrder: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev", "MWSS", "MWSS Ext", "Pumping Scheme", "MWSS Pump Reno", "HPS", "HPR"];
@@ -124,10 +122,10 @@ export default function WorkStatusByService({ allFileEntries, onOpenDialog, curr
         <CardDescription>Breakdown of application statuses across different service categories. Click on a number to see detailed reports.</CardDescription>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="w-full h-[400px]">
+        <div className="w-full overflow-x-auto">
           {workStatusByServiceData && workStatusByServiceData.length > 0 ? (
             <Table>
-              <TableHeader className="sticky top-0 bg-secondary z-10">
+              <TableHeader>
                 <TableRow>
                   <TableHead className="font-semibold p-2">Work Category</TableHead>
                   {[...dashboardServiceOrder, 'Total'].map(service => (
@@ -160,7 +158,7 @@ export default function WorkStatusByService({ allFileEntries, onOpenDialog, curr
           ) : (
             <p className="text-center text-muted-foreground py-4">No work status data available for services.</p>
           )}
-        </ScrollArea>
+        </div>
       </CardContent>
     </Card>
   );
