@@ -81,7 +81,7 @@ const processDataForForm = (data: any): any => {
 };
 
 const CompletionDateField = ({ isFieldReadOnly }: { isFieldReadOnly: (fieldName: keyof ArsEntryFormData) => boolean }) => {
-    const { control } } = useFormContext<ArsEntryFormData>();
+    const { control } = useFormContext<ArsEntryFormData>();
     const arsStatus = useWatch({ control, name: 'arsStatus' });
     const isRequired = arsStatus === 'Work Completed' || arsStatus === 'Work Failed';
 
@@ -116,22 +116,22 @@ const CompletionDateField = ({ isFieldReadOnly }: { isFieldReadOnly: (fieldName:
 
 
 export default function ArsEntryPage() {
-    const { setHeader } } = usePageHeader();
+    const { setHeader } = usePageHeader();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { user, fetchAllUsers } } = useAuth();
-    const { staffMembers, isLoading: staffIsLoading } } = useStaffMembers();
+    const { user, fetchAllUsers } = useAuth();
+    const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
     const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
-    const { allLsgConstituencyMaps, allArsEntries, addArsEntry, deleteArsEntry } } = useDataStore();
+    const { allLsgConstituencyMaps, allArsEntries, addArsEntry, deleteArsEntry } = useDataStore();
     
     const entryIdToEdit = searchParams.get('id');
     const approveUpdateId = searchParams.get("approveUpdateId");
     const pageToReturnTo = searchParams.get('page');
     
-    const { isLoading: entriesLoading, getArsEntryById, updateArsEntry } } = useArsEntries();
-    const { createArsPendingUpdate, getPendingUpdateById, hasPendingUpdateForFile } } = usePendingUpdates();
+    const { isLoading: entriesLoading, getArsEntryById, updateArsEntry } = useArsEntries();
+    const { createArsPendingUpdate, getPendingUpdateById, hasPendingUpdateForFile } = usePendingUpdates();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const { toast } } = useToast();
+    const { toast } = useToast();
     
     const isEditing = !!entryIdToEdit;
     const canEdit = user?.role === 'editor';
@@ -527,5 +527,7 @@ export default function ArsEntryPage() {
         </div>
     );
 }
+
+    
 
     
