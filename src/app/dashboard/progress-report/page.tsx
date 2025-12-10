@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { BarChart3, XCircle, Loader2, Play, FileDown, Landmark } from 'lucide-react';
-import { format, startOfDay, endOfDay, isValid, isBefore, isWithinInterval, parseISO, startOfMonth, endOfMonth, isAfter } from 'date-fns';
+import { format, startOfDay, endOfDay, isWithinInterval, isValid, isBefore, parseISO, startOfMonth, endOfMonth, isAfter, parse } from 'date-fns';
 import { cn } from "@/lib/utils";
 import {
   applicationTypeOptions,
@@ -311,6 +311,7 @@ export default function ProgressReportPage() {
                 statsObj.previousBalance++; 
                 statsObj.previousBalanceData.push(siteWithFileContext); 
             }
+            // Only count completions inside the period for the 'completed' metric
             if (isCompletedInPeriod) { 
                 statsObj.completed++; 
                 statsObj.completedData.push(siteWithFileContext); 
@@ -909,7 +910,7 @@ export default function ProgressReportPage() {
           <DialogHeader className="p-6 pb-4 border-b">
             <DialogTitle>{detailDialogTitle}</DialogTitle>
             <DialogDescription>
-              Displaying {detailDialogData.length} records.
+              Showing {detailDialogData.length} records.
             </DialogDescription>
           </DialogHeader>
           <div className="flex-1 min-h-0 px-6 py-4">
