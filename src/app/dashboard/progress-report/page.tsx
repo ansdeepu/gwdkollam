@@ -297,8 +297,10 @@ export default function ProgressReportPage() {
         const isCompletedInPeriod = completionDate && isWithinInterval(completionDate, { start: sDate, end: eDate });
         const isToBeRefunded = workStatus && REFUNDED_STATUSES.includes(workStatus);
         
+        // Corrected logic: An application contributes to previous balance if it was remitted before the period
+        // and NOT completed before the period started.
         const wasActiveBeforePeriod = fileRemittanceDate && isBefore(fileRemittanceDate, sDate) &&
-                                  (!completionDate || isAfter(completionDate, sDate));
+                                  (!completionDate || !isBefore(completionDate, sDate));
 
         const updateStats = (statsObj: ProgressStats) => {
             if (isCurrentApplicationInPeriod) { 
@@ -795,8 +797,8 @@ export default function ProgressReportPage() {
       <Card className="shadow-lg bg-background no-print">
           <CardHeader>
             <div className="flex flex-col sm:flex-row flex-wrap gap-2 pt-4">
-                <Input type="date" placeholder="From Date" className="w-full sm:w-auto" value={startDate ? format(startDate, 'yyyy-MM-dd') : ''} onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value) : undefined)} />
-                <Input type="date" placeholder="To Date" className="w-full sm:w-auto" value={endDate ? format(endDate, 'yyyy-MM-dd') : ''} onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value) : undefined)} />
+                <Input type="date" placeholder="From Date" className="w-full sm:w-auto" value={startDate ? format(startDate, 'yyyy-MM-dd') : ''} onChange={(e) => setStartDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)} />
+                <Input type="date" placeholder="To Date" className="w-full sm:w-auto" value={endDate ? format(endDate, 'yyyy-MM-dd') : ''} onChange={(e) => setEndDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)} />
 
                 <Button onClick={handleGenerateReport} disabled={isFiltering || !startDate || !endDate}>
                     {isFiltering ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Play className="mr-2 h-4 w-4" />}
