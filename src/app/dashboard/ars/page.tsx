@@ -62,7 +62,7 @@ const getStatusRowClass = (status: SiteWorkStatus | undefined | null): string =>
     
     const completedOrFailed: SiteWorkStatus[] = ["Work Completed", "Bill Prepared", "Payment Completed", "Utilization Certificate Issued", "Work Failed"];
     if (completedOrFailed.includes(status as SiteWorkStatus)) {
-        return 'bg-red-500/10 hover:bg-red-500/20 text-red-700';
+        return 'bg-red-500/5 hover:bg-red-500/15 text-red-700';
     }
     
     if (status === 'To be Refunded') {
@@ -579,7 +579,12 @@ export default function ArsPage() {
                 <Button onClick={() => {setStartDate(""); setEndDate(""); setSchemeTypeFilter("all"); setConstituencyFilter("all");}} variant="ghost" className="h-9 px-3"><XCircle className="mr-2 h-4 w-4"/>Clear Filters</Button>
               </div>
               <div className="flex justify-between items-center gap-4">
-                  <p className="text-xs text-muted-foreground">Filter by completion date, scheme, and/or constituency</p>
+                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <span className="font-semibold">Row Color Legend:</span>
+                        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-500/80"></div><span>Ongoing</span></div>
+                        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-yellow-500/80"></div><span>To be Refunded</span></div>
+                        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-red-500/80"></div><span>Completed / Failed</span></div>
+                   </div>
                    <div className="flex items-center gap-4">
                         <div className="text-sm font-medium text-muted-foreground whitespace-nowrap">
                             Total Sites: <span className="font-bold text-primary">{filteredSites.length}</span>

@@ -223,7 +223,7 @@ export default function ETenderListPage() {
         <div className="space-y-6">
             <Card>
                 <CardContent className="p-4 space-y-4">
-                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <div className="relative flex-grow w-full">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                             <Input
@@ -234,20 +234,20 @@ export default function ETenderListPage() {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
-                            <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as E_tenderStatus | 'all')}>
-                                <SelectTrigger className="w-full sm:w-[200px]">
-                                    <SelectValue placeholder="Filter by Status" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All Statuses</SelectItem>
-                                    {eTenderStatusOptions.map(status => (
-                                        <SelectItem key={status} value={status}>{status}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            {user?.role === 'editor' && (
-                                <div className="flex flex-col items-end gap-1">
+                        <div className="flex flex-col items-end gap-2 w-full sm:w-auto">
+                           <div className="flex w-full sm:w-auto items-center gap-2">
+                                <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as E_tenderStatus | 'all')}>
+                                    <SelectTrigger className="w-full sm:w-[200px]">
+                                        <SelectValue placeholder="Filter by Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Statuses</SelectItem>
+                                        {eTenderStatusOptions.map(status => (
+                                            <SelectItem key={status} value={status}>{status}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {user?.role === 'editor' && (
                                     <div className="flex items-center gap-2">
                                         <Button onClick={() => router.push('/dashboard/bidders')} variant="secondary" className="shrink-0">
                                             <Users className="mr-2 h-4 w-4" /> Bidders List
@@ -256,15 +256,24 @@ export default function ETenderListPage() {
                                             <PlusCircle className="mr-2 h-4 w-4" /> Create New
                                         </Button>
                                     </div>
-                                    {lastCreatedDate && (
-                                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground self-end mt-1">
-                                            <Clock className="h-3 w-3"/>
-                                            Last created: <span className="font-semibold text-primary/90">{format(lastCreatedDate, 'dd/MM/yy, hh:mm a')}</span>
-                                        </div>
-                                    )}
+                                )}
+                            </div>
+                             {lastCreatedDate && (
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground self-end mt-1">
+                                    <Clock className="h-3 w-3"/>
+                                    Last created: <span className="font-semibold text-primary/90">{format(lastCreatedDate, 'dd/MM/yy, hh:mm a')}</span>
                                 </div>
                             )}
                         </div>
+                    </div>
+                    <div className="flex justify-end items-center gap-4 mt-4 pt-4 border-t text-xs text-muted-foreground">
+                        <span className="font-semibold">Row Color Legend:</span>
+                        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-gray-400"></div><span>Tender Process</span></div>
+                        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-orange-400"></div><span>Bid Opened</span></div>
+                        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-blue-400"></div><span>Selection Notice</span></div>
+                        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-400"></div><span>Work/Supply Order</span></div>
+                        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-yellow-400"></div><span>Retender</span></div>
+                        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-red-400"></div><span>Cancelled</span></div>
                     </div>
                 </CardContent>
             </Card>
