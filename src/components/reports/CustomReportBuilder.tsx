@@ -73,10 +73,10 @@ export default function CustomReportBuilder() {
 
   const handleGenerateReport = useCallback(() => {
     if (selectedFields.length === 0) {
-      toast({ title: "No Fields Selected", description: "Please select at least one field.", variant: "destructive" });
-      return;
+        toast({ title: "No Fields Selected", description: "Please select at least one field for the report.", variant: "destructive" });
+        return;
     }
-    
+
     let sourceData: (DataEntryFormData | ArsEntryFormData)[] = [];
     if (selectedPage === 'deposit') {
         sourceData = allFileEntries.filter(e => !e.applicationType || !PRIVATE_APPLICATION_TYPES.includes(e.applicationType));
@@ -90,45 +90,60 @@ export default function CustomReportBuilder() {
     const toDate = endDate ? endOfDay(endDate) : null;
     let filteredData = sourceData;
 
-    // Apply Filters
+    // Filter by Date Range
     if (fromDate && toDate) {
         filteredData = filteredData.filter(entry => {
-            const dateToTest = selectedPage === 'ars' ? (entry as ArsEntryFormData).arsSanctionedDate : (entry as DataEntryFormData).remittanceDetails?.[0]?.dateOfRemittance;
+            const dateToTest = selectedPage === 'ars'
+                ? (entry as ArsEntryFormData).arsSanctionedDate
+                : (entry as DataEntryFormData).remittanceDetails?.[0]?.dateOfRemittance;
             const entryDate = safeParseDate(dateToTest);
             return entryDate ? isWithinInterval(entryDate, { start: fromDate, end: toDate }) : false;
         });
     }
 
-    const filterBySiteProperty = (data: (DataEntryFormData | ArsEntryFormData)[], siteProp: 'purpose' | 'localSelfGovt' | 'constituency', filterValue: string) => {
-        if (filterValue === 'all') return data;
-        return data.filter(entry => {
-            if ('siteDetails' in entry && entry.siteDetails) {
-                return entry.siteDetails.some(site => site[siteProp] === filterValue);
+    // Unpack entries with multiple sites into individual rows
+    let siteLevelData: ReportableEntry[] = [];
+    if (selectedPage === 'deposit' || selectedPage === 'private') {
+        filteredData.forEach(entry => {
+            const fileEntry = entry as DataEntryFormData;
+            if (fileEntry.siteDetails && fileEntry.siteDetails.length > 0) {
+                fileEntry.siteDetails.forEach(site => {
+                    siteLevelData.push({ ...fileEntry, ...site, siteDetails: undefined });
+                });
+            } else {
+                 siteLevelData.push({ ...fileEntry, siteDetails: undefined });
             }
-            if(selectedPage === 'ars'){
-                 const key = siteProp === 'purpose' ? 'arsTypeOfScheme' : siteProp;
-                 return (entry as any)[key] === filterValue;
-            }
-            return false;
         });
-    };
-
-    filteredData = filterBySiteProperty(filteredData, 'purpose', selectedPurpose);
-    filteredData = filterBySiteProperty(filteredData, 'localSelfGovt', selectedLsg);
-    filteredData = filterBySiteProperty(filteredData, 'constituency', selectedConstituency);
-
-    if (selectedAppType !== 'all') {
-        filteredData = filteredData.filter(entry => ('applicationType' in entry && entry.applicationType === selectedAppType));
+    } else {
+        siteLevelData = filteredData;
     }
 
-    // Generate Report Rows
+    // Apply Site-level Filters on unpacked data
+    if (selectedPurpose !== 'all') {
+        siteLevelData = siteLevelData.filter(entry => ((entry as any).purpose || (entry as any).arsTypeOfScheme) === selectedPurpose);
+    }
+    if (selectedLsg !== 'all') {
+        siteLevelData = siteLevelData.filter(entry => (entry as any).localSelfGovt === selectedLsg);
+    }
+    if (selectedConstituency !== 'all') {
+        siteLevelData = siteLevelData.filter(entry => (entry as any).constituency === selectedConstituency);
+    }
+    if (selectedAppType !== 'all') {
+        siteLevelData = siteLevelData.filter(entry => ('applicationType' in entry && entry.applicationType === selectedAppType));
+    }
+    
+    // Generate Report Rows from the final, site-level data
     const selectedFieldObjects = reportableFields.filter(f => selectedFields.includes(f.id));
     const headers = selectedFieldObjects.map(f => f.label);
-    const dataForReport = filteredData.map(entry => {
+    const dataForReport = siteLevelData.map(entry => {
         const row: ReportRow = {};
         selectedFieldObjects.forEach(field => {
             const value = field.accessor(entry as any);
-            row[field.label] = value === null || value === undefined ? 'N/A' : value;
+            if (typeof value === 'object' && value instanceof Date) {
+                 row[field.label] = formatDateHelper(value);
+            } else {
+                 row[field.label] = value === null || value === undefined ? 'N/A' : value;
+            }
         });
         return row;
     });
@@ -158,9 +173,50 @@ export default function CustomReportBuilder() {
       toast({ title: "No report data to export.", variant: "destructive" });
       return;
     }
-    // Excel generation logic remains the same...
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Custom_Report');
+    
+    worksheet.addRow(reportHeaders).font = { bold: true };
+
+    reportData.forEach(row => {
+        const rowData = reportHeaders.map(header => row[header]);
+        worksheet.addRow(rowData);
+    });
+
+    worksheet.columns.forEach(column => {
+        let maxLength = 0;
+        column.eachCell!({ includeEmpty: true }, cell => {
+            const columnLength = cell.value ? String(cell.value).length : 10;
+            if (columnLength > maxLength) {
+                maxLength = columnLength;
+            }
+        });
+        column.width = maxLength < 15 ? 15 : maxLength + 2;
+    });
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `GWD_Custom_Report_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    toast({ title: "Excel Exported", description: "Custom report has been downloaded." });
   };
   
+  const formatDateHelper = (date: Date | string | null | undefined): string => {
+    if (!date) return 'N/A';
+    try {
+        const d = date instanceof Date ? date : new Date(date);
+        return isValid(d) ? format(d, "dd/MM/yyyy") : 'Invalid Date';
+    } catch {
+        return 'Invalid Date';
+    }
+  };
+
   return (
     <div className="space-y-6">
         <Card>
@@ -238,3 +294,6 @@ export default function CustomReportBuilder() {
     </div>
   );
 }
+
+// Add a new type to handle both entry types
+type ReportableEntry = (DataEntryFormData | ArsEntryFormData) & { [key: string]: any };

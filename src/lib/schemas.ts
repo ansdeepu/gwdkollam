@@ -234,48 +234,75 @@ const formatDateHelper = (date: Date | string | null | undefined): string => {
   }
 };
 
-import { DataEntryFormData, applicationTypeDisplayMap } from './schemas/DataEntrySchema';
-export const reportableFields: Array<{ id: string; label: string; accessor: (entry: DataEntryFormData) => string | number | undefined | null }> = [
+import { DataEntryFormData, applicationTypeDisplayMap, SitePurpose } from './schemas/DataEntrySchema';
+type ReportableEntry = DataEntryFormData | ArsEntryFormData;
+
+export const reportableFields: Array<{ id: string; label: string; accessor: (entry: ReportableEntry) => any, purpose?: SitePurpose[], arsApplicable?: boolean }> = [
   // === Main File Details ===
-  { id: 'fileNo', label: 'File No.', accessor: (entry) => entry.fileNo },
-  { id: 'applicantName', label: 'Applicant Name', accessor: (entry) => entry.applicantName },
-  { id: 'phoneNo', label: 'Phone No.', accessor: (entry) => entry.phoneNo },
-  { id: 'applicationType', label: 'Application Type', accessor: (entry) => entry.applicationType ? applicationTypeDisplayMap[entry.applicationType] : undefined },
-  { id: 'fileStatus', label: 'File Status', accessor: (entry) => entry.fileStatus },
-  { id: 'fileRemarks', label: 'File Remarks', accessor: (entry) => entry.remarks },
-
-  // === Remittance Details (Aggregated) ===
-  { id: 'firstRemittanceDate', label: 'First Remittance Date', accessor: (entry) => formatDateHelper(entry.remittanceDetails?.[0]?.dateOfRemittance) },
-  { id: 'allRemittanceDates', label: 'All Remittance Dates', accessor: (entry) => entry.remittanceDetails?.map(rd => formatDateHelper(rd.dateOfRemittance)).join('; ') || 'N/A' },
-  { id: 'totalRemittance', label: 'Total Remittance (₹)', accessor: (entry) => entry.totalRemittance },
-  { id: 'remittanceAccounts', label: 'Remittance Accounts', accessor: (entry) => join(entry.remittanceDetails, 'remittedAccount') },
-
-  // === Site Details (Aggregated) ===
-  { id: 'allSiteNames', label: 'Site Names', accessor: (entry) => join(entry.siteDetails, 'nameOfSite') },
-  { id: 'allLocalSelfGovt', label: 'Local Self Govt (Site)', accessor: (entry) => join(entry.siteDetails, 'localSelfGovt') },
-  { id: 'allConstituencies', label: 'Constituency (Site)', accessor: (entry) => join(entry.siteDetails, 'constituency') },
-  { id: 'allSitePurposes', label: 'Site Purposes', accessor: (entry) => join(entry.siteDetails, 'purpose') },
-  { id: 'allSiteWorkStatuses', label: 'Site Work Statuses', accessor: (entry) => join(entry.siteDetails, 'workStatus') },
-  { id: 'allSiteSupervisors', label: 'Site Supervisors', accessor: (entry) => [...new Set(entry.siteDetails?.map(s => s.supervisorName).filter(Boolean))].join('; ') || 'N/A' },
-  { id: 'allContractors', label: 'Contractor Names', accessor: (entry) => [...new Set(entry.siteDetails?.map(s => s.contractorName).filter(Boolean))].join('; ') || 'N/A' },
-  { id: 'allSiteCompletionDates', label: 'Site Completion Dates', accessor: (entry) => join(entry.siteDetails, 'dateOfCompletion', '; ') },
-  { id: 'allTenderNos', label: 'Tender Nos.', accessor: (entry) => join(entry.siteDetails, 'tenderNo') },
-  { id: 'allTypeOfRigs', label: 'Types of Rig', accessor: (entry) => join(entry.siteDetails, 'typeOfRig') },
-
-  // === Financial Summary (Aggregated) ===
-  { id: 'totalSiteEstimate', label: 'Total Site Estimate (₹)', accessor: (entry) => sum(entry.siteDetails, 'estimateAmount') },
-  { id: 'totalSiteExpenditure', label: 'Total Site Expenditure (₹)', accessor: (entry) => sum(entry.siteDetails, 'totalExpenditure') },
-  { id: 'totalPayment', label: 'Total Payment (₹)', accessor: (entry) => entry.totalPaymentAllEntries },
-  { id: 'overallBalance', label: 'Overall Balance (₹)', accessor: (entry) => entry.overallBalance },
+  { id: 'fileNo', label: 'File No.', accessor: (entry) => entry.fileNo, arsApplicable: true },
+  { id: 'applicantName', label: 'Applicant Name', accessor: (entry) => (entry as DataEntryFormData).applicantName, arsApplicable: false },
+  { id: 'phoneNo', label: 'Phone No.', accessor: (entry) => (entry as DataEntryFormData).phoneNo, arsApplicable: false },
+  { id: 'applicationType', label: 'Application Type', accessor: (entry) => (entry as DataEntryFormData).applicationType ? applicationTypeDisplayMap[(entry as DataEntryFormData).applicationType!] : undefined, arsApplicable: false },
+  { id: 'fileStatus', label: 'File Status', accessor: (entry) => (entry as DataEntryFormData).fileStatus, arsApplicable: false },
+  { id: 'fileRemarks', label: 'File Remarks', accessor: (entry) => (entry as DataEntryFormData).remarks, arsApplicable: false },
   
-  // === Payment Details (Aggregated) ===
-  { id: 'allPaymentDates', label: 'Payment Dates', accessor: (entry) => entry.paymentDetails?.map(pd => formatDateHelper(pd.dateOfPayment)).join('; ') || 'N/A' },
-  { id: 'totalContractorPayment', label: 'Total Contractor Payment (₹)', accessor: (entry) => sum(entry.paymentDetails, 'contractorsPayment') },
-  { id: 'totalGst', label: 'Total GST (₹)', accessor: (entry) => sum(entry.paymentDetails, 'gst') },
-  { id: 'totalIncomeTax', label: 'Total Income Tax (₹)', accessor: (entry) => sum(entry.paymentDetails, 'incomeTax') },
-  { id: 'totalKbcwb', label: 'Total KBCWB (₹)', accessor: (entry) => sum(entry.paymentDetails, 'kbcwb') },
-  { id: 'totalRefundToParty', label: 'Total Refund to Party (₹)', accessor: (entry) => sum(entry.paymentDetails, 'refundToParty') },
-  { id: 'totalRevenueHead', label: 'Total to Revenue Head (₹)', accessor: (entry) => sum(entry.paymentDetails, 'revenueHead') },
+  // === Site Details (Individual) ===
+  { id: 'siteName', label: 'Site Name', accessor: (entry) => (entry as any).nameOfSite, arsApplicable: true },
+  { id: 'sitePurpose', label: 'Site Purpose', accessor: (entry) => (entry as any).purpose || (entry as any).arsTypeOfScheme, arsApplicable: true },
+  { id: 'siteLocalSelfGovt', label: 'Local Self Govt.', accessor: (entry) => (entry as any).localSelfGovt, arsApplicable: true },
+  { id: 'siteConstituency', label: 'Constituency', accessor: (entry) => (entry as any).constituency, arsApplicable: true },
+  { id: 'siteLatitude', label: 'Latitude', accessor: (entry) => (entry as any).latitude, arsApplicable: true },
+  { id: 'siteLongitude', label: 'Longitude', accessor: (entry) => (entry as any).longitude, arsApplicable: true },
+
+  // --- Work Implementation Fields ---
+  { id: 'siteEstimateAmount', label: 'Site Estimate (₹)', accessor: (entry) => (entry as any).estimateAmount, arsApplicable: true },
+  { id: 'siteRemittedAmount', label: 'Site Remitted (₹)', accessor: (entry) => (entry as any).remittedAmount, arsApplicable: false },
+  { id: 'siteTsAmount', label: 'TS Amount (₹)', accessor: (entry) => (entry as any).tsAmount, arsApplicable: true },
+  { id: 'siteTenderNo', label: 'Tender No.', accessor: (entry) => (entry as any).tenderNo, arsApplicable: false },
+  { id: 'siteContractorName', label: 'Contractor', accessor: (entry) => (entry as any).contractorName, arsApplicable: false },
+  { id: 'siteSupervisorName', label: 'Supervisor', accessor: (entry) => (entry as any).supervisorName, arsApplicable: true },
+
+  // --- Survey Details ---
+  { id: 'surveyRecommendedDiameter', label: 'Survey Ø (mm)', accessor: (entry) => (entry as any).surveyRecommendedDiameter, purpose: ['BWC', 'TWC', 'FPW'] },
+  { id: 'surveyRecommendedTD', label: 'Survey TD (m)', accessor: (entry) => (entry as any).surveyRecommendedTD, purpose: ['BWC', 'TWC', 'FPW'] },
+  { id: 'surveyRecommendedOB', label: 'Survey OB (m)', accessor: (entry) => (entry as any).surveyRecommendedOB, purpose: ['BWC'] },
+  { id: 'surveyRecommendedCasingPipe', label: 'Survey Casing (m)', accessor: (entry) => (entry as any).surveyRecommendedCasingPipe, purpose: ['BWC', 'FPW'] },
+  { id: 'surveyRecommendedPlainPipe', label: 'Survey Plain Pipe (m)', accessor: (entry) => (entry as any).surveyRecommendedPlainPipe, purpose: ['TWC'] },
+  { id: 'surveyRecommendedSlottedPipe', label: 'Survey Slotted Pipe (m)', accessor: (entry) => (entry as any).surveyRecommendedSlottedPipe, purpose: ['TWC'] },
+  { id: 'surveyRecommendedMsCasingPipe', label: 'Survey MS Casing (m)', accessor: (entry) => (entry as any).surveyRecommendedMsCasingPipe, purpose: ['TWC'] },
+  { id: 'surveyLocation', label: 'Survey Location', accessor: (entry) => (entry as any).surveyLocation, purpose: ['BWC', 'TWC', 'FPW'] },
+  
+  // --- Drilling Details (Actuals) ---
+  { id: 'drillingDiameter', label: 'Actual Ø (mm)', accessor: (entry) => (entry as any).diameter, purpose: ['BWC', 'TWC', 'FPW', 'BW Dev', 'TW Dev', 'FPW Dev'] },
+  { id: 'drillingPilotDepth', label: 'Pilot Drilling (m)', accessor: (entry) => (entry as any).pilotDrillingDepth, purpose: ['TWC'] },
+  { id: 'drillingTotalDepth', label: 'Actual TD (m)', accessor: (entry) => (entry as any).totalDepth, purpose: ['BWC', 'TWC', 'FPW', 'BW Dev', 'TW Dev', 'FPW Dev'] },
+  { id: 'drillingOB', label: 'Actual OB (m)', accessor: (entry) => (entry as any).surveyOB, purpose: ['BWC'] },
+  { id: 'drillingCasingPipe', label: 'Actual Casing (m)', accessor: (entry) => (entry as any).casingPipeUsed, purpose: ['BWC', 'FPW'] },
+  { id: 'drillingOuterCasing', label: 'Outer Casing (m)', accessor: (entry) => (entry as any).outerCasingPipe, purpose: ['BWC', 'TWC'] },
+  { id: 'drillingInnerCasing', label: 'Inner Casing (m)', accessor: (entry) => (entry as any).innerCasingPipe, purpose: ['BWC'] },
+  { id: 'drillingPlainPipe', label: 'Plain Pipe (m)', accessor: (entry) => (entry as any).surveyPlainPipe, purpose: ['TWC'] },
+  { id: 'drillingSlottedPipe', label: 'Slotted Pipe (m)', accessor: (entry) => (entry as any).surveySlottedPipe, purpose: ['TWC'] },
+  { id: 'drillingYield', label: 'Yield (LPH)', accessor: (entry) => (entry as any).yieldDischarge, purpose: ['BWC', 'TWC', 'FPW', 'BW Dev', 'TW Dev', 'FPW Dev', 'MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'] },
+  { id: 'drillingZoneDetails', label: 'Zone Details (m)', accessor: (entry) => (entry as any).zoneDetails, purpose: ['BWC', 'TWC'] },
+  { id: 'drillingWaterLevel', label: 'Static Water Level (m)', accessor: (entry) => (entry as any).waterLevel, purpose: ['BWC', 'TWC', 'FPW', 'BW Dev', 'TW Dev', 'FPW Dev', 'HPS', 'HPR'] },
+  { id: 'drillingRigType', label: 'Type of Rig', accessor: (entry) => (entry as any).typeOfRig, purpose: ['BWC', 'TWC', 'FPW'] },
+
+  // --- Scheme Details ---
+  { id: 'schemePumpDetails', label: 'Pump Details', accessor: (entry) => (entry as any).pumpDetails, purpose: ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'] },
+  { id: 'schemeTankCapacity', label: 'Tank Capacity (L)', accessor: (entry) => (entry as any).waterTankCapacity, purpose: ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'] },
+  { id: 'schemeTapConnections', label: '# Taps', accessor: (entry) => (entry as any).noOfTapConnections, purpose: ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'] },
+  { id: 'schemeBeneficiaries', label: '# Beneficiaries', accessor: (entry) => (entry as any).noOfBeneficiary, arsApplicable: true },
+  
+  // --- ARS Fields ---
+  { id: 'arsStructures', label: 'ARS # Structures', accessor: (entry) => (entry as any).arsNumberOfStructures, arsApplicable: true },
+  { id: 'arsStorage', label: 'ARS Storage (m³)', accessor: (entry) => (entry as any).arsStorageCapacity, arsApplicable: true },
+  { id: 'arsFillings', label: 'ARS # Fillings', accessor: (entry) => (entry as any).arsNumberOfFillings, arsApplicable: true },
+
+  // --- Work Status ---
+  { id: 'siteWorkStatus', label: 'Work Status', accessor: (entry) => (entry as any).workStatus, arsApplicable: true },
+  { id: 'siteCompletionDate', label: 'Completion Date', accessor: (entry) => formatDateHelper((entry as any).dateOfCompletion), arsApplicable: true },
+  { id: 'siteTotalExpenditure', label: 'Site Expenditure (₹)', accessor: (entry) => (entry as any).totalExpenditure, arsApplicable: true },
+  
 ];
 
 
@@ -507,4 +534,5 @@ export const arsWorkStatusOptions = [
 ] as const;
 
     
+
 
