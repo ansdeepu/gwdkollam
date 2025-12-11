@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export default function ReportBuilderPage() {
   const { setHeader } = usePageHeader();
   useEffect(() => {
-    setHeader('Custom Report Builder', 'Generate custom reports by selecting data sources, filters, and fields.');
+    setHeader('Report Builder', 'Generate custom reports by selecting data sources, filters, and fields.');
   }, [setHeader]);
 
   return (
