@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { reportableFields, sitePurposeOptions, applicationTypeOptions, applicationTypeDisplayMap, constituencyOptions, type ApplicationType, type SitePurpose, type DataEntryFormData, type ArsEntryFormData } from '@/lib/schemas';
+import { reportableFields, sitePurposeOptions, applicationTypeOptions, applicationTypeDisplayMap, constituencyOptions, type ApplicationType, type SitePurpose, type DataEntryFormData, type ArsEntryFormData, arsTypeOfSchemeOptions } from '@/lib/schemas';
 import { useDataStore } from '@/hooks/use-data-store';
 import { useToast } from '@/hooks/use-toast';
 import { format, parse, isValid, startOfDay, endOfDay, isWithinInterval, parseISO } from 'date-fns';
@@ -48,6 +48,7 @@ export default function CustomReportBuilder() {
   const [selectedLsg, setSelectedLsg] = useState<string>('all');
   const [selectedConstituency, setSelectedConstituency] = useState<string>('all');
   const [selectedAppType, setSelectedAppType] = useState<string>('all');
+  const [selectedSchemeType, setSelectedSchemeType] = useState<string>('all');
   
   // Field Selection & Report Data
   const [selectedFields, setSelectedFields] = useState<string[]>([]);
@@ -124,17 +125,24 @@ export default function CustomReportBuilder() {
     }
 
     // Apply Site-level Filters on unpacked data
-    if (selectedPurpose !== 'all') {
-        siteLevelData = siteLevelData.filter(entry => ((entry as any).purpose || (entry as any).arsTypeOfScheme) === selectedPurpose);
+    if (selectedPage === 'ars') {
+        if (selectedSchemeType !== 'all') {
+            siteLevelData = siteLevelData.filter(entry => (entry as ArsEntryFormData).arsTypeOfScheme === selectedSchemeType);
+        }
+    } else {
+        if (selectedPurpose !== 'all') {
+            siteLevelData = siteLevelData.filter(entry => (entry as any).purpose === selectedPurpose);
+        }
+        if (selectedAppType !== 'all') {
+            siteLevelData = siteLevelData.filter(entry => ('applicationType' in entry && entry.applicationType === selectedAppType));
+        }
     }
+    
     if (selectedLsg !== 'all') {
         siteLevelData = siteLevelData.filter(entry => (entry as any).localSelfGovt === selectedLsg);
     }
     if (selectedConstituency !== 'all') {
         siteLevelData = siteLevelData.filter(entry => (entry as any).constituency === selectedConstituency);
-    }
-    if (selectedAppType !== 'all') {
-        siteLevelData = siteLevelData.filter(entry => ('applicationType' in entry && entry.applicationType === selectedAppType));
     }
     
     // Generate Report Rows from the final, site-level data
@@ -158,7 +166,7 @@ export default function CustomReportBuilder() {
     }
     setReportData(dataForReport);
     setReportHeaders(headers);
-  }, [selectedFields, selectedPage, startDate, endDate, selectedPurpose, selectedLsg, selectedConstituency, selectedAppType, allFileEntries, allArsEntries, toast]);
+  }, [selectedFields, selectedPage, startDate, endDate, selectedPurpose, selectedLsg, selectedConstituency, selectedAppType, selectedSchemeType, allFileEntries, allArsEntries, toast]);
 
   const handleClear = () => {
     setSelectedFields([]);
@@ -168,6 +176,7 @@ export default function CustomReportBuilder() {
     setSelectedLsg('all');
     setSelectedConstituency('all');
     setSelectedAppType('all');
+    setSelectedSchemeType('all');
     setReportData(null);
     setReportHeaders([]);
     toast({ title: 'Cleared', description: 'All selections and filters have been reset.' });
@@ -230,10 +239,11 @@ export default function CustomReportBuilder() {
                     <div className="space-y-2"><Label>Data Source</Label><Select value={selectedPage} onValueChange={(v) => setSelectedPage(v as ReportSource)}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="deposit">Deposit Works</SelectItem><SelectItem value="private">Private Deposit Works</SelectItem><SelectItem value="ars">ARS</SelectItem></SelectContent></Select></div>
                     <div className="space-y-2"><Label>From Date</Label><Input type="date" value={startDate ? format(startDate, 'yyyy-MM-dd') : ''} onChange={(e) => setStartDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)} /></div>
                     <div className="space-y-2"><Label>To Date</Label><Input type="date" value={endDate ? format(endDate, 'yyyy-MM-dd') : ''} onChange={(e) => setEndDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)} /></div>
-                    <div className="space-y-2"><Label>Purpose</Label><Select value={selectedPurpose} onValueChange={setSelectedPurpose}><SelectTrigger><SelectValue placeholder="Select Purpose"/></SelectTrigger><SelectContent><SelectItem value="all">All Purposes</SelectItem>{sitePurposeOptions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-2"><Label>Purpose</Label><Select value={selectedPurpose} onValueChange={setSelectedPurpose} disabled={selectedPage === 'ars'}><SelectTrigger><SelectValue placeholder="Select Purpose"/></SelectTrigger><SelectContent><SelectItem value="all">All Purposes</SelectItem>{sitePurposeOptions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-2"><Label>Type of Scheme (ARS)</Label><Select value={selectedSchemeType} onValueChange={setSelectedSchemeType} disabled={selectedPage !== 'ars'}><SelectTrigger><SelectValue placeholder="Select Scheme"/></SelectTrigger><SelectContent><SelectItem value="all">All Scheme Types</SelectItem>{arsTypeOfSchemeOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-2"><Label>Type of Application</Label><Select value={selectedAppType} onValueChange={setSelectedAppType} disabled={selectedPage === 'ars'}><SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger><SelectContent><SelectItem value="all">All Types</SelectItem>{applicationTypeOptions.map(t => <SelectItem key={t} value={t}>{applicationTypeDisplayMap[t]}</SelectItem>)}</SelectContent></Select></div>
                     <div className="space-y-2"><Label>Local Self Govt.</Label><Select value={selectedLsg} onValueChange={setSelectedLsg}><SelectTrigger><SelectValue placeholder="Select LSG"/></SelectTrigger><SelectContent className="max-h-80"><SelectItem value="all">All LSGs</SelectItem>{lsgOptions.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent></Select></div>
                     <div className="space-y-2"><Label>Constituency (LAC)</Label><Select value={selectedConstituency} onValueChange={setSelectedConstituency}><SelectTrigger><SelectValue placeholder="Select Constituency"/></SelectTrigger><SelectContent><SelectItem value="all">All Constituencies</SelectItem>{[...constituencyOptions].sort().map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
-                    <div className="space-y-2"><Label>Type of Application</Label><Select value={selectedAppType} onValueChange={setSelectedAppType} disabled={selectedPage==='ars'}><SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger><SelectContent><SelectItem value="all">All Types</SelectItem>{applicationTypeOptions.map(t => <SelectItem key={t} value={t}>{applicationTypeDisplayMap[t]}</SelectItem>)}</SelectContent></Select></div>
                 </div>
             </CardContent>
         </Card>
@@ -244,7 +254,7 @@ export default function CustomReportBuilder() {
                     <div className="flex justify-between items-center">
                       <div>
                         <h3 className="text-base font-semibold text-primary">Select Report Fields</h3>
-                        <p className="text-sm text-muted-foreground">Choose columns for your report. {selectedPurpose === 'all' && selectedPage !== 'ars' && 'Fields are limited until a specific purpose is selected.'}</p>
+                         <p className="text-sm text-muted-foreground">Choose columns for your report. {selectedPage !== 'ars' && selectedPurpose === 'all' && 'Some fields are available only after selecting a specific purpose.'}</p>
                       </div>
                       <Button variant="link" onClick={handleSelectAllFields} disabled={availableFields.length === 0} className="p-0 h-auto">
                         {selectedFields.length === availableFields.length ? 'Deselect All' : 'Select All'}
@@ -301,3 +311,4 @@ export default function CustomReportBuilder() {
 
 // Add a new type to handle both entry types
 type ReportableEntry = (DataEntryFormData | ArsEntryFormData) & { [key: string]: any };
+
