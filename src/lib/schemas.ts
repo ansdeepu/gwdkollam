@@ -237,7 +237,7 @@ const formatDateHelper = (date: Date | string | null | undefined): string => {
 import { DataEntryFormData, applicationTypeDisplayMap, SitePurpose } from './schemas/DataEntrySchema';
 type ReportableEntry = DataEntryFormData | ArsEntryFormData;
 
-export const reportableFields: Array<{ id: string; label: string; accessor: (entry: ReportableEntry) => any, purpose?: SitePurpose[], arsApplicable?: boolean }> = [
+export const reportableFields: Array<{ id: string; label: string; accessor: (entry: ReportableEntry) => any, purpose?: SitePurpose[], arsApplicable?: boolean, arsOnly?: boolean }> = [
   // === Main File Details ===
   { id: 'fileNo', label: 'File No.', accessor: (entry) => entry.fileNo, arsApplicable: true },
   { id: 'applicantName', label: 'Applicant Name', accessor: (entry) => (entry as DataEntryFormData).applicantName, arsApplicable: false },
@@ -294,14 +294,14 @@ export const reportableFields: Array<{ id: string; label: string; accessor: (ent
   { id: 'schemeBeneficiaries', label: '# Beneficiaries', accessor: (entry) => (entry as any).noOfBeneficiary, arsApplicable: true },
   
   // --- ARS Fields ---
-  { id: 'arsStructures', label: 'ARS # Structures', accessor: (entry) => (entry as any).arsNumberOfStructures, arsApplicable: true },
-  { id: 'arsStorage', label: 'ARS Storage (m³)', accessor: (entry) => (entry as any).arsStorageCapacity, arsApplicable: true },
-  { id: 'arsFillings', label: 'ARS # Fillings', accessor: (entry) => (entry as any).arsNumberOfFillings, arsApplicable: true },
+  { id: 'arsStructures', label: 'ARS # Structures', accessor: (entry) => (entry as any).arsNumberOfStructures, arsOnly: true },
+  { id: 'arsStorage', label: 'ARS Storage (m³)', accessor: (entry) => (entry as any).arsStorageCapacity, arsOnly: true },
+  { id: 'arsFillings', label: 'ARS # Fillings', accessor: (entry) => (entry as any).arsNumberOfFillings, arsOnly: true },
 
   // --- Work Status ---
-  { id: 'siteWorkStatus', label: 'Work Status', accessor: (entry) => (entry as any).workStatus, arsApplicable: true },
-  { id: 'siteCompletionDate', label: 'Completion Date', accessor: (entry) => formatDateHelper((entry as any).dateOfCompletion), arsApplicable: true },
-  { id: 'siteTotalExpenditure', label: 'Site Expenditure (₹)', accessor: (entry) => (entry as any).totalExpenditure, arsApplicable: true },
+  { id: 'siteWorkStatus', label: 'Work Status', accessor: (entry) => (entry as any).workStatus || (entry as any).arsStatus, arsOnly: true },
+  { id: 'siteCompletionDate', label: 'Completion Date', accessor: (entry) => formatDateHelper((entry as any).dateOfCompletion), arsOnly: true },
+  { id: 'siteTotalExpenditure', label: 'Site Expenditure (₹)', accessor: (entry) => (entry as any).totalExpenditure, arsOnly: true },
   
 ];
 
@@ -534,5 +534,6 @@ export const arsWorkStatusOptions = [
 ] as const;
 
     
+
 
 
