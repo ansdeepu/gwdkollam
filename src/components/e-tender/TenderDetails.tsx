@@ -24,6 +24,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { isValid, parseISO } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
 
 import BasicDetailsForm from './BasicDetailsForm';
 import TenderOpeningDetailsForm from './TenderOpeningDetailsForm';
@@ -88,6 +89,7 @@ const DetailRow = ({ label, value, subValue, isCurrency = false, align = 'left' 
 
 export default function TenderDetails() {
     const router = useRouter();
+    const { user } = useAuth();
     const { tender, updateTender } = useTenderData();
     const { addTender, updateTender: saveTenderToDb } = useE_tenders();
     const { allStaffMembers } = useDataStore();
@@ -98,6 +100,7 @@ export default function TenderDetails() {
     const [isClearOpeningDetailsConfirmOpen, setIsClearOpeningDetailsConfirmOpen] = useState(false);
     const [isClearSelectionNoticeConfirmOpen, setIsClearSelectionNoticeConfirmOpen] = useState(false);
 
+    const isReadOnly = user?.role === 'viewer';
 
     const form = useForm<E_tenderFormData>({
         resolver: zodResolver(E_tenderSchema),
@@ -346,7 +349,7 @@ export default function TenderDetails() {
                                         <Building className="h-5 w-5 text-primary"/>
                                         <CardTitle className="text-lg font-semibold text-primary">Basic Details</CardTitle>
                                     </div>
-                                    <Button type="button" size="sm" variant="outline" className="bg-white" onClick={() => setActiveModal('basic')}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                    {!isReadOnly && <Button type="button" size="sm" variant="outline" className="bg-white" onClick={() => setActiveModal('basic')}><Edit className="h-4 w-4 mr-2"/>Edit</Button>}
                                 </CardHeader>
                                 {hasAnyBasicData ? (
                                     <CardContent className="p-6 pt-0">
@@ -401,7 +404,7 @@ export default function TenderDetails() {
                                         <GitBranch className="h-5 w-5 text-primary"/>
                                         <CardTitle className="text-lg font-semibold text-primary">Corrigendum Details ({corrigendumFields.length})</CardTitle>
                                     </div>
-                                    <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('addCorrigendum'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Corrigendum</Button>
+                                    {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('addCorrigendum'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Corrigendum</Button>}
                                 </CardHeader>
                                 {hasAnyCorrigendumData ? (
                                     <CardContent className="p-6 pt-0">
@@ -409,8 +412,8 @@ export default function TenderDetails() {
                                             {corrigendumFields.map((corrigendum, index) => (
                                                 <div key={corrigendum.id} className="p-4 border rounded-md bg-secondary/30 relative group">
                                                     <div className="absolute top-2 right-2 flex items-center gap-1">
-                                                        <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>
-                                                        <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>
+                                                        {!isReadOnly && <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditCorrigendumClick(corrigendum, index)}><Edit className="h-4 w-4"/></Button>}
+                                                        {!isReadOnly && <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeCorrigendum(index)}><Trash2 className="h-4 w-4"/></Button>}
                                                     </div>
                                                     <h4 className="text-sm font-semibold text-primary mb-2">Corrigendum No. {index + 1}</h4>
                                                     <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3 mt-1">
@@ -438,8 +441,8 @@ export default function TenderDetails() {
                                         <CardTitle className="text-lg font-semibold text-primary">Tender Opening Details</CardTitle>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('opening'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
-                                        <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearOpeningDetailsConfirmOpen(true); }}><Trash2 className="h-4 w-4"/></Button>
+                                        {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('opening'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>}
+                                        {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearOpeningDetailsConfirmOpen(true); }}><Trash2 className="h-4 w-4"/></Button>}
                                     </div>
                                 </CardHeader>
                                 {hasAnyOpeningData ? (
@@ -479,7 +482,7 @@ export default function TenderDetails() {
                                         <Users className="h-5 w-5 text-primary"/>
                                         <CardTitle className="text-lg font-semibold text-primary">Bidders ({bidderFields.length})</CardTitle>
                                     </div>
-                                    <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setModalData(null); setActiveModal('addBidder'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Bidder</Button>
+                                    {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setModalData(null); setActiveModal('addBidder'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add Bidder</Button>}
                                 </CardHeader>
                                 {hasAnyBidderData ? (
                                     <CardContent className="p-6 pt-0">
@@ -495,8 +498,8 @@ export default function TenderDetails() {
                                                                 {bidder.status && <Badge variant={bidder.status === 'Accepted' ? 'default' : 'destructive'} className="mt-1">{bidder.status}</Badge>}
                                                             </div>
                                                             <div className="flex items-center gap-1">
-                                                                <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...bidder, index: originalIndex }); setActiveModal('editBidder'); }}><Edit className="h-4 w-4"/></Button>
-                                                                <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeBidder(originalIndex)}><Trash2 className="h-4 w-4"/></Button>
+                                                                {!isReadOnly && <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setModalData({ ...bidder, index: originalIndex }); setActiveModal('editBidder'); }}><Edit className="h-4 w-4"/></Button>}
+                                                                {!isReadOnly && <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeBidder(originalIndex)}><Trash2 className="h-4 w-4"/></Button>}
                                                             </div>
                                                         </div>
                                                         <p className="text-xs text-muted-foreground">{bidder.address}</p>
@@ -525,11 +528,11 @@ export default function TenderDetails() {
                                     <div className="flex items-center gap-2">
                                         {hasAnySelectionNoticeData ? (
                                             <>
-                                                <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('selectionNotice'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
-                                                <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearSelectionNoticeConfirmOpen(true); }}><Trash2 className="h-4 w-4"/></Button>
+                                                {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('selectionNotice'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>}
+                                                {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearSelectionNoticeConfirmOpen(true); }}><Trash2 className="h-4 w-4"/></Button>}
                                             </>
                                         ) : (
-                                            <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('selectionNotice'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
+                                            !isReadOnly && <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('selectionNotice'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
                                         )}
                                     </div>
                                 </CardHeader>
@@ -555,7 +558,7 @@ export default function TenderDetails() {
                                         <ScrollText className="h-5 w-5 text-primary"/>
                                         <CardTitle className="text-lg font-semibold text-primary">{workOrderTitle}</CardTitle>
                                     </div>
-                                    <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('workOrder'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                    {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('workOrder'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>}
                                 </CardHeader>
                                 {hasAnyWorkOrderData ? (
                                     <CardContent className="p-6 pt-0">
@@ -588,7 +591,7 @@ export default function TenderDetails() {
                                                 control={control}
                                                 render={({ field }) => (
                                                     <FormItem>
-                                                        <Select onValueChange={(value) => { field.onChange(value); updateTender({ presentStatus: value as any }); }} value={field.value || undefined}>
+                                                        <Select onValueChange={(value) => { field.onChange(value); updateTender({ presentStatus: value as any }); }} value={field.value || undefined} disabled={isReadOnly}>
                                                             <FormControl><SelectTrigger className="w-full"><SelectValue placeholder="Select current status" /></SelectTrigger></FormControl>
                                                             <SelectContent>{dynamicStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                                                         </Select>
@@ -614,6 +617,7 @@ export default function TenderDetails() {
                                                         updateTender({ remarks: e.target.value });
                                                     }}
                                                     placeholder="Add any remarks about the current status..."
+                                                    readOnly={isReadOnly}
                                                 />
                                             </FormControl>
                                             <FormMessage />
@@ -624,19 +628,21 @@ export default function TenderDetails() {
                         </Card>
                         
                          <div className="mt-6 flex flex-col items-center gap-6">
-                            <TooltipProvider>
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <Button type="button" size="lg" onClick={handleFinalSave} disabled={isSubmitting}>
-                                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                                            Save All Changes & Exit
-                                        </Button>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Persists all locally made changes to the database and returns to the list.</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                            </TooltipProvider>
+                            {!isReadOnly && 
+                              <TooltipProvider>
+                                  <Tooltip>
+                                      <TooltipTrigger asChild>
+                                          <Button type="button" size="lg" onClick={handleFinalSave} disabled={isSubmitting}>
+                                              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                                              Save All Changes & Exit
+                                          </Button>
+                                      </TooltipTrigger>
+                                      <TooltipContent>
+                                          <p>Persists all locally made changes to the database and returns to the list.</p>
+                                      </TooltipContent>
+                                  </Tooltip>
+                              </TooltipProvider>
+                            }
 
                              <PdfReportDialogs />
                         </div>

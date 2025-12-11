@@ -1,3 +1,4 @@
+
 // src/app/dashboard/user-management/page.tsx
 "use client";
 
@@ -43,6 +44,8 @@ export default function UserManagementPage() {
   const [usersLoading, setUsersLoading] = useState(true);
 
   const canManage = user?.role === 'editor';
+  const isViewer = user?.role === 'viewer';
+
 
   const loadUsers = useCallback(async () => {
     if (!user || !user.isApproved || !['editor', 'viewer'].includes(user.role)) {
@@ -163,6 +166,7 @@ export default function UserManagementPage() {
             isLoading={usersLoading}
             onDataChange={() => setShouldRefresh(prev => !prev)}
             currentUser={user}
+            isViewer={isViewer}
             updateUserApproval={updateUserApproval}
             updateUserRole={updateUserRole}
             deleteUserDocument={deleteUserDocument}

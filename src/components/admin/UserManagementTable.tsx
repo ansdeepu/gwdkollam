@@ -1,3 +1,4 @@
+
 // src/components/admin/UserManagementTable.tsx
 "use client";
 
@@ -83,6 +84,7 @@ interface UserManagementTableProps {
   users: UserProfile[];
   isLoading: boolean;
   onDataChange: () => void;
+  isViewer: boolean;
   updateUserApproval: (uid: string, isApproved: boolean) => Promise<void>;
   updateUserRole: (uid: string, newRole: UserRole, staffId?: string) => Promise<void>;
   deleteUserDocument: (uid: string) => Promise<void>;
@@ -94,6 +96,7 @@ export default function UserManagementTable({
   users,
   isLoading,
   onDataChange,
+  isViewer,
   updateUserApproval,
   updateUserRole,
   deleteUserDocument,
@@ -231,7 +234,7 @@ export default function UserManagementTable({
               <TableHead className="px-3 py-2.5">Registered</TableHead>
               <TableHead className="px-3 py-2.5 text-center">Role</TableHead>
               <TableHead className="px-3 py-2.5 text-center">Status</TableHead>
-              <TableHead className="px-3 py-2.5 text-center">Actions</TableHead>
+              {!isViewer && <TableHead className="px-3 py-2.5 text-center">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -270,7 +273,7 @@ export default function UserManagementTable({
                     <Select
                       value={userRow.role}
                       onValueChange={(newRole) => handleRoleChange(userRow.uid, newRole as UserRole)}
-                      disabled={disableActions || updatingUsers[userRow.uid]?.role}
+                      disabled={isViewer || disableActions || updatingUsers[userRow.uid]?.role}
                     >
                       <SelectTrigger className="w-[120px] h-8 text-xs focus:ring-primary" aria-label={`Change role for ${userRow.name}`}>
                          {updatingUsers[userRow.uid]?.role ? <Loader2 className="h-3 w-3 animate-spin" /> : <SelectValue />}
@@ -290,7 +293,7 @@ export default function UserManagementTable({
                     <Switch
                       checked={userRow.isApproved}
                       onCheckedChange={() => handleApprovalChange(userRow.uid, userRow.isApproved)}
-                      disabled={disableActions || updatingUsers[userRow.uid]?.approval}
+                      disabled={isViewer || disableActions || updatingUsers[userRow.uid]?.approval}
                       aria-label={`Toggle approval for ${userRow.name}`}
                       className="data-[state=checked]:bg-green-600 data-[state=unchecked]:bg-destructive/30"
                     />
@@ -300,37 +303,39 @@ export default function UserManagementTable({
                     </Badge>
                   </div>
                 </TableCell>
-                <TableCell className="px-3 py-2 text-center">
-                  <div className="flex items-center justify-center space-x-0.5">
-                      {isUserInRowAdmin ? (
-                          <Tooltip>
-                              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 cursor-not-allowed opacity-70"><UserCog className="h-4 w-4 text-primary" /></Button></TooltipTrigger>
-                              <TooltipContent><p>Main Admin User (Cannot be modified here)</p></TooltipContent>
-                          </Tooltip>
-                      ) : isCurrentUserTheUserInRow ? (
-                          <Tooltip>
-                              <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 cursor-not-allowed opacity-70"><Edit className="h-4 w-4 text-blue-600" /></Button></TooltipTrigger>
-                              <TooltipContent><p>This is you (Cannot be modified here)</p></TooltipContent>
-                          </Tooltip>
-                      ) : (
-                          <Tooltip>
-                          <TooltipTrigger asChild>
-                              <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 h-8 w-8"
-                              onClick={() => handleDeleteUserClick(userRow)}
-                              disabled={disableActions || isDeletingUser}
-                              aria-label={`Remove user profile ${userRow.name}`}
-                              >
-                              {isDeletingUser && userToDelete?.uid === userRow.uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                              </Button>
-                          </TooltipTrigger>
-                          <TooltipContent><p>Remove User Profile</p></TooltipContent>
-                          </Tooltip>
-                      )}
-                  </div>
-                </TableCell>
+                {!isViewer && 
+                    <TableCell className="px-3 py-2 text-center">
+                    <div className="flex items-center justify-center space-x-0.5">
+                        {isUserInRowAdmin ? (
+                            <Tooltip>
+                                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 cursor-not-allowed opacity-70"><UserCog className="h-4 w-4 text-primary" /></Button></TooltipTrigger>
+                                <TooltipContent><p>Main Admin User (Cannot be modified here)</p></TooltipContent>
+                            </Tooltip>
+                        ) : isCurrentUserTheUserInRow ? (
+                            <Tooltip>
+                                <TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8 cursor-not-allowed opacity-70"><Edit className="h-4 w-4 text-blue-600" /></Button></TooltipTrigger>
+                                <TooltipContent><p>This is you (Cannot be modified here)</p></TooltipContent>
+                            </Tooltip>
+                        ) : (
+                            <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 h-8 w-8"
+                                onClick={() => handleDeleteUserClick(userRow)}
+                                disabled={disableActions || isDeletingUser}
+                                aria-label={`Remove user profile ${userRow.name}`}
+                                >
+                                {isDeletingUser && userToDelete?.uid === userRow.uid ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent><p>Remove User Profile</p></TooltipContent>
+                            </Tooltip>
+                        )}
+                    </div>
+                    </TableCell>
+                }
               </TableRow>
             )})}
           </TableBody>

@@ -149,7 +149,7 @@ export default function StaffTable({
                       <div className="flex items-center justify-center space-x-0.5">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={() => onEdit && onEdit(staff)} disabled={isViewer} className="h-8 w-8">
+                            <Button variant="ghost" size="icon" onClick={() => onEdit && onEdit(staff)} className="h-8 w-8">
                                <Eye className="h-4 w-4" />
                             </Button>
                           </TooltipTrigger>
