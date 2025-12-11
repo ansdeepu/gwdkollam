@@ -226,7 +226,6 @@ export default function CustomReportBuilder() {
         <Card>
             <CardHeader>
                 <CardTitle>Report Builder</CardTitle>
-                <CardDescription>Generate custom reports by selecting data sources, filters, and fields.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
