@@ -225,7 +225,7 @@ export default function UserManagementTable({
     <TooltipProvider delayDuration={300}>
       <div className="relative w-full max-h-[70vh] overflow-auto rounded-md border">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 bg-secondary z-10">
             <TableRow>
               <TableHead className="w-[60px] px-3 py-2.5">Sl. No.</TableHead>
               <TableHead className="w-[70px] px-3 py-2.5 text-center">Photo</TableHead>
