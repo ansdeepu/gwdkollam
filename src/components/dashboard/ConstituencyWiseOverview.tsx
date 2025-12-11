@@ -213,7 +213,6 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
         </div>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[400px] pr-4">
           {totalCategorizedWorks > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {sortedConstituencies.map(constituency => {
@@ -263,7 +262,6 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
                   <p>No works found for the selected filters.</p>
               </div>
           )}
-        </ScrollArea>
       </CardContent>
     </Card>
   );
