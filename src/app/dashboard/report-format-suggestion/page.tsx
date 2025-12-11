@@ -7,10 +7,10 @@ import CustomReportBuilder from '@/components/reports/CustomReportBuilder';
 
 export const dynamic = 'force-dynamic';
 
-export default function ReportFormatSuggestionPage() {
+export default function ReportBuilderPage() {
   const { setHeader } = usePageHeader();
   useEffect(() => {
-    setHeader('Report Builders', 'Generate custom reports by selecting filters and data fields.');
+    setHeader('Custom Report Builder', 'Generate custom reports by selecting data sources, filters, and fields.');
   }, [setHeader]);
 
   return (
