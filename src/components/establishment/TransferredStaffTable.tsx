@@ -1,4 +1,3 @@
-
 // src/components/establishment/TransferredStaffTable.tsx
 "use client";
 
@@ -79,7 +78,7 @@ export default function TransferredStaffTable({
         )}
         {!isLoading && (
         <Table>
-          <TableHeader className="bg-secondary sticky top-0">
+          <TableHeader className="bg-secondary sticky top-0 z-10">
             <TableRow>
               <TableHead className="w-[50px]">Sl. No.</TableHead>
               <TableHead className="w-[80px] px-2 py-2 text-center">Photo</TableHead>
