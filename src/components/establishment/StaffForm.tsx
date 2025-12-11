@@ -1,3 +1,4 @@
+
 // src/components/establishment/StaffForm.tsx
 "use client";
 
@@ -36,6 +37,7 @@ interface StaffFormProps {
   initialData?: StaffMember | null;
   isSubmitting: boolean;
   onCancel: () => void;
+  isViewer?: boolean;
 }
 
 const isValidWebUrl = (url?: string | null): boolean => {
@@ -54,7 +56,7 @@ const isPlaceholderUrl = (url?: string | null): boolean => {
 };
 
 
-export default function StaffForm({ onSubmit, initialData, isSubmitting, onCancel }: StaffFormProps) {
+export default function StaffForm({ onSubmit, initialData, isSubmitting, onCancel, isViewer = false }: StaffFormProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageLoadError, setImageLoadError] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
@@ -100,6 +102,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
   }, [watchedPhotoUrl]);
 
   const handleFormSubmitInternal = (data: StaffMemberFormData) => {
+    if (isViewer) return;
     const dataToSubmit: any = {
         ...data,
         remarks: data.remarks || "",
@@ -121,7 +124,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
               <FormItem>
                 <FormLabel>Full Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter full name" {...field} />
+                  <Input placeholder="Enter full name" {...field} readOnly={isViewer} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -133,7 +136,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Designation</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isViewer}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select designation" />
@@ -156,7 +159,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
               <FormItem>
                 <FormLabel>PEN</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter PEN" {...field} />
+                  <Input placeholder="Enter PEN" {...field} readOnly={isViewer} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -170,7 +173,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input type="tel" placeholder="Enter 10 digit phone number" {...field} />
+                  <Input type="tel" placeholder="Enter 10 digit phone number" {...field} readOnly={isViewer} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -183,7 +186,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
               <FormItem>
                 <FormLabel>Date of Birth</FormLabel>
                 <FormControl>
-                   <Input type="date" {...field} />
+                   <Input type="date" {...field} readOnly={isViewer}/>
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -195,7 +198,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Status</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isViewer}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
@@ -281,6 +284,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
                                     placeholder="https://example.com/photo.jpg" 
                                     {...field} 
                                     value={field.value || ""}
+                                    readOnly={isViewer}
                                 />
                             </FormControl>
                             <FormDescription>
@@ -301,9 +305,9 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
               <FormItem className="md:col-span-1">
                 <FormLabel>Roles/Responsibilities</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="e.g., Section Clerk, Field Supervisor" className="resize-y min-h-[120px]" {...field} />
+                  <Textarea placeholder="e.g., Section Clerk, Field Supervisor" className="resize-y min-h-[120px]" {...field} readOnly={isViewer}/>
                 </FormControl>
-                <FormDescription>Enter comma-separated roles or a brief description. (Optional)</FormDescription>
+                <FormDescription>(Optional)</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -316,7 +320,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
               <FormItem className="md:col-span-1">
                 <FormLabel>Remarks</FormLabel>
                 <FormControl>
-                  <Textarea placeholder="Any additional remarks about the staff member." className="resize-y min-h-[120px]" {...field} />
+                  <Textarea placeholder="Any additional remarks about the staff member." className="resize-y min-h-[120px]" {...field} readOnly={isViewer}/>
                 </FormControl>
                 <FormDescription>(Optional)</FormDescription>
                 <FormMessage />
@@ -329,10 +333,12 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
           <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             <X className="mr-2 h-4 w-4" /> Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            {initialData?.id ? "Save Changes" : "Add Staff Member"}
-          </Button>
+          {!isViewer && (
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              {initialData?.id ? "Save Changes" : "Add Staff Member"}
+            </Button>
+          )}
         </div>
       </form>
     </Form>

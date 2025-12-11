@@ -71,6 +71,7 @@ export default function EstablishmentPage() {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   
   const canManage = user?.role === 'editor' && user.isApproved;
+  const isViewer = user?.role === 'viewer';
 
   const handleAddNewStaff = () => {
     setEditingStaff(null);
@@ -305,10 +306,10 @@ export default function EstablishmentPage() {
               <div className="max-h-[70vh] overflow-auto">
                 <StaffTable
                   staffData={activeStaffList}
-                  onEdit={canManage ? handleEditStaff : undefined}
+                  onEdit={handleEditStaff}
                   onDelete={canManage ? deleteStaffMember : undefined}
                   onSetStatus={canManage ? handleSetStaffStatus : undefined}
-                  isViewer={!canManage}
+                  isViewer={isViewer}
                   onImageClick={handleOpenImageModal}
                   isLoading={isFiltering}
                   searchActive={!!debouncedSearchTerm}
@@ -320,7 +321,7 @@ export default function EstablishmentPage() {
                 <TransferredStaffTable
                     staffData={transferredStaffList}
                     onSetStatus={canManage ? handleSetStaffStatus : undefined}
-                    isViewer={!canManage}
+                    isViewer={isViewer}
                     onImageClick={handleOpenImageModal}
                     isLoading={isFiltering}
                     searchActive={!!debouncedSearchTerm}
@@ -332,7 +333,7 @@ export default function EstablishmentPage() {
                 <RetiredStaffTable
                     staffData={retiredStaffList}
                     onSetStatus={canManage ? handleSetStaffStatus : undefined}
-                    isViewer={!canManage}
+                    isViewer={isViewer}
                     onImageClick={handleOpenImageModal}
                     isLoading={isFiltering}
                     searchActive={!!debouncedSearchTerm}
@@ -353,10 +354,10 @@ export default function EstablishmentPage() {
       }}>
         <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="sm:max-w-3xl max-h-[90vh]">
           <DialogHeader className="p-6 pb-4">
-            <DialogTitle>{editingStaff ? "Edit Staff Details" : "Add New Staff Member"}</DialogTitle>
+            <DialogTitle>{editingStaff ? (isViewer ? "View Staff Details" : "Edit Staff Details") : "Add New Staff Member"}</DialogTitle>
             <DialogDescription>
-              {editingStaff ? "Update the details for the staff member." : "Fill in the form to add a new staff member."}
-              {" Direct photo upload is disabled; please use a public image URL."}
+              {editingStaff ? (isViewer ? "Viewing details for the staff member." : "Update the details for the staff member.") : "Fill in the form to add a new staff member."}
+              {!isViewer && " Direct photo upload is disabled; please use a public image URL."}
             </DialogDescription>
           </DialogHeader>
           <div className="px-6 pb-6">
@@ -365,6 +366,7 @@ export default function EstablishmentPage() {
                 initialData={editingStaff}
                 isSubmitting={isSubmittingForm}
                 onCancel={() => {setIsFormOpen(false); setEditingStaff(null);}}
+                isViewer={isViewer}
             />
           </div>
         </DialogContent>
@@ -380,4 +382,3 @@ export default function EstablishmentPage() {
     </div>
   );
 }
-
