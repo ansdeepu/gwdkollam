@@ -60,7 +60,11 @@ export default function CustomReportBuilder() {
     if (selectedPage === 'ars') {
         return reportableFields.filter(f => f.arsApplicable);
     }
-    return reportableFields.filter(f => !f.purpose || f.purpose.includes(selectedPurpose as SitePurpose));
+    // For deposit and private, show fields that are NOT ARS-specific, and match the purpose.
+    return reportableFields.filter(f => 
+        !f.arsApplicable && 
+        (!f.purpose || f.purpose.includes(selectedPurpose as SitePurpose))
+    );
   }, [selectedPurpose, selectedPage]);
   
   const handleSelectAllFields = () => {
@@ -115,7 +119,7 @@ export default function CustomReportBuilder() {
             }
         });
     } else {
-        siteLevelData = filteredData;
+        siteLevelData = filteredData as ReportableEntry[];
     }
 
     // Apply Site-level Filters on unpacked data
@@ -220,6 +224,10 @@ export default function CustomReportBuilder() {
   return (
     <div className="space-y-6">
         <Card>
+            <CardHeader>
+                <CardTitle>Report Builder</CardTitle>
+                <CardDescription>Generate custom reports by selecting data sources, filters, and fields.</CardDescription>
+            </CardHeader>
             <CardContent className="space-y-4 pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-2"><Label>Data Source</Label><Select value={selectedPage} onValueChange={(v) => setSelectedPage(v as ReportSource)}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="deposit">Deposit Works</SelectItem><SelectItem value="private">Private Deposit Works</SelectItem><SelectItem value="ars">ARS</SelectItem></SelectContent></Select></div>
