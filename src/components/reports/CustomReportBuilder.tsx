@@ -57,15 +57,15 @@ export default function CustomReportBuilder() {
   const lsgOptions = useMemo(() => allLsgConstituencyMaps.map(m => m.name).sort(), [allLsgConstituencyMaps]);
 
   const availableFields = useMemo(() => {
-    if (selectedPurpose === 'all') return [];
     if (selectedPage === 'ars') {
         return reportableFields.filter(f => f.arsApplicable);
     }
-    // For deposit and private, show fields that are NOT ARS-specific, and match the purpose.
-    return reportableFields.filter(f => 
+    // For deposit and private works
+    const purposeFiltered = reportableFields.filter(f => 
         !f.arsOnly && 
-        (!f.purpose || f.purpose.includes(selectedPurpose as SitePurpose))
+        (selectedPurpose === 'all' || !f.purpose || f.purpose.includes(selectedPurpose as SitePurpose))
     );
+    return purposeFiltered;
   }, [selectedPurpose, selectedPage]);
   
   const handleSelectAllFields = () => {
@@ -238,13 +238,13 @@ export default function CustomReportBuilder() {
             </CardContent>
         </Card>
 
-        {selectedPurpose !== 'all' && (
+        {selectedPage && (
             <Card>
                 <CardHeader>
                     <div className="flex justify-between items-center">
                       <div>
                         <h3 className="text-base font-semibold text-primary">Select Report Fields</h3>
-                        <p className="text-sm text-muted-foreground">Choose columns for your report. Available fields depend on the selected purpose.</p>
+                        <p className="text-sm text-muted-foreground">Choose columns for your report. {selectedPurpose === 'all' && selectedPage !== 'ars' && 'Fields are limited until a specific purpose is selected.'}</p>
                       </div>
                       <Button variant="link" onClick={handleSelectAllFields} disabled={availableFields.length === 0} className="p-0 h-auto">
                         {selectedFields.length === availableFields.length ? 'Deselect All' : 'Select All'}
