@@ -12,7 +12,7 @@ import type { DepartmentVehicle, HiredVehicle, RigCompressor } from '@/lib/schem
 import { DepartmentVehicleForm, HiredVehicleForm, RigCompressorForm } from '@/components/vehicles/VehicleForms';
 import { useAuth } from '@/hooks/useAuth';
 import ExcelJS from 'exceljs';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { DepartmentVehicleTable, HiredVehicleTable, RigCompressorTable } from '@/components/vehicles/VehicleTables';
 import { useDataStore } from '@/hooks/use-data-store';
@@ -236,7 +236,7 @@ export default function VehiclesPage() {
                 </div>
             )}
 
-            <Dialog open={isDepartmentDialogOpen} onOpenChange={setIsDepartmentDialogOpen}>
+            <Dialog open={isDepartmentDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) setEditingDepartmentVehicle(null); setIsDepartmentDialogOpen(isOpen); }}>
                 <DialogContent className="max-w-4xl">
                     <DepartmentVehicleForm 
                         initialData={editingDepartmentVehicle}
@@ -245,7 +245,7 @@ export default function VehiclesPage() {
                     />
                 </DialogContent>
             </Dialog>
-            <Dialog open={isHiredDialogOpen} onOpenChange={setIsHiredDialogOpen}>
+            <Dialog open={isHiredDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) setEditingHiredVehicle(null); setIsHiredDialogOpen(isOpen); }}>
                 <DialogContent className="max-w-4xl">
                      <HiredVehicleForm 
                         initialData={editingHiredVehicle}
@@ -254,7 +254,7 @@ export default function VehiclesPage() {
                     />
                 </DialogContent>
             </Dialog>
-            <Dialog open={isRigDialogOpen} onOpenChange={setIsRigDialogOpen}>
+            <Dialog open={isRigDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) setEditingRigCompressor(null); setIsRigDialogOpen(isOpen); }}>
                 <DialogContent className="max-w-2xl">
                     <RigCompressorForm
                         initialData={editingRigCompressor}

@@ -1,3 +1,4 @@
+
 // src/hooks/use-data-store.tsx
 "use client";
 
@@ -226,7 +227,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
                             });
                             setter((prev: Record<RateDescriptionId, string>) => ({ ...defaultRateDescriptions, ...prev, ...descriptions }));
                         }
-                    } else if (collectionName === 'officeAddress') {
+                    } else if (collectionName === 'officeAddresses') { // Corrected collection name
                         if (snapshot.empty) {
                             setter(null);
                         } else {

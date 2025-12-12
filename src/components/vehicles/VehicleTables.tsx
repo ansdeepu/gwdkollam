@@ -1,3 +1,4 @@
+
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
@@ -5,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from "@/lib/schemas";
-import { formatDateSafe } from '@/app/dashboard/vehicles/page';
+import { format, isValid } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { Loader2 } from 'lucide-react';
@@ -28,6 +29,25 @@ interface RigCompressorTableProps extends CommonTableProps {
     onEdit: (unit: RigCompressor) => void;
     onDelete: (id: string, name: string) => Promise<void>;
 }
+
+const safeParseDate = (dateValue: any): Date | null => {
+  if (!dateValue) return null;
+  if (dateValue instanceof Date) return dateValue;
+  if (typeof dateValue === 'object' && dateValue !== null && typeof (dateValue as any).seconds === 'number') {
+    return new Date((dateValue as any).seconds * 1000);
+  }
+  if (typeof dateValue === 'string') {
+    const parsed = new Date(dateValue);
+    if (!isNaN(parsed.getTime())) return parsed;
+  }
+  return null;
+};
+
+const formatDateSafe = (d: any): string => {
+    if (!d) return 'N/A';
+    const date = safeParseDate(d);
+    return date ? format(date, 'dd/MM/yyyy') : 'N/A';
+};
 
 export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: DepartmentVehicleTableProps) {
     const [itemToDelete, setItemToDelete] = useState<DepartmentVehicle | null>(null);
