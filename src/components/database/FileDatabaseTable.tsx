@@ -255,7 +255,7 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
   const startEntryNum = (currentPage - 1) * ITEMS_PER_PAGE + 1;
   const endEntryNum = Math.min(currentPage * ITEMS_PER_PAGE, fileEntries.length);
 
-  const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
+  const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig", "Work Initiated"];
 
 
   return (

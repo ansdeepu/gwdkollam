@@ -5,7 +5,7 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { Loader2, UserPlus, Users, Edit, Trash2, ArrowLeft, Move } from 'lucide-react';
+import { Loader2, UserPlus, Users, Edit, Trash2, ArrowLeft, Move, Eye } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -185,7 +185,7 @@ export default function BiddersListPage() {
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     <div className="flex items-center justify-center space-x-1">
-                                                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => { setBidderToEdit(bidder); setIsNewBidderDialogOpen(true); }}><Edit className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Edit Bidder</p></TooltipContent></Tooltip>
+                                                        <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => { setBidderToEdit(bidder); setIsNewBidderDialogOpen(true); }}><Eye className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>{user?.role === 'editor' ? 'View / Edit' : 'View Details'}</p></TooltipContent></Tooltip>
                                                         <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => setBidderToReorder(bidder)}><Move className="h-4 w-4"/></Button></TooltipTrigger><TooltipContent><p>Move Bidder</p></TooltipContent></Tooltip>
                                                         <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => setBidderToDelete(bidder)}><Trash2 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent><p>Delete Bidder</p></TooltipContent></Tooltip>
                                                     </div>
@@ -270,4 +270,5 @@ export default function BiddersListPage() {
         </div>
     );
 }
+
 

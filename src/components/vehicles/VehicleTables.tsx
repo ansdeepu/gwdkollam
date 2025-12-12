@@ -4,12 +4,13 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Eye } from "lucide-react";
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from "@/lib/schemas";
 import { format, isValid } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { Loader2 } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 
 interface CommonTableProps {
     canEdit: boolean;
@@ -62,7 +63,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
     };
 
     return (
-        <>
+        <TooltipProvider>
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -90,8 +91,18 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
                             <TableCell>{v.fuelConsumptionRate}</TableCell>
                             {canEdit && (
                                 <TableCell className="text-right">
-                                    <Button variant="ghost" size="icon" onClick={() => onEdit(v)}><Edit className="h-4 w-4"/></Button>
-                                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete(v)}><Trash2 className="h-4 w-4"/></Button>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" onClick={() => onEdit(v)}><Eye className="h-4 w-4"/></Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>View / Edit</p></TooltipContent>
+                                    </Tooltip>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete(v)}><Trash2 className="h-4 w-4"/></Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Delete</p></TooltipContent>
+                                    </Tooltip>
                                 </TableCell>
                             )}
                         </TableRow>
@@ -99,7 +110,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
                 </TableBody>
             </Table>
             <ConfirmDeleteDialog isOpen={!!itemToDelete} onOpenChange={() => setItemToDelete(null)} onConfirm={handleDelete} itemName={itemToDelete?.registrationNumber} isDeleting={isDeleting} />
-        </>
+        </TooltipProvider>
     );
 }
 
@@ -116,7 +127,7 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehi
     };
 
     return (
-        <>
+        <TooltipProvider>
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -138,8 +149,18 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehi
                             <TableCell>{v.hireCharges}</TableCell>
                              {canEdit && (
                                 <TableCell className="text-right">
-                                    <Button variant="ghost" size="icon" onClick={() => onEdit(v)}><Edit className="h-4 w-4"/></Button>
-                                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete(v)}><Trash2 className="h-4 w-4"/></Button>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" onClick={() => onEdit(v)}><Eye className="h-4 w-4"/></Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>View / Edit</p></TooltipContent>
+                                    </Tooltip>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete(v)}><Trash2 className="h-4 w-4"/></Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Delete</p></TooltipContent>
+                                    </Tooltip>
                                 </TableCell>
                             )}
                         </TableRow>
@@ -147,7 +168,7 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehi
                 </TableBody>
             </Table>
             <ConfirmDeleteDialog isOpen={!!itemToDelete} onOpenChange={() => setItemToDelete(null)} onConfirm={handleDelete} itemName={itemToDelete?.registrationNumber} isDeleting={isDeleting} />
-        </>
+        </TooltipProvider>
     );
 }
 
@@ -164,7 +185,7 @@ export function RigCompressorTable({ data, onEdit, onDelete, canEdit }: RigCompr
     };
 
     return (
-        <>
+        <TooltipProvider>
             <Table>
                 <TableHeader>
                     <TableRow>
@@ -190,8 +211,18 @@ export function RigCompressorTable({ data, onEdit, onDelete, canEdit }: RigCompr
                             <TableCell>{u.remarks}</TableCell>
                             {canEdit && (
                                 <TableCell className="text-right">
-                                    <Button variant="ghost" size="icon" onClick={() => onEdit(u)}><Edit className="h-4 w-4"/></Button>
-                                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete(u)}><Trash2 className="h-4 w-4"/></Button>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" onClick={() => onEdit(u)}><Eye className="h-4 w-4"/></Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>View / Edit</p></TooltipContent>
+                                    </Tooltip>
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete(u)}><Trash2 className="h-4 w-4"/></Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent><p>Delete</p></TooltipContent>
+                                    </Tooltip>
                                 </TableCell>
                             )}
                         </TableRow>
@@ -199,7 +230,7 @@ export function RigCompressorTable({ data, onEdit, onDelete, canEdit }: RigCompr
                 </TableBody>
             </Table>
             <ConfirmDeleteDialog isOpen={!!itemToDelete} onOpenChange={() => setItemToDelete(null)} onConfirm={handleDelete} itemName={itemToDelete?.typeOfRigUnit} isDeleting={isDeleting} />
-        </>
+        </TooltipProvider>
     );
 }
 
