@@ -1,4 +1,5 @@
 
+
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
@@ -1285,7 +1286,7 @@ export default function AgencyRegistrationPage() {
                                     </AccordionTrigger>
                                     {!isReadOnly && (
                                         <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('addFee', {}) }}>
-                                            <PlusCircle className="mr-2 h-4 w-4" /> Add Application Fee
+                                            <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
                                         </Button>
                                     )}
                                 </div>
@@ -1444,7 +1445,7 @@ export default function AgencyRegistrationPage() {
                 </Card>
             </form>
             <Dialog open={dialogState.type === 'editAgencyReg'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-2xl flex flex-col p-0">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-xl flex flex-col p-0">
                   <AgencyRegistrationDialogContent
                       initialData={dialogState.data?.regData}
                       onConfirm={handleConfirmAgencyReg}
@@ -1711,8 +1712,8 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
                 <ScrollArea className="h-full px-6 py-4 no-scrollbar">
                     <div className="space-y-6">
                         <div className="space-y-4 rounded-lg border p-4">
-                            <div className="grid grid-cols-3 gap-4 items-end">
-                                <div className="col-span-2 space-y-2">
+                            <div className="grid grid-cols-2 gap-4 items-end">
+                                <div className="space-y-2">
                                     <Label htmlFor="agencyRegistrationNo">Agency Reg. No.</Label>
                                     <Input id="agencyRegistrationNo" value={data.agencyRegistrationNo} onChange={(e) => setData(d => ({ ...d, agencyRegistrationNo: e.target.value }))} />
                                 </div>
@@ -2110,3 +2111,5 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
       
+
+    
