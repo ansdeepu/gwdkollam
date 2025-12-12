@@ -109,25 +109,36 @@ export function useVehicles() {
         isLoading
     } = useDataStore();
 
+    const addDepartmentVehicle = useAddVehicle<DepartmentVehicle>(COLLECTIONS.DEPARTMENT, refetchDepartmentVehicles);
+    const updateDepartmentVehicle = useUpdateVehicle<DepartmentVehicle>(COLLECTIONS.DEPARTMENT, refetchDepartmentVehicles);
+    const deleteDepartmentVehicle = useDeleteVehicle(COLLECTIONS.DEPARTMENT, refetchDepartmentVehicles);
+
+    const addHiredVehicle = useAddVehicle<HiredVehicle>(COLLECTIONS.HIRED, refetchHiredVehicles);
+    const updateHiredVehicle = useUpdateVehicle<HiredVehicle>(COLLECTIONS.HIRED, refetchHiredVehicles);
+    const deleteHiredVehicle = useDeleteVehicle(COLLECTIONS.HIRED, refetchHiredVehicles);
+
+    const addRigCompressor = useAddVehicle<RigCompressor>(COLLECTIONS.RIG_COMPRESSOR, refetchRigCompressors);
+    const updateRigCompressor = useUpdateVehicle<RigCompressor>(COLLECTIONS.RIG_COMPRESSOR, refetchRigCompressors);
+    const deleteRigCompressor = useDeleteVehicle(COLLECTIONS.RIG_COMPRESSOR, refetchRigCompressors);
 
     return {
         // Department Vehicles
         departmentVehicles: allDepartmentVehicles,
-        useAddDepartmentVehicle: () => useAddVehicle<DepartmentVehicle>(COLLECTIONS.DEPARTMENT, refetchDepartmentVehicles),
-        useUpdateDepartmentVehicle: () => useUpdateVehicle<DepartmentVehicle>(COLLECTIONS.DEPARTMENT, refetchDepartmentVehicles),
-        useDeleteDepartmentVehicle: () => useDeleteVehicle(COLLECTIONS.DEPARTMENT, refetchDepartmentVehicles),
+        addDepartmentVehicle,
+        updateDepartmentVehicle,
+        deleteDepartmentVehicle,
         
         // Hired Vehicles
         hiredVehicles: allHiredVehicles,
-        useAddHiredVehicle: () => useAddVehicle<HiredVehicle>(COLLECTIONS.HIRED, refetchHiredVehicles),
-        useUpdateHiredVehicle: () => useUpdateVehicle<HiredVehicle>(COLLECTIONS.HIRED, refetchHiredVehicles),
-        useDeleteHiredVehicle: () => useDeleteVehicle(COLLECTIONS.HIRED, refetchHiredVehicles),
+        addHiredVehicle,
+        updateHiredVehicle,
+        deleteHiredVehicle,
         
         // Rig & Compressor Units
         rigCompressors: allRigCompressors,
-        useAddRigCompressor: () => useAddVehicle<RigCompressor>(COLLECTIONS.RIG_COMPRESSOR, refetchRigCompressors),
-        useUpdateRigCompressor: () => useUpdateVehicle<RigCompressor>(COLLECTIONS.RIG_COMPRESSOR, refetchRigCompressors),
-        useDeleteRigCompressor: () => useDeleteVehicle(COLLECTIONS.RIG_COMPRESSOR, refetchRigCompressors),
+        addRigCompressor,
+        updateRigCompressor,
+        deleteRigCompressor,
 
         isLoading
     };

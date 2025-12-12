@@ -33,7 +33,7 @@ const safeParseDate = (dateValue: any): Date | null => {
   return null;
 };
 
-const formatDateSafe = (date: any): string => {
+export const formatDateSafe = (date: any): string => {
     if (date === null || date === undefined || date === '') {
         return 'N/A';
     }
@@ -50,9 +50,9 @@ export default function VehiclesPage() {
     const canEdit = user?.role === 'editor';
 
     const {
-        departmentVehicles, useAddDepartmentVehicle, useUpdateDepartmentVehicle, useDeleteDepartmentVehicle,
-        hiredVehicles, useAddHiredVehicle, useUpdateHiredVehicle, useDeleteHiredVehicle,
-        rigCompressors, useAddRigCompressor, useUpdateRigCompressor, useDeleteRigCompressor,
+        departmentVehicles, addDepartmentVehicle, updateDepartmentVehicle, deleteDepartmentVehicle,
+        hiredVehicles, addHiredVehicle, updateHiredVehicle, deleteHiredVehicle,
+        rigCompressors, addRigCompressor, updateRigCompressor, deleteRigCompressor,
         isLoading
     } = useVehicles();
 
@@ -168,7 +168,7 @@ export default function VehiclesPage() {
                             <DepartmentVehicleTable 
                                 data={departmentVehicles} 
                                 onEdit={(v) => handleAddOrEdit('department', v)} 
-                                onDelete={useDeleteDepartmentVehicle()} 
+                                onDelete={deleteDepartmentVehicle} 
                                 canEdit={canEdit}
                             />
                         </CardContent>
@@ -186,7 +186,7 @@ export default function VehiclesPage() {
                             <HiredVehicleTable 
                                 data={hiredVehicles} 
                                 onEdit={(v) => handleAddOrEdit('hired', v)} 
-                                onDelete={useDeleteHiredVehicle()}
+                                onDelete={deleteHiredVehicle}
                                 canEdit={canEdit}
                             />
                         </CardContent>
@@ -204,7 +204,7 @@ export default function VehiclesPage() {
                             <RigCompressorTable 
                                 data={rigCompressors} 
                                 onEdit={(v) => handleAddOrEdit('rig', v)} 
-                                onDelete={useDeleteRigCompressor()}
+                                onDelete={deleteRigCompressor}
                                 canEdit={canEdit}
                             />
                         </CardContent>
@@ -216,7 +216,7 @@ export default function VehiclesPage() {
                 <DialogContent className="max-w-4xl">
                     <DepartmentVehicleForm 
                         initialData={editingDepartmentVehicle}
-                        onSubmit={editingDepartmentVehicle ? useUpdateDepartmentVehicle() : useAddDepartmentVehicle()}
+                        onSubmit={editingDepartmentVehicle ? updateDepartmentVehicle : addDepartmentVehicle}
                         onClose={() => setIsDepartmentDialogOpen(false)}
                     />
                 </DialogContent>
@@ -225,7 +225,7 @@ export default function VehiclesPage() {
                 <DialogContent className="max-w-4xl">
                      <HiredVehicleForm 
                         initialData={editingHiredVehicle}
-                        onSubmit={editingHiredVehicle ? useUpdateHiredVehicle() : useAddHiredVehicle()}
+                        onSubmit={editingHiredVehicle ? updateHiredVehicle : addHiredVehicle}
                         onClose={() => setIsHiredDialogOpen(false)}
                     />
                 </DialogContent>
@@ -234,7 +234,7 @@ export default function VehiclesPage() {
                 <DialogContent className="max-w-2xl">
                     <RigCompressorForm
                         initialData={editingRigCompressor}
-                        onSubmit={editingRigCompressor ? useUpdateRigCompressor() : useAddRigCompressor()}
+                        onSubmit={editingRigCompressor ? updateRigCompressor : addRigCompressor}
                         onClose={() => setIsRigDialogOpen(false)}
                     />
                 </DialogContent>
