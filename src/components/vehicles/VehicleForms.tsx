@@ -10,10 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save, X } from "lucide-react";
-import { DepartmentVehicleSchema, HiredVehicleSchema, RigCompressorSchema } from "@/lib/schemas";
+import { DepartmentVehicleSchema, HiredVehicleSchema, RigCompressorSchema, rcStatusOptions } from "@/lib/schemas";
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from "@/lib/schemas";
 import { ScrollArea } from "../ui/scroll-area";
 import { format, isValid } from "date-fns";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
@@ -51,7 +53,7 @@ export function DepartmentVehicleForm({ initialData, onFormSubmit, onClose }: Fo
             model: initialData?.model || '',
             typeOfVehicle: initialData?.typeOfVehicle || '',
             vehicleClass: initialData?.vehicleClass || '',
-            rcStatus: initialData?.rcStatus || '',
+            rcStatus: initialData?.rcStatus || undefined,
             fuelConsumptionRate: initialData?.fuelConsumptionRate || '',
             registrationDate: formatDateForInput(initialData?.registrationDate),
             fitnessExpiry: formatDateForInput(initialData?.fitnessExpiry),
@@ -81,7 +83,22 @@ export function DepartmentVehicleForm({ initialData, onFormSubmit, onClose }: Fo
                         <FormField name="typeOfVehicle" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Type of Vehicle</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                         <FormField name="vehicleClass" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Vehicle Class</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                         <FormField name="registrationDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Registration Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''}/></FormControl><FormMessage/></FormItem> )}/>
-                        <FormField name="rcStatus" control={form.control} render={({ field }) => ( <FormItem><FormLabel>RC Status</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                         <FormField
+                            name="rcStatus"
+                            control={form.control}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>RC Status</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl>
+                                        <SelectContent>
+                                            {rcStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                         <FormField name="fuelConsumptionRate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Fuel Consumption Rate</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                     </div>
                     <div className="space-y-2 pt-4 border-t">

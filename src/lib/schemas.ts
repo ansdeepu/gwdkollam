@@ -534,6 +534,9 @@ export const arsWorkStatusOptions = [
 ] as const;
 
 // Vehicle Management Schemas
+export const rcStatusOptions = ["Active", "Cancelled", "Garaged"] as const;
+export type RCStatus = typeof rcStatusOptions[number];
+
 export const DepartmentVehicleSchema = z.object({
     id: z.string().optional(),
     registrationNumber: z.string().min(1, "Registration Number is required."),
@@ -541,7 +544,7 @@ export const DepartmentVehicleSchema = z.object({
     typeOfVehicle: z.string().optional(),
     vehicleClass: z.string().optional(),
     registrationDate: optionalDateSchema,
-    rcStatus: z.string().optional(),
+    rcStatus: z.enum(rcStatusOptions).optional(),
     fuelConsumptionRate: z.string().optional(),
     fitnessExpiry: optionalDateSchema,
     taxExpiry: optionalDateSchema,
@@ -578,6 +581,7 @@ export const RigCompressorSchema = z.object({
 });
 export type RigCompressor = z.infer<typeof RigCompressorSchema>;
     
+
 
 
 
