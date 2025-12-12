@@ -1,5 +1,6 @@
 
 
+// src/lib/schemas.ts
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
 
@@ -533,7 +534,51 @@ export const arsWorkStatusOptions = [
     "Payment Completed"
 ] as const;
 
+// Vehicle Management Schemas
+export const DepartmentVehicleSchema = z.object({
+    id: z.string().optional(),
+    registrationNumber: z.string().min(1, "Registration Number is required."),
+    model: z.string().optional(),
+    typeOfVehicle: z.string().optional(),
+    vehicleClass: z.string().optional(),
+    registrationDate: optionalDateSchema,
+    rcStatus: z.string().optional(),
+    fuelConsumptionRate: z.string().optional(),
+    fitnessExpiry: optionalDateSchema,
+    taxExpiry: optionalDateSchema,
+    insuranceExpiry: optionalDateSchema,
+    pollutionExpiry: optionalDateSchema,
+});
+export type DepartmentVehicle = z.infer<typeof DepartmentVehicleSchema>;
+
+export const HiredVehicleSchema = z.object({
+    id: z.string().optional(),
+    registrationNumber: z.string().min(1, "Registration Number is required."),
+    model: z.string().optional(),
+    agreementValidity: optionalDateSchema,
+    vehicleClass: z.string().optional(),
+    registrationDate: optionalDateSchema,
+    rcStatus: z.string().optional(),
+    hireCharges: optionalNumber(),
+    fitnessExpiry: optionalDateSchema,
+    taxExpiry: optionalDateSchema,
+    insuranceExpiry: optionalDateSchema,
+    pollutionExpiry: optionalDateSchema,
+    fuelConsumption: z.string().optional(),
+});
+export type HiredVehicle = z.infer<typeof HiredVehicleSchema>;
+
+export const RigCompressorSchema = z.object({
+    id: z.string().optional(),
+    typeOfRigUnit: z.string().min(1, "Type of Rig Unit is required."),
+    registrationNumber: z.string().optional(),
+    compressorDetails: z.string().optional(),
+    fuelConsumption: z.string().optional(),
+    remarks: z.string().optional(),
+});
+export type RigCompressor = z.infer<typeof RigCompressorSchema>;
     
+
 
 
 
