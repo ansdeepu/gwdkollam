@@ -1,3 +1,4 @@
+
 // src/app/dashboard/vehicles/page.tsx
 "use client";
 
@@ -11,7 +12,7 @@ import type { DepartmentVehicle, HiredVehicle, RigCompressor } from '@/lib/schem
 import { DepartmentVehicleForm, HiredVehicleForm, RigCompressorForm } from '@/components/vehicles/VehicleForms';
 import { useAuth } from '@/hooks/useAuth';
 import ExcelJS from 'exceljs';
-import { format } from 'date-fns';
+import { format, isValid } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { DepartmentVehicleTable, HiredVehicleTable, RigCompressorTable } from '@/components/vehicles/VehicleTables';
 import { useDataStore } from '@/hooks/use-data-store';
@@ -34,7 +35,6 @@ const formatDateSafe = (d: any): string => {
     const date = safeParseDate(d);
     return date ? format(date, 'dd/MM/yyyy') : 'N/A';
 };
-
 
 export default function VehiclesPage() {
     const { setHeader } = usePageHeader();
@@ -79,6 +79,8 @@ export default function VehiclesPage() {
         } else {
             await addDepartmentVehicle(data);
         }
+        setIsDepartmentDialogOpen(false);
+        setEditingDepartmentVehicle(null);
     };
 
     const handleHiredFormSubmit = async (data: HiredVehicle) => {
@@ -87,6 +89,8 @@ export default function VehiclesPage() {
         } else {
             await addHiredVehicle(data);
         }
+        setIsHiredDialogOpen(false);
+        setEditingHiredVehicle(null);
     };
 
     const handleRigCompressorFormSubmit = async (data: RigCompressor) => {
@@ -95,6 +99,8 @@ export default function VehiclesPage() {
         } else {
             await addRigCompressor(data);
         }
+        setIsRigDialogOpen(false);
+        setEditingRigCompressor(null);
     };
 
     const handleExportExcel = useCallback(async (
