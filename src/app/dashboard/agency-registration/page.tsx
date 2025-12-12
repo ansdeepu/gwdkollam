@@ -1279,63 +1279,63 @@ export default function AgencyRegistrationPage() {
                         </Accordion>
                          
                         <Accordion type="single" collapsible defaultValue="item-1">
-                            <AccordionItem value="item-1">
-                                <div className="flex justify-between items-center py-4">
-                                    <AccordionTrigger className="text-xl font-semibold text-primary flex-1 py-0">
-                                        <span>2. Application Fees</span>
-                                    </AccordionTrigger>
-                                    {!isReadOnly && (
-                                        <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('addFee', {}) }}>
-                                            <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
-                                        </Button>
-                                    )}
-                                </div>
-                                <AccordionContent className="pt-4 space-y-4">
-                                    {feeFields.length > 0 ? feeFields.map((field, index) => (
-                                        <div key={field.id} className="p-4 border rounded-lg bg-secondary/20">
-                                          <div className="flex justify-between items-center mb-2">
-                                             <div className="flex items-center gap-3">
-                                                <div className="font-bold text-sm text-muted-foreground">Sl. No. {index + 1}</div>
-                                                <h4 className="font-medium text-primary">{field.applicationFeeType || 'Not Set'}</h4>
-                                             </div>
-                                            {!isReadOnly && (
-                                                <div className="flex items-center gap-1">
-                                                    <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('editFee', { index, fee: field })}>
-                                                        <Edit className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setDeletingFeeIndex(index)}>
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            )}
-                                          </div>
-                                          <dl className="grid md:grid-cols-3 gap-4 border-t pt-2">
-                                            <DetailRow label="Type of Application" value={field.applicationFeeType} />
-                                            <DetailRow label="Fees Amount" value={field.applicationFeeAmount} />
-                                            <DetailRow label="Payment Date" value={field.applicationFeePaymentDate} />
-                                            <div className="md:col-span-3"><DetailRow label="Challan No." value={field.applicationFeeChallanNo} /></div>
-                                          </dl>
-                                        </div>
-                                    )) : (
-                                        <p className="text-sm text-muted-foreground text-center py-4">No application fees added.</p>
-                                    )}
-                                </AccordionContent>
-                            </AccordionItem>
+                          <AccordionItem value="item-1">
+                            <div className="flex justify-between items-center py-4">
+                                <AccordionTrigger className="text-xl font-semibold text-primary flex-1 py-0">
+                                    <span>2. Application Fees</span>
+                                </AccordionTrigger>
+                                {!isReadOnly && (
+                                    <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('addFee', {}) }}>
+                                        <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
+                                    </Button>
+                                )}
+                            </div>
+                            <AccordionContent className="pt-4 space-y-4">
+                                {feeFields.length > 0 ? feeFields.map((field, index) => (
+                                    <div key={field.id} className="p-4 border rounded-lg bg-secondary/20">
+                                      <div className="flex justify-between items-center mb-2">
+                                         <div className="flex items-center gap-3">
+                                            <div className="font-bold text-sm text-muted-foreground">Sl. No. {index + 1}</div>
+                                            <h4 className="font-medium text-primary">{field.applicationFeeType || 'Not Set'}</h4>
+                                         </div>
+                                        {!isReadOnly && (
+                                            <div className="flex items-center gap-1">
+                                                <Button type="button" variant="ghost" size="icon" onClick={() => openDialog('editFee', { index, fee: field })}>
+                                                    <Edit className="h-4 w-4" />
+                                                </Button>
+                                                <Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setDeletingFeeIndex(index)}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        )}
+                                      </div>
+                                      <dl className="grid md:grid-cols-3 gap-4 border-t pt-2">
+                                        <DetailRow label="Type of Application" value={field.applicationFeeType} />
+                                        <DetailRow label="Fees Amount" value={field.applicationFeeAmount} />
+                                        <DetailRow label="Payment Date" value={field.applicationFeePaymentDate} />
+                                        <div className="md:col-span-3"><DetailRow label="Challan No." value={field.applicationFeeChallanNo} /></div>
+                                      </dl>
+                                    </div>
+                                )) : (
+                                    <p className="text-sm text-muted-foreground text-center py-4">No application fees added.</p>
+                                )}
+                            </AccordionContent>
+                          </AccordionItem>
                         </Accordion>
 
                         {/* Section 2: Agency Registration */}
                         <Accordion type="single" collapsible defaultValue="item-1">
                           <AccordionItem value="item-1">
-                                <div className="flex justify-between items-center py-4">
-                                    <AccordionTrigger className="text-xl font-semibold text-primary flex-1 py-0">
-                                        <span>3. Agency Registration</span>
-                                    </AccordionTrigger>
-                                    {!isReadOnly && (
-                                        <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('editAgencyReg', { regData: form.getValues() }) }}>
-                                            <Edit className="mr-2 h-4 w-4" /> Add
-                                        </Button>
-                                    )}
-                                </div>
+                            <div className="flex justify-between items-center py-4">
+                                <AccordionTrigger className="text-xl font-semibold text-primary flex-1 py-0">
+                                    <span>3. Agency Registration</span>
+                                </AccordionTrigger>
+                                {!isReadOnly && (
+                                    <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('editAgencyReg', { regData: form.getValues() }) }}>
+                                        <Edit className="mr-2 h-4 w-4" /> Add
+                                    </Button>
+                                )}
+                            </div>
                             <AccordionContent className="pt-4 space-y-4">
                                <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-4">
                                 <DetailRow label="Agency Reg. No." value={form.watch('agencyRegistrationNo')} />
@@ -1445,7 +1445,7 @@ export default function AgencyRegistrationPage() {
                 </Card>
             </form>
             <Dialog open={dialogState.type === 'editAgencyReg'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-xl flex flex-col p-0">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-3xl flex flex-col p-0">
                   <AgencyRegistrationDialogContent
                       initialData={dialogState.data?.regData}
                       onConfirm={handleConfirmAgencyReg}
@@ -1711,12 +1711,12 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
             <div className="flex-1 min-h-0">
                 <ScrollArea className="h-full px-6 py-4 no-scrollbar">
                     <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4 items-end border p-4 rounded-lg">
-                            <div className="space-y-2">
+                        <div className="grid grid-cols-3 gap-4 items-end border p-4 rounded-lg">
+                            <div className="space-y-2 col-span-1">
                                 <Label htmlFor="agencyRegistrationNo">Agency Reg. No.</Label>
                                 <Input id="agencyRegistrationNo" value={data.agencyRegistrationNo} onChange={(e) => setData(d => ({ ...d, agencyRegistrationNo: e.target.value }))} />
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-2 col-span-2">
                                 <Label htmlFor="agencyRegistrationDate">Reg. Date</Label>
                                 <Input id="agencyRegistrationDate" type="date" value={data.agencyRegistrationDate} onChange={(e) => setData(d => ({ ...d, agencyRegistrationDate: e.target.value }))} />
                             </div>
@@ -2116,3 +2116,6 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
     
 
+
+
+    
