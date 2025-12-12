@@ -65,7 +65,8 @@ export function DepartmentVehicleForm({ initialData, onFormSubmit, onClose }: Fo
     });
 
     const handleSubmit = async (data: DepartmentVehicle) => {
-        await onFormSubmit(data);
+        const payload = { ...initialData, ...data };
+        await onFormSubmit(payload);
     };
 
     return (
@@ -145,7 +146,8 @@ export function HiredVehicleForm({ initialData, onFormSubmit, onClose }: FormPro
     });
 
     const handleSubmit = async (data: HiredVehicle) => {
-        await onFormSubmit(data);
+        const payload = { ...initialData, ...data };
+        await onFormSubmit(payload);
     };
 
     return (
@@ -207,18 +209,19 @@ export function HiredVehicleForm({ initialData, onFormSubmit, onClose }: FormPro
 export function RigCompressorForm({ initialData, onFormSubmit, onClose }: FormProps<RigCompressor>) {
     const form = useForm<RigCompressor>({
         resolver: zodResolver(RigCompressorSchema),
-        defaultValues: {
-            typeOfRigUnit: initialData?.typeOfRigUnit || '',
-            registrationNumber: initialData?.registrationNumber || '',
-            compressorDetails: initialData?.compressorDetails || '',
-            fuelConsumption: initialData?.fuelConsumption || '',
-            remarks: initialData?.remarks || '',
-            status: initialData?.status || 'Active',
+        defaultValues: initialData || {
+            typeOfRigUnit: '',
+            registrationNumber: '',
+            compressorDetails: '',
+            fuelConsumption: '',
+            remarks: '',
+            status: 'Active',
         },
     });
 
     const handleSubmit = async (data: RigCompressor) => {
-        await onFormSubmit(data);
+        const payload = { ...initialData, ...data };
+        await onFormSubmit(payload);
     };
 
     return (
