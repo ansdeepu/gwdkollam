@@ -1,3 +1,4 @@
+
 // src/components/vehicles/VehicleForms.tsx
 "use client";
 
@@ -25,6 +26,12 @@ export function DepartmentVehicleForm({ initialData, onSubmit, onClose }: FormPr
         resolver: zodResolver(DepartmentVehicleSchema),
         defaultValues: {
             ...initialData,
+            registrationNumber: initialData?.registrationNumber || '',
+            model: initialData?.model || '',
+            typeOfVehicle: initialData?.typeOfVehicle || '',
+            vehicleClass: initialData?.vehicleClass || '',
+            rcStatus: initialData?.rcStatus || '',
+            fuelConsumptionRate: initialData?.fuelConsumptionRate || '',
             registrationDate: formatDateForInput(initialData?.registrationDate),
             fitnessExpiry: formatDateForInput(initialData?.fitnessExpiry),
             taxExpiry: formatDateForInput(initialData?.taxExpiry),
@@ -90,6 +97,11 @@ export function HiredVehicleForm({ initialData, onSubmit, onClose }: FormProps<H
         resolver: zodResolver(HiredVehicleSchema),
         defaultValues: {
             ...initialData,
+            registrationNumber: initialData?.registrationNumber || '',
+            model: initialData?.model || '',
+            vehicleClass: initialData?.vehicleClass || '',
+            rcStatus: initialData?.rcStatus || '',
+            fuelConsumption: initialData?.fuelConsumption || '',
             agreementValidity: formatDateForInput(initialData?.agreementValidity),
             registrationDate: formatDateForInput(initialData?.registrationDate),
             fitnessExpiry: formatDateForInput(initialData?.fitnessExpiry),
@@ -154,7 +166,14 @@ export function HiredVehicleForm({ initialData, onSubmit, onClose }: FormProps<H
 export function RigCompressorForm({ initialData, onSubmit, onClose }: FormProps<RigCompressor>) {
     const form = useForm<RigCompressor>({
         resolver: zodResolver(RigCompressorSchema),
-        defaultValues: initialData || {},
+        defaultValues: {
+            ...initialData,
+            typeOfRigUnit: initialData?.typeOfRigUnit || '',
+            registrationNumber: initialData?.registrationNumber || '',
+            compressorDetails: initialData?.compressorDetails || '',
+            fuelConsumption: initialData?.fuelConsumption || '',
+            remarks: initialData?.remarks || '',
+        },
     });
 
     const handleSubmit = async (data: RigCompressor) => {
