@@ -1,3 +1,4 @@
+
 // src/app/dashboard/vehicles/page.tsx
 "use client";
 
@@ -13,7 +14,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
 import { DepartmentVehicleForm, HiredVehicleForm, RigCompressorForm } from '@/components/vehicles/VehicleForms';
-import { DepartmentVehicleTable, HiredVehicleTable, RigCompressorTable } from '@/components/vehicles/VehicleTables';
 import { useVehicles } from '@/hooks/useVehicles';
 import { useAuth } from '@/hooks/useAuth';
 import ExcelJS from 'exceljs';
@@ -67,7 +67,7 @@ export default function VehiclesPage() {
         switch (dataType) {
             case 'department':
                 data = departmentVehicles;
-                headers = ["Registration Number", "Model", "Type of Vehicle", "Vehicle Class", "Registration Date", "RC Status", "Fuel Consumption Rate", "Fitness Expiry", "Tax Expiry", "Insurance Expiry", "Pollution Expiry"];
+                headers = ["Registration Number", "Model", "Type of Vehicle", "Vehicle Class", "Registration Date", "RC Status", "Fuel Consumption Rate", "Fitness Expiry", "Tax Expiry", "Insurance Expiry", "Pollution Expiry", "Fuel Test Expiry"];
                 sheetName = 'Department Vehicles';
                 fileNamePrefix = 'GWD_Department_Vehicles';
                 break;
@@ -122,7 +122,7 @@ export default function VehiclesPage() {
         URL.revokeObjectURL(url);
 
         toast({ title: "Excel Exported", description: `${sheetName} data has been downloaded.` });
-    }, [departmentVehicles, hiredVehicles, rigCompressors]);
+    }, [departmentVehicles, hiredVehicles, rigCompressors, toast]);
 
 
     return (
