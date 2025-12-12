@@ -1,16 +1,20 @@
+
 // src/hooks/use-data-store.tsx
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { getFirestore, collection, onSnapshot, query, Timestamp, DocumentData, orderBy, getDocs, type QuerySnapshot, where, deleteDoc, doc } from 'firebase/firestore';
+import { getFirestore, collection, onSnapshot, query, Timestamp, DocumentData, orderBy, getDocs, type QuerySnapshot, where, deleteDoc, doc, addDoc, updateDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 import type { DataEntryFormData } from '@/lib/schemas/DataEntrySchema';
 import type { ArsEntry } from './useArsEntries';
-import type { StaffMember, LsgConstituencyMap, Designation, Bidder as MasterBidder } from '@/lib/schemas';
+import type { StaffMember, LsgConstituencyMap, Designation, Bidder as MasterBidder, DepartmentVehicle, HiredVehicle, RigCompressor } from '@/lib/schemas';
 import type { AgencyApplication } from './useAgencyApplications';
 import { toast } from './use-toast';
 import { designationOptions } from '@/lib/schemas';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
 
 const db = getFirestore(app);
 
@@ -62,6 +66,12 @@ export interface OfficeAddress {
   otherDetails?: string;
 }
 
+const COLLECTIONS = {
+    DEPARTMENT: 'departmentVehicles',
+    HIRED: 'hiredVehicles',
+    RIG_COMPRESSOR: 'rigCompressors',
+};
+
 interface DataStoreContextType {
     allFileEntries: DataEntryFormData[];
     allArsEntries: ArsEntry[];
@@ -70,6 +80,9 @@ interface DataStoreContextType {
     allLsgConstituencyMaps: LsgConstituencyMap[];
     allRateDescriptions: Record<RateDescriptionId, string>;
     allBidders: MasterBidder[];
+    allDepartmentVehicles: DepartmentVehicle[];
+    allHiredVehicles: HiredVehicle[];
+    allRigCompressors: RigCompressor[];
     officeAddress: OfficeAddress | null;
     isLoading: boolean;
     refetchFileEntries: () => void;
@@ -80,6 +93,15 @@ interface DataStoreContextType {
     refetchLsgConstituencyMaps: () => void;
     refetchRateDescriptions: () => void;
     refetchBidders: () => void;
+    addDepartmentVehicle: (data: DepartmentVehicle) => Promise<void>;
+    updateDepartmentVehicle: (data: DepartmentVehicle) => Promise<void>;
+    deleteDepartmentVehicle: (id: string, name: string) => Promise<void>;
+    addHiredVehicle: (data: HiredVehicle) => Promise<void>;
+    updateHiredVehicle: (data: HiredVehicle) => Promise<void>;
+    deleteHiredVehicle: (id: string, name: string) => Promise<void>;
+    addRigCompressor: (data: RigCompressor) => Promise<void>;
+    updateRigCompressor: (data: RigCompressor) => Promise<void>;
+    deleteRigCompressor: (id: string, name: string) => Promise<void>;
 }
 
 const DataStoreContext = createContext<DataStoreContextType | undefined>(undefined);
@@ -93,6 +115,9 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
     const [allLsgConstituencyMaps, setAllLsgConstituencyMaps] = useState<LsgConstituencyMap[]>([]);
     const [allRateDescriptions, setAllRateDescriptions] = useState<Record<RateDescriptionId, string>>(defaultRateDescriptions);
     const [allBidders, setAllBidders] = useState<MasterBidder[]>([]);
+    const [allDepartmentVehicles, setAllDepartmentVehicles] = useState<DepartmentVehicle[]>([]);
+    const [allHiredVehicles, setAllHiredVehicles] = useState<HiredVehicle[]>([]);
+    const [allRigCompressors, setAllRigCompressors] = useState<RigCompressor[]>([]);
     const [officeAddress, setOfficeAddress] = useState<OfficeAddress | null>(null);
 
     const [loadingStates, setLoadingStates] = useState({
@@ -103,6 +128,9 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
         lsg: true,
         rates: true,
         bidders: true,
+        departmentVehicles: true,
+        hiredVehicles: true,
+        rigCompressors: true,
         officeAddress: true,
     });
     
@@ -114,6 +142,9 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
         lsg: 0,
         rates: 0,
         bidders: 0,
+        departmentVehicles: 0,
+        hiredVehicles: 0,
+        rigCompressors: 0,
     });
 
     const refetchFileEntries = useCallback(() => setRefetchCounters(c => ({...c, files: c.files + 1})), []);
@@ -123,6 +154,9 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
     const refetchLsgConstituencyMaps = useCallback(() => setRefetchCounters(c => ({ ...c, lsg: c.lsg + 1 })), []);
     const refetchRateDescriptions = useCallback(() => setRefetchCounters(c => ({ ...c, rates: c.rates + 1 })), []);
     const refetchBidders = useCallback(() => setRefetchCounters(c => ({ ...c, bidders: c.bidders + 1 })), []);
+    const refetchDepartmentVehicles = useCallback(() => setRefetchCounters(c => ({...c, departmentVehicles: c.departmentVehicles + 1})), []);
+    const refetchHiredVehicles = useCallback(() => setRefetchCounters(c => ({...c, hiredVehicles: c.hiredVehicles + 1})), []);
+    const refetchRigCompressors = useCallback(() => setRefetchCounters(c => ({...c, rigCompressors: c.rigCompressors + 1})), []);
 
      const deleteArsEntry = useCallback(async (id: string) => {
         if (!user || user.role !== 'editor') {
@@ -143,8 +177,11 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             setAllLsgConstituencyMaps([]);
             setAllRateDescriptions(defaultRateDescriptions);
             setAllBidders([]);
+            setAllDepartmentVehicles([]);
+            setAllHiredVehicles([]);
+            setAllRigCompressors([]);
             setOfficeAddress(null);
-            setLoadingStates({ files: false, ars: false, staff: false, agencies: false, lsg: false, rates: false, bidders: false, officeAddress: false });
+            setLoadingStates({ files: false, ars: false, staff: false, agencies: false, lsg: false, rates: false, bidders: false, officeAddress: false, departmentVehicles: false, hiredVehicles: false, rigCompressors: false });
             return;
         }
 
@@ -163,6 +200,9 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             localSelfGovernments: { setter: setAllLsgConstituencyMaps, loaderKey: 'lsg', collectionName: 'localSelfGovernments' },
             rateDescriptions: { setter: setAllRateDescriptions, loaderKey: 'rates', collectionName: 'rateDescriptions' },
             bidders: { setter: setAllBidders, loaderKey: 'bidders', collectionName: 'bidders' },
+            departmentVehicles: { setter: setAllDepartmentVehicles, loaderKey: 'departmentVehicles', collectionName: 'departmentVehicles' },
+            hiredVehicles: { setter: setAllHiredVehicles, loaderKey: 'hiredVehicles', collectionName: 'hiredVehicles' },
+            rigCompressors: { setter: setAllRigCompressors, loaderKey: 'rigCompressors', collectionName: 'rigCompressors' },
             officeAddress: { setter: setOfficeAddress, loaderKey: 'officeAddress', collectionName: 'officeAddresses' },
         };
 
@@ -187,7 +227,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
                             });
                             setter((prev: Record<RateDescriptionId, string>) => ({ ...defaultRateDescriptions, ...prev, ...descriptions }));
                         }
-                    } else if (collectionName === 'officeAddress') {
+                    } else if (collectionName === 'officeAddresses') { // Corrected collection name
                         if (snapshot.empty) {
                             setter(null);
                         } else {
@@ -239,6 +279,96 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
 
     const isLoading = Object.values(loadingStates).some(Boolean);
 
+    // --- Vehicle Management Logic ---
+
+    const useAddVehicle = <T extends {}>(collectionName: string, refetch: () => void) => {
+      return useCallback(async (data: T) => {
+          if (!user) throw new Error("User must be logged in.");
+          const payload = { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
+          if ('id' in payload) delete (payload as any).id;
+  
+          addDoc(collection(db, collectionName), payload)
+              .then(() => {
+                  toast({ title: 'Item Added', description: 'The new item has been saved.' });
+                  refetch();
+              })
+              .catch(error => {
+                  if (error.code === 'permission-denied') {
+                      errorEmitter.emit('permission-error', new FirestorePermissionError({
+                          path: `/${collectionName}`,
+                          operation: 'create',
+                          requestResourceData: payload,
+                      }));
+                  } else {
+                      toast({ title: "Error Adding Item", description: error.message, variant: "destructive" });
+                  }
+              });
+      }, [user, collectionName, refetch]);
+    };
+  
+    const useUpdateVehicle = <T extends { id?: string }>(collectionName: string, refetch: () => void) => {
+      return useCallback(async (data: T) => {
+          if (!user) throw new Error("User must be logged in.");
+          if (!data.id) throw new Error("Document ID is missing for update.");
+          const docRef = doc(db, collectionName, data.id);
+          const payload = { ...data, updatedAt: serverTimestamp() };
+          if ('id' in payload) delete (payload as any).id;
+          
+          updateDoc(docRef, payload)
+              .then(() => {
+                  toast({ title: 'Item Updated', description: 'Your changes have been saved.' });
+                  refetch();
+              })
+              .catch(error => {
+                  if (error.code === 'permission-denied') {
+                      errorEmitter.emit('permission-error', new FirestorePermissionError({
+                          path: docRef.path,
+                          operation: 'update',
+                          requestResourceData: payload,
+                      }));
+                  } else {
+                      toast({ title: "Error Updating Item", description: error.message, variant: "destructive" });
+                  }
+              });
+      }, [user, collectionName, refetch]);
+    };
+  
+    const useDeleteVehicle = (collectionName: string, refetch: () => void) => {
+      return useCallback(async (id: string, name: string) => {
+          if (!user) throw new Error("User must be logged in.");
+          const docRef = doc(db, collectionName, id);
+          
+          deleteDoc(docRef)
+              .then(() => {
+                  toast({ title: 'Item Deleted', description: `${name} has been removed.` });
+                  refetch();
+              })
+              .catch(error => {
+                  if (error.code === 'permission-denied') {
+                      errorEmitter.emit('permission-error', new FirestorePermissionError({
+                          path: docRef.path,
+                          operation: 'delete',
+                      }));
+                  } else {
+                      toast({ title: "Error Deleting Item", description: error.message, variant: "destructive" });
+                  }
+              });
+      }, [user, collectionName, refetch]);
+    };
+
+    const addDepartmentVehicle = useAddVehicle<DepartmentVehicle>(COLLECTIONS.DEPARTMENT, refetchDepartmentVehicles);
+    const updateDepartmentVehicle = useUpdateVehicle<DepartmentVehicle>(COLLECTIONS.DEPARTMENT, refetchDepartmentVehicles);
+    const deleteDepartmentVehicle = useDeleteVehicle(COLLECTIONS.DEPARTMENT, refetchDepartmentVehicles);
+
+    const addHiredVehicle = useAddVehicle<HiredVehicle>(COLLECTIONS.HIRED, refetchHiredVehicles);
+    const updateHiredVehicle = useUpdateVehicle<HiredVehicle>(COLLECTIONS.HIRED, refetchHiredVehicles);
+    const deleteHiredVehicle = useDeleteVehicle(COLLECTIONS.HIRED, refetchHiredVehicles);
+
+    const addRigCompressor = useAddVehicle<RigCompressor>(COLLECTIONS.RIG_COMPRESSOR, refetchRigCompressors);
+    const updateRigCompressor = useUpdateVehicle<RigCompressor>(COLLECTIONS.RIG_COMPRESSOR, refetchRigCompressors);
+    const deleteRigCompressor = useDeleteVehicle(COLLECTIONS.RIG_COMPRESSOR, refetchRigCompressors);
+
+
     return (
         <DataStoreContext.Provider value={{
             allFileEntries,
@@ -248,6 +378,9 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             allLsgConstituencyMaps,
             allRateDescriptions,
             allBidders,
+            allDepartmentVehicles,
+            allHiredVehicles,
+            allRigCompressors,
             officeAddress,
             isLoading,
             refetchFileEntries,
@@ -258,6 +391,15 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             refetchLsgConstituencyMaps,
             refetchRateDescriptions,
             refetchBidders,
+            addDepartmentVehicle,
+            updateDepartmentVehicle,
+            deleteDepartmentVehicle,
+            addHiredVehicle,
+            updateHiredVehicle,
+            deleteHiredVehicle,
+            addRigCompressor,
+            updateRigCompressor,
+            deleteRigCompressor,
         }}>
             {children}
         </DataStoreContext.Provider>
