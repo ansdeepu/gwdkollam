@@ -64,20 +64,11 @@ export default function VehiclesPage() {
                 </CardHeader>
                 <CardContent>
                     <Tabs defaultValue="department">
-                        <div className="flex justify-between items-center mb-4">
-                            <TabsList>
-                                <TabsTrigger value="department">Department Vehicles</TabsTrigger>
-                                <TabsTrigger value="hired">Hired Vehicles</TabsTrigger>
-                                <TabsTrigger value="rigs">Rig & Compressor</TabsTrigger>
-                            </TabsList>
-                             {canEdit && (
-                                <div className="flex gap-2">
-                                     <Button onClick={() => handleAddOrEdit('department', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add Department Vehicle</Button>
-                                     <Button onClick={() => handleAddOrEdit('hired', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add Hired Vehicle</Button>
-                                     <Button onClick={() => handleAddOrEdit('rig', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add Rig/Compressor</Button>
-                                </div>
-                            )}
-                        </div>
+                        <TabsList>
+                            <TabsTrigger value="department">Department Vehicles</TabsTrigger>
+                            <TabsTrigger value="hired">Hired Vehicles</TabsTrigger>
+                            <TabsTrigger value="rigs">Rig & Compressor</TabsTrigger>
+                        </TabsList>
                         
                         {isLoading ? (
                              <div className="flex justify-center items-center h-64">
@@ -86,6 +77,9 @@ export default function VehiclesPage() {
                         ) : (
                             <>
                                 <TabsContent value="department">
+                                    <div className="flex justify-end my-4">
+                                        {canEdit && <Button onClick={() => handleAddOrEdit('department', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add Department Vehicle</Button>}
+                                    </div>
                                     <DepartmentVehicleTable 
                                         data={departmentVehicles} 
                                         onEdit={(v) => handleAddOrEdit('department', v)} 
@@ -94,6 +88,9 @@ export default function VehiclesPage() {
                                     />
                                 </TabsContent>
                                 <TabsContent value="hired">
+                                    <div className="flex justify-end my-4">
+                                        {canEdit && <Button onClick={() => handleAddOrEdit('hired', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add Hired Vehicle</Button>}
+                                    </div>
                                     <HiredVehicleTable 
                                         data={hiredVehicles} 
                                         onEdit={(v) => handleAddOrEdit('hired', v)} 
@@ -102,6 +99,9 @@ export default function VehiclesPage() {
                                     />
                                 </TabsContent>
                                 <TabsContent value="rigs">
+                                     <div className="flex justify-end my-4">
+                                        {canEdit && <Button onClick={() => handleAddOrEdit('rig', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add Rig/Compressor</Button>}
+                                    </div>
                                     <RigCompressorTable 
                                         data={rigCompressors} 
                                         onEdit={(v) => handleAddOrEdit('rig', v)} 
