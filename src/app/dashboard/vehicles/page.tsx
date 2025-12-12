@@ -2,7 +2,7 @@
 // src/app/dashboard/vehicles/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { DepartmentVehicleTable, HiredVehicleTable, RigCompressorTable } from '@/components/vehicles/VehicleTables';
 import { useDataStore } from '@/hooks/use-data-store';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
@@ -170,6 +171,16 @@ export default function VehiclesPage() {
 
         toast({ title: "Excel Exported", description: `${sheetName} data has been downloaded.` });
     }, [allDepartmentVehicles, allHiredVehicles, allRigCompressors, toast]);
+    
+    const { presentDepartmentVehicles, historyDepartmentVehicles } = useMemo(() => ({
+        presentDepartmentVehicles: allDepartmentVehicles.filter(v => v.rcStatus !== 'Garaged'),
+        historyDepartmentVehicles: allDepartmentVehicles.filter(v => v.rcStatus === 'Garaged'),
+    }), [allDepartmentVehicles]);
+
+    const { presentHiredVehicles, historyHiredVehicles } = useMemo(() => ({
+        presentHiredVehicles: allHiredVehicles.filter(v => v.rcStatus !== 'Garaged'),
+        historyHiredVehicles: allHiredVehicles.filter(v => v.rcStatus === 'Garaged'),
+    }), [allHiredVehicles]);
 
 
     return (
@@ -179,61 +190,95 @@ export default function VehiclesPage() {
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                  </div>
             ) : (
-                <div className="space-y-6">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle>Department Vehicles</CardTitle>
-                             <div className="flex items-center gap-2">
-                                {canEdit && <Button onClick={() => handleAddOrEdit('department', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
-                                <Button variant="outline" onClick={() => handleExportExcel('department')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <DepartmentVehicleTable 
-                                data={allDepartmentVehicles} 
-                                onEdit={(v) => handleAddOrEdit('department', v)} 
-                                onDelete={deleteDepartmentVehicle} 
-                                canEdit={canEdit}
-                            />
-                        </CardContent>
-                    </Card>
+                <Tabs defaultValue="present">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="present">Present Data</TabsTrigger>
+                        <TabsTrigger value="history">History</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="present" className="mt-4 space-y-6">
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <CardTitle>Department Vehicles</CardTitle>
+                                 <div className="flex items-center gap-2">
+                                    {canEdit && <Button onClick={() => handleAddOrEdit('department', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
+                                    <Button variant="outline" onClick={() => handleExportExcel('department')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <DepartmentVehicleTable 
+                                    data={presentDepartmentVehicles} 
+                                    onEdit={(v) => handleAddOrEdit('department', v)} 
+                                    onDelete={deleteDepartmentVehicle} 
+                                    canEdit={canEdit}
+                                />
+                            </CardContent>
+                        </Card>
 
-                    <Card>
-                         <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle>Hired Vehicles</CardTitle>
-                             <div className="flex items-center gap-2">
-                                {canEdit && <Button onClick={() => handleAddOrEdit('hired', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
-                                <Button variant="outline" onClick={() => handleExportExcel('hired')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <HiredVehicleTable 
-                                data={allHiredVehicles} 
-                                onEdit={(v) => handleAddOrEdit('hired', v)} 
-                                onDelete={deleteHiredVehicle}
-                                canEdit={canEdit}
-                            />
-                        </CardContent>
-                    </Card>
+                        <Card>
+                             <CardHeader className="flex flex-row items-center justify-between">
+                                <CardTitle>Hired Vehicles</CardTitle>
+                                 <div className="flex items-center gap-2">
+                                    {canEdit && <Button onClick={() => handleAddOrEdit('hired', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
+                                    <Button variant="outline" onClick={() => handleExportExcel('hired')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <HiredVehicleTable 
+                                    data={presentHiredVehicles} 
+                                    onEdit={(v) => handleAddOrEdit('hired', v)} 
+                                    onDelete={deleteHiredVehicle}
+                                    canEdit={canEdit}
+                                />
+                            </CardContent>
+                        </Card>
 
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle>Rig & Compressor Units</CardTitle>
-                             <div className="flex items-center gap-2">
-                                {canEdit && <Button onClick={() => handleAddOrEdit('rig', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
-                                <Button variant="outline" onClick={() => handleExportExcel('rig')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <RigCompressorTable 
-                                data={allRigCompressors} 
-                                onEdit={(v) => handleAddOrEdit('rig', v)} 
-                                onDelete={deleteRigCompressor}
-                                canEdit={canEdit}
-                            />
-                        </CardContent>
-                    </Card>
-                </div>
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <CardTitle>Rig & Compressor Units</CardTitle>
+                                 <div className="flex items-center gap-2">
+                                    {canEdit && <Button onClick={() => handleAddOrEdit('rig', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
+                                    <Button variant="outline" onClick={() => handleExportExcel('rig')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <RigCompressorTable 
+                                    data={allRigCompressors} 
+                                    onEdit={(v) => handleAddOrEdit('rig', v)} 
+                                    onDelete={deleteRigCompressor}
+                                    canEdit={canEdit}
+                                />
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                    <TabsContent value="history" className="mt-4 space-y-6">
+                         <Card>
+                            <CardHeader>
+                                <CardTitle>Department Vehicles (Garaged)</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <DepartmentVehicleTable 
+                                    data={historyDepartmentVehicles} 
+                                    onEdit={(v) => handleAddOrEdit('department', v)} 
+                                    onDelete={deleteDepartmentVehicle} 
+                                    canEdit={canEdit}
+                                />
+                            </CardContent>
+                        </Card>
+                        <Card>
+                             <CardHeader>
+                                <CardTitle>Hired Vehicles (Garaged)</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <HiredVehicleTable 
+                                    data={historyHiredVehicles} 
+                                    onEdit={(v) => handleAddOrEdit('hired', v)} 
+                                    onDelete={deleteHiredVehicle}
+                                    canEdit={canEdit}
+                                />
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             )}
 
             <Dialog open={isDepartmentDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) setEditingDepartmentVehicle(null); setIsDepartmentDialogOpen(isOpen); }}>
