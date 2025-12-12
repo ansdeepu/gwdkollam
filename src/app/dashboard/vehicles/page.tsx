@@ -81,54 +81,58 @@ export default function VehiclesPage() {
         }
     };
     
-    const handleExportExcel = useCallback(async () => {
+    const handleExportExcel = useCallback(async (
+        dataType: 'department' | 'hired' | 'rig'
+    ) => {
         const workbook = new ExcelJS.Workbook();
+        let data, headers, sheetName, fileNamePrefix;
 
-        // Department Vehicles
-        const deptSheet = workbook.addWorksheet('Department Vehicles');
-        const deptHeaders = ["Registration Number", "Model", "Type of Vehicle", "Vehicle Class", "Registration Date", "RC Status", "Fuel Consumption Rate", "Fitness Expiry", "Tax Expiry", "Insurance Expiry", "Pollution Expiry"];
-        deptSheet.addRow(deptHeaders).font = { bold: true };
-        departmentVehicles.forEach(v => {
-            deptSheet.addRow([
-                v.registrationNumber, v.model, v.typeOfVehicle, v.vehicleClass,
-                formatDateSafe(v.registrationDate), v.rcStatus, v.fuelConsumptionRate,
-                formatDateSafe(v.fitnessExpiry), formatDateSafe(v.taxExpiry),
-                formatDateSafe(v.insuranceExpiry), formatDateSafe(v.pollutionExpiry)
-            ]);
-        });
+        switch (dataType) {
+            case 'department':
+                data = departmentVehicles;
+                headers = ["Registration Number", "Model", "Type of Vehicle", "Vehicle Class", "Registration Date", "RC Status", "Fuel Consumption Rate", "Fitness Expiry", "Tax Expiry", "Insurance Expiry", "Pollution Expiry"];
+                sheetName = 'Department Vehicles';
+                fileNamePrefix = 'GWD_Department_Vehicles';
+                break;
+            case 'hired':
+                data = hiredVehicles;
+                headers = ["Registration Number", "Model", "Agreement Validity", "Vehicle Class", "Registration Date", "RC Status", "Hire Charges", "Fuel Consumption"];
+                sheetName = 'Hired Vehicles';
+                fileNamePrefix = 'GWD_Hired_Vehicles';
+                break;
+            case 'rig':
+                data = rigCompressors;
+                headers = ["Type of Rig Unit", "Registration Number", "Compressor Details", "Fuel Consumption", "Remarks"];
+                sheetName = 'Rig and Compressor';
+                fileNamePrefix = 'GWD_Rig_Compressor';
+                break;
+        }
 
-        // Hired Vehicles
-        const hiredSheet = workbook.addWorksheet('Hired Vehicles');
-        const hiredHeaders = ["Registration Number", "Model", "Agreement Validity", "Vehicle Class", "Registration Date", "RC Status", "Hire Charges", "Fuel Consumption"];
-        hiredSheet.addRow(hiredHeaders).font = { bold: true };
-        hiredVehicles.forEach(v => {
-            hiredSheet.addRow([
-                v.registrationNumber, v.model, formatDateSafe(v.agreementValidity),
-                v.vehicleClass, formatDateSafe(v.registrationDate), v.rcStatus,
-                v.hireCharges, v.fuelConsumption
-            ]);
-        });
-        
-        // Rig/Compressor Units
-        const rigSheet = workbook.addWorksheet('Rig and Compressor');
-        const rigHeaders = ["Type of Rig Unit", "Registration Number", "Compressor Details", "Fuel Consumption", "Remarks"];
-        rigSheet.addRow(rigHeaders).font = { bold: true };
-        rigCompressors.forEach(u => {
-            rigSheet.addRow([u.typeOfRigUnit, u.registrationNumber, u.compressorDetails, u.fuelConsumption, u.remarks]);
+        const sheet = workbook.addWorksheet(sheetName);
+        sheet.addRow(headers).font = { bold: true };
+
+        data.forEach(item => {
+            const row = headers.map(header => {
+                const key = header.toLowerCase().replace(/ & /g, 'And').replace(/ /g, '');
+                let value = (item as any)[Object.keys(item).find(k => k.toLowerCase().replace(/ /g, '') === key) || ''];
+                if (header.toLowerCase().includes('date') || header.toLowerCase().includes('validity') || header.toLowerCase().includes('expiry')) {
+                    value = formatDateSafe(value);
+                }
+                return value;
+            });
+            sheet.addRow(row);
         });
 
         // Auto-width columns
-        [deptSheet, hiredSheet, rigSheet].forEach(sheet => {
-            sheet.columns.forEach(column => {
-                let maxLength = 0;
-                column.eachCell!({ includeEmpty: true }, cell => {
-                    const columnLength = cell.value ? cell.value.toString().length : 10;
-                    if (columnLength > maxLength) {
-                        maxLength = columnLength;
-                    }
-                });
-                column.width = maxLength < 15 ? 15 : maxLength + 2;
+        sheet.columns.forEach(column => {
+            let maxLength = 0;
+            column.eachCell!({ includeEmpty: true }, cell => {
+                const columnLength = cell.value ? cell.value.toString().length : 10;
+                if (columnLength > maxLength) {
+                    maxLength = columnLength;
+                }
             });
+            column.width = maxLength < 15 ? 15 : maxLength + 2;
         });
 
         const buffer = await workbook.xlsx.writeBuffer();
@@ -136,29 +140,16 @@ export default function VehiclesPage() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `GWD_Vehicles_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+        a.download = `${fileNamePrefix}_${format(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
         a.click();
         URL.revokeObjectURL(url);
 
-        toast({ title: "Excel Exported", description: "Vehicle data has been downloaded." });
+        toast({ title: "Excel Exported", description: `${sheetName} data has been downloaded.` });
     }, [departmentVehicles, hiredVehicles, rigCompressors]);
 
 
     return (
         <div className="space-y-6">
-            <Card>
-                <CardContent className="p-4">
-                     {canEdit && (
-                        <div className="flex justify-center items-center space-x-2 mb-4 p-4 border-b">
-                            <Button onClick={() => handleAddOrEdit('department', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add Department Vehicle</Button>
-                            <Button onClick={() => handleAddOrEdit('hired', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add Hired Vehicle</Button>
-                            <Button onClick={() => handleAddOrEdit('rig', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add Rig/Compressor</Button>
-                            <Button variant="outline" onClick={handleExportExcel}><FileDown className="h-4 w-4 mr-2" /> Export Excel</Button>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
             {isLoading ? (
                  <div className="flex justify-center items-center h-64">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -166,8 +157,12 @@ export default function VehiclesPage() {
             ) : (
                 <div className="space-y-6">
                     <Card>
-                        <CardHeader>
+                        <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>Department Vehicles</CardTitle>
+                             <div className="flex items-center gap-2">
+                                {canEdit && <Button onClick={() => handleAddOrEdit('department', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
+                                <Button variant="outline" onClick={() => handleExportExcel('department')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <DepartmentVehicleTable 
@@ -180,8 +175,12 @@ export default function VehiclesPage() {
                     </Card>
 
                     <Card>
-                        <CardHeader>
+                         <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>Hired Vehicles</CardTitle>
+                             <div className="flex items-center gap-2">
+                                {canEdit && <Button onClick={() => handleAddOrEdit('hired', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
+                                <Button variant="outline" onClick={() => handleExportExcel('hired')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <HiredVehicleTable 
@@ -194,8 +193,12 @@ export default function VehiclesPage() {
                     </Card>
 
                     <Card>
-                        <CardHeader>
+                        <CardHeader className="flex flex-row items-center justify-between">
                             <CardTitle>Rig & Compressor Units</CardTitle>
+                             <div className="flex items-center gap-2">
+                                {canEdit && <Button onClick={() => handleAddOrEdit('rig', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
+                                <Button variant="outline" onClick={() => handleExportExcel('rig')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
+                            </div>
                         </CardHeader>
                         <CardContent>
                             <RigCompressorTable 
