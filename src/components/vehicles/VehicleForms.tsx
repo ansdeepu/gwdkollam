@@ -27,6 +27,13 @@ const safeParseDate = (dateValue: any): Date | null => {
   return null;
 };
 
+export const formatDateSafe = (d: any): string => {
+    if (!d) return 'N/A';
+    const date = safeParseDate(d);
+    return date ? format(date, 'dd/MM/yyyy') : 'N/A';
+};
+
+
 const formatDateForInput = (date: any): string => {
     if (!date) return '';
     const d = safeParseDate(date);
