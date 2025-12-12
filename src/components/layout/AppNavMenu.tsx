@@ -7,8 +7,6 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
 import { LayoutDashboard, FileText, FolderOpen, Users, Briefcase, Settings, BarChart3, DollarSign, Hourglass, Waves, ClipboardList, UserPlus, HelpCircle, Landmark, Calendar, Building, MapPin, Hammer, ArrowUpRight, Truck } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -46,6 +44,14 @@ export const allNavItems: NavItem[] = [
   { href: '/dashboard/help', label: 'Help & About', icon: HelpCircle },
 ];
 
+const navItemColors = [
+  "text-sky-700", "text-blue-700", "text-indigo-700", "text-violet-700",
+  "text-purple-700", "text-fuchsia-700", "text-pink-700", "text-rose-700",
+  "text-red-700", "text-orange-700", "text-amber-700",
+  "text-lime-700", "text-green-700", "text-emerald-700", "text-teal-700", "text-cyan-700"
+];
+
+
 export default function AppNavMenu() {
   const pathname = usePathname();
   const { user } = useAuth();
@@ -79,20 +85,21 @@ export default function AppNavMenu() {
 
   return (
     <SidebarMenu>
-      {accessibleNavItems.map((item) => (
+      {accessibleNavItems.map((item, index) => (
         <SidebarMenuItem key={item.href}>
             <div className="flex items-center w-full group">
               <Link href={item.href} passHref onClick={() => handleNavigation(item.href)} className="flex-grow">
                 <SidebarMenuButton
                   asChild
-                  isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href) && !item.subItems)}
+                  size="compact"
+                  isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))}
                   tooltip={{ children: item.label, side: "right", align: "center" }}
-                  className="justify-start pr-8" // Add padding to make space for the icon
+                  className="justify-start pr-8"
                 >
                   <div className="flex items-center justify-between w-full">
                     <div className="flex items-center gap-2">
-                      <item.icon className="h-5 w-5" />
-                      <span>{item.label}</span>
+                      <item.icon className={`h-4 w-4 ${navItemColors[index % navItemColors.length]}`} />
+                      <span className={`font-medium ${navItemColors[index % navItemColors.length]}`}>{item.label}</span>
                     </div>
                     {item.href === '/dashboard/pending-updates' && pendingCount > 0 && (
                       <Badge className="h-5 px-2 text-xs font-semibold leading-none rounded-full bg-destructive text-destructive-foreground group-data-[collapsible=icon]:hidden">
@@ -113,34 +120,6 @@ export default function AppNavMenu() {
                 </Tooltip>
                </TooltipProvider>
             </div>
-           {item.subItems && (
-            <SidebarMenuSub>
-              {item.subItems.filter(subItem => !subItem.roles || subItem.roles.includes(user!.role)).map(subItem => (
-                <SidebarMenuSubItem key={subItem.href}>
-                   <div className="flex items-center w-full group">
-                    <Link href={subItem.href} passHref onClick={() => handleNavigation(subItem.href)} className="flex-grow">
-                        <SidebarMenuSubButton asChild isActive={pathname.startsWith(subItem.href)}>
-                            <div className="flex items-center gap-2">
-                                <subItem.icon className="h-4 w-4" />
-                                <span>{subItem.label}</span>
-                            </div>
-                        </SidebarMenuSubButton>
-                    </Link>
-                    <TooltipProvider>
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <a href={subItem.href} target="_blank" rel="noopener noreferrer" className="absolute right-1 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity p-1 rounded-md hover:bg-sidebar-accent group-data-[collapsible=icon]:hidden">
-                                    <ArrowUpRight className="h-3 w-3" />
-                                </a>
-                            </TooltipTrigger>
-                            <TooltipContent side="right"><p>Open in new tab</p></TooltipContent>
-                        </Tooltip>
-                    </TooltipProvider>
-                   </div>
-                </SidebarMenuSubItem>
-              ))}
-            </SidebarMenuSub>
-          )}
         </SidebarMenuItem>
       ))}
     </SidebarMenu>
