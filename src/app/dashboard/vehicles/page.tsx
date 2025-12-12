@@ -15,8 +15,26 @@ import { useAuth } from '@/hooks/useAuth';
 import ExcelJS from 'exceljs';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
-import { formatDateSafe } from '@/components/vehicles/VehicleForms';
 import { DepartmentVehicleTable, HiredVehicleTable, RigCompressorTable } from '@/components/vehicles/VehicleTables';
+
+const safeParseDate = (dateValue: any): Date | null => {
+  if (!dateValue) return null;
+  if (dateValue instanceof Date) return dateValue;
+  if (typeof dateValue === 'object' && dateValue !== null && typeof (dateValue as any).seconds === 'number') {
+    return new Date((dateValue as any).seconds * 1000);
+  }
+  if (typeof dateValue === 'string') {
+    const parsed = new Date(dateValue);
+    if (!isNaN(parsed.getTime())) return parsed;
+  }
+  return null;
+};
+
+const formatDateSafe = (d: any): string => {
+    if (!d) return 'N/A';
+    const date = safeParseDate(d);
+    return date ? format(date, 'dd/MM/yyyy') : 'N/A';
+};
 
 
 export default function VehiclesPage() {
@@ -56,6 +74,30 @@ export default function VehiclesPage() {
         }
     };
     
+    const handleDepartmentFormSubmit = async (data: DepartmentVehicle) => {
+        if (editingDepartmentVehicle) {
+            await updateDepartmentVehicle(data);
+        } else {
+            await addDepartmentVehicle(data);
+        }
+    };
+
+    const handleHiredFormSubmit = async (data: HiredVehicle) => {
+        if (editingHiredVehicle) {
+            await updateHiredVehicle(data);
+        } else {
+            await addHiredVehicle(data);
+        }
+    };
+
+    const handleRigCompressorFormSubmit = async (data: RigCompressor) => {
+        if (editingRigCompressor) {
+            await updateRigCompressor(data);
+        } else {
+            await addRigCompressor(data);
+        }
+    };
+
     const handleExportExcel = useCallback(async (
         dataType: 'department' | 'hired' | 'rig'
     ) => {
@@ -193,7 +235,7 @@ export default function VehiclesPage() {
                 <DialogContent className="max-w-4xl">
                     <DepartmentVehicleForm 
                         initialData={editingDepartmentVehicle}
-                        onFormSubmit={editingDepartmentVehicle ? updateDepartmentVehicle : addDepartmentVehicle}
+                        onFormSubmit={handleDepartmentFormSubmit}
                         onClose={() => setIsDepartmentDialogOpen(false)}
                     />
                 </DialogContent>
@@ -202,7 +244,7 @@ export default function VehiclesPage() {
                 <DialogContent className="max-w-4xl">
                      <HiredVehicleForm 
                         initialData={editingHiredVehicle}
-                        onFormSubmit={editingHiredVehicle ? updateHiredVehicle : addHiredVehicle}
+                        onFormSubmit={handleHiredFormSubmit}
                         onClose={() => setIsHiredDialogOpen(false)}
                     />
                 </DialogContent>
@@ -211,7 +253,7 @@ export default function VehiclesPage() {
                 <DialogContent className="max-w-2xl">
                     <RigCompressorForm
                         initialData={editingRigCompressor}
-                        onFormSubmit={editingRigCompressor ? updateRigCompressor : addRigCompressor}
+                        onFormSubmit={handleRigCompressorFormSubmit}
                         onClose={() => setIsRigDialogOpen(false)}
                     />
                 </DialogContent>
