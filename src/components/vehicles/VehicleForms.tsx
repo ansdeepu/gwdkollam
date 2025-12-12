@@ -1,3 +1,4 @@
+
 // src/components/vehicles/VehicleForms.tsx
 "use client";
 
@@ -46,7 +47,6 @@ export function DepartmentVehicleForm({ initialData, onSubmit, onClose }: FormPr
     const form = useForm<DepartmentVehicle>({
         resolver: zodResolver(DepartmentVehicleSchema),
         defaultValues: {
-            ...initialData,
             registrationNumber: initialData?.registrationNumber || '',
             model: initialData?.model || '',
             typeOfVehicle: initialData?.typeOfVehicle || '',
@@ -58,6 +58,7 @@ export function DepartmentVehicleForm({ initialData, onSubmit, onClose }: FormPr
             taxExpiry: formatDateForInput(initialData?.taxExpiry),
             insuranceExpiry: formatDateForInput(initialData?.insuranceExpiry),
             pollutionExpiry: formatDateForInput(initialData?.pollutionExpiry),
+            fuelTestExpiry: formatDateForInput(initialData?.fuelTestExpiry),
         } as any,
     });
 
@@ -86,11 +87,12 @@ export function DepartmentVehicleForm({ initialData, onSubmit, onClose }: FormPr
                     </div>
                     <div className="space-y-2 pt-4 border-t">
                         <h4 className="font-medium text-sm">Certificate Validity</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             <FormField name="fitnessExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Fitness</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                             <FormField name="taxExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tax</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                             <FormField name="insuranceExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Insurance</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                             <FormField name="pollutionExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Pollution</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                            <FormField name="fuelTestExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Fuel Test</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                         </div>
                     </div>
                 </div>
@@ -111,7 +113,6 @@ export function HiredVehicleForm({ initialData, onSubmit, onClose }: FormProps<H
     const form = useForm<HiredVehicle>({
         resolver: zodResolver(HiredVehicleSchema),
         defaultValues: {
-            ...initialData,
             registrationNumber: initialData?.registrationNumber || '',
             model: initialData?.model || '',
             vehicleClass: initialData?.vehicleClass || '',
@@ -177,7 +178,6 @@ export function RigCompressorForm({ initialData, onSubmit, onClose }: FormProps<
     const form = useForm<RigCompressor>({
         resolver: zodResolver(RigCompressorSchema),
         defaultValues: {
-            ...initialData,
             typeOfRigUnit: initialData?.typeOfRigUnit || '',
             registrationNumber: initialData?.registrationNumber || '',
             compressorDetails: initialData?.compressorDetails || '',

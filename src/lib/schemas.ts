@@ -1,5 +1,4 @@
 
-
 // src/lib/schemas.ts
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
@@ -548,6 +547,7 @@ export const DepartmentVehicleSchema = z.object({
     taxExpiry: optionalDateSchema,
     insuranceExpiry: optionalDateSchema,
     pollutionExpiry: optionalDateSchema,
+    fuelTestExpiry: optionalDateSchema,
 });
 export type DepartmentVehicle = z.infer<typeof DepartmentVehicleSchema>;
 
@@ -578,6 +578,7 @@ export const RigCompressorSchema = z.object({
 });
 export type RigCompressor = z.infer<typeof RigCompressorSchema>;
     
+
 
 
 
