@@ -212,11 +212,13 @@ export function RigCompressorForm({ initialData, onFormSubmit, onClose }: FormPr
         defaultValues: {
             id: initialData?.id || undefined,
             typeOfRigUnit: initialData?.typeOfRigUnit || '',
-            registrationNumber: initialData?.registrationNumber || '',
-            compressorDetails: initialData?.compressorDetails || '',
-            fuelConsumption: initialData?.fuelConsumption || '',
-            remarks: initialData?.remarks || '',
             status: initialData?.status || 'Active',
+            fuelConsumption: initialData?.fuelConsumption || '',
+            rigVehicleRegNo: initialData?.rigVehicleRegNo || '',
+            compressorVehicleRegNo: initialData?.compressorVehicleRegNo || '',
+            supportingVehicleRegNo: initialData?.supportingVehicleRegNo || '',
+            compressorDetails: initialData?.compressorDetails || '',
+            remarks: initialData?.remarks || '',
         },
     });
 
@@ -232,9 +234,8 @@ export function RigCompressorForm({ initialData, onFormSubmit, onClose }: FormPr
                     <DialogTitle>{initialData ? 'Edit' : 'Add'} Rig & Compressor Unit</DialogTitle>
                 </DialogHeader>
                 <div className="p-6 pt-0 space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <FormField name="typeOfRigUnit" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Type of Rig Unit</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
-                        <FormField name="registrationNumber" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Vehicle Reg. No</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                         <FormField name="status" control={form.control} render={({ field }) => ( 
                             <FormItem>
                                 <FormLabel>Status</FormLabel>
@@ -248,8 +249,15 @@ export function RigCompressorForm({ initialData, onFormSubmit, onClose }: FormPr
                             </FormItem>
                         )}/>
                         <FormField name="fuelConsumption" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Fuel Consumption</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
-                        <FormField name="compressorDetails" control={form.control} render={({ field }) => ( <FormItem className="md:col-span-2"><FormLabel>Compressor Details</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
-                        <FormField name="remarks" control={form.control} render={({ field }) => ( <FormItem className="md:col-span-2"><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                    </div>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <FormField name="rigVehicleRegNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Rig Vehicle Reg. No</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                        <FormField name="compressorVehicleRegNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Compressor Vehicle Reg. No</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                        <FormField name="supportingVehicleRegNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Supporting Vehicle Reg. No</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                    </div>
+                    <div className="space-y-4">
+                        <FormField name="compressorDetails" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Compressor Details</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                        <FormField name="remarks" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                     </div>
                 </div>
                 <DialogFooter className="p-6 pt-4">
@@ -263,5 +271,3 @@ export function RigCompressorForm({ initialData, onFormSubmit, onClose }: FormPr
         </Form>
     );
 }
-
-    

@@ -577,10 +577,12 @@ export type RigStatus = typeof rigStatusOptions[number];
 export const RigCompressorSchema = z.object({
     id: z.string().optional(),
     typeOfRigUnit: z.string().min(1, "Type of Rig Unit is required."),
-    registrationNumber: z.string().optional(),
     status: z.enum(rigStatusOptions).default('Active').optional(),
-    compressorDetails: z.string().optional(),
     fuelConsumption: z.string().optional(),
+    rigVehicleRegNo: z.string().optional(),
+    compressorVehicleRegNo: z.string().optional(),
+    supportingVehicleRegNo: z.string().optional(),
+    compressorDetails: z.string().optional(),
     remarks: z.string().optional(),
 });
 export type RigCompressor = z.infer<typeof RigCompressorSchema>;

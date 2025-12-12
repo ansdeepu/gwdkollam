@@ -192,10 +192,10 @@ export function RigCompressorTable({ data, onEdit, onDelete, canEdit }: RigCompr
                         <TableHead>Sl. No</TableHead>
                         <TableHead>Type of Rig Unit</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Vehicle Reg. No</TableHead>
+                        <TableHead>Rig Vehicle Reg. No</TableHead>
+                        <TableHead>Compressor Vehicle Reg. No</TableHead>
+                        <TableHead>Supporting Vehicle Reg. No</TableHead>
                         <TableHead>Compressor Details</TableHead>
-                        <TableHead>Fuel Consumption</TableHead>
-                        <TableHead>Remarks</TableHead>
                         {canEdit && <TableHead className="text-right">Actions</TableHead>}
                     </TableRow>
                 </TableHeader>
@@ -205,10 +205,10 @@ export function RigCompressorTable({ data, onEdit, onDelete, canEdit }: RigCompr
                             <TableCell>{index + 1}</TableCell>
                             <TableCell>{u.typeOfRigUnit}</TableCell>
                             <TableCell>{u.status}</TableCell>
-                            <TableCell>{u.registrationNumber}</TableCell>
+                            <TableCell>{u.rigVehicleRegNo}</TableCell>
+                            <TableCell>{u.compressorVehicleRegNo}</TableCell>
+                            <TableCell>{u.supportingVehicleRegNo}</TableCell>
                             <TableCell>{u.compressorDetails}</TableCell>
-                            <TableCell>{u.fuelConsumption}</TableCell>
-                            <TableCell>{u.remarks}</TableCell>
                             {canEdit && (
                                 <TableCell className="text-right">
                                     <Tooltip>
