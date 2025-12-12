@@ -1699,7 +1699,7 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
 
     return (
         <>
-            <DialogHeader className="p-6 pb-4">
+            <DialogHeader className="p-6 pb-4 shrink-0">
                 <DialogTitle>Add Agency Registration</DialogTitle>
             </DialogHeader>
             <div className="flex-1 min-h-0">
@@ -1752,7 +1752,7 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
                     </div>
                 </ScrollArea>
             </div>
-            <DialogFooter className="mt-4 p-6 pt-0">
+            <DialogFooter className="mt-4 p-6 pt-0 shrink-0">
                 <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
                 <Button type="button" onClick={() => onConfirm(data)}>Save Changes</Button>
             </DialogFooter>
