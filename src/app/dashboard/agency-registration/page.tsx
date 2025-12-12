@@ -1787,24 +1787,28 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
                 <DialogTitle>{initialData?.id ? 'Edit Application Fee' : 'Add Application Fee'}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                    <Label>Type of Application</Label>
-                    <Select onValueChange={(value) => setData(d => ({ ...d, applicationFeeType: value as ApplicationFeeType }))} value={data.applicationFeeType}>
-                        <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
-                        <SelectContent>{applicationFeeTypes.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
-                    </Select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label>Type of Application</Label>
+                        <Select onValueChange={(value) => setData(d => ({ ...d, applicationFeeType: value as ApplicationFeeType }))} value={data.applicationFeeType}>
+                            <SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger>
+                            <SelectContent>{applicationFeeTypes.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Fees Amount</Label>
+                        <Input type="number" value={data.applicationFeeAmount ?? ''} onChange={(e) => setData(d => ({ ...d, applicationFeeAmount: e.target.value === '' ? undefined : +e.target.value }))} />
+                    </div>
                 </div>
-                <div className="space-y-2">
-                    <Label>Fees Amount</Label>
-                    <Input type="number" value={data.applicationFeeAmount ?? ''} onChange={(e) => setData(d => ({ ...d, applicationFeeAmount: e.target.value === '' ? undefined : +e.target.value }))} />
-                </div>
-                <div className="space-y-2">
-                    <Label>Payment Date</Label>
-                    <Input type="date" value={data.applicationFeePaymentDate ?? ''} onChange={(e) => setData(d => ({ ...d, applicationFeePaymentDate: e.target.value }))} />
-                </div>
-                <div className="space-y-2">
-                    <Label>Challan No.</Label>
-                    <Input value={data.applicationFeeChallanNo ?? ''} onChange={(e) => setData(d => ({ ...d, applicationFeeChallanNo: e.target.value }))} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label>Payment Date</Label>
+                        <Input type="date" value={data.applicationFeePaymentDate ?? ''} onChange={(e) => setData(d => ({ ...d, applicationFeePaymentDate: e.target.value }))} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label>Challan No.</Label>
+                        <Input value={data.applicationFeeChallanNo ?? ''} onChange={(e) => setData(d => ({ ...d, applicationFeeChallanNo: e.target.value }))} />
+                    </div>
                 </div>
             </div>
             <DialogFooter>
@@ -2111,3 +2115,4 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
       
 
     
+
