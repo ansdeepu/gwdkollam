@@ -63,6 +63,13 @@ export default function VehiclesPage() {
                     <CardDescription>Oversee all vehicles and heavy machinery units.</CardDescription>
                 </CardHeader>
                 <CardContent>
+                    {canEdit && (
+                        <div className="flex justify-end space-x-2 mb-4">
+                            <Button onClick={() => handleAddOrEdit('department', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add Department Vehicle</Button>
+                            <Button onClick={() => handleAddOrEdit('hired', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add Hired Vehicle</Button>
+                            <Button onClick={() => handleAddOrEdit('rig', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add Rig/Compressor</Button>
+                        </div>
+                    )}
                     <Tabs defaultValue="department">
                         <TabsList>
                             <TabsTrigger value="department">Department Vehicles</TabsTrigger>
@@ -77,9 +84,6 @@ export default function VehiclesPage() {
                         ) : (
                             <>
                                 <TabsContent value="department">
-                                    <div className="flex justify-end my-4">
-                                        {canEdit && <Button onClick={() => handleAddOrEdit('department', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add Department Vehicle</Button>}
-                                    </div>
                                     <DepartmentVehicleTable 
                                         data={departmentVehicles} 
                                         onEdit={(v) => handleAddOrEdit('department', v)} 
@@ -88,9 +92,6 @@ export default function VehiclesPage() {
                                     />
                                 </TabsContent>
                                 <TabsContent value="hired">
-                                    <div className="flex justify-end my-4">
-                                        {canEdit && <Button onClick={() => handleAddOrEdit('hired', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add Hired Vehicle</Button>}
-                                    </div>
                                     <HiredVehicleTable 
                                         data={hiredVehicles} 
                                         onEdit={(v) => handleAddOrEdit('hired', v)} 
@@ -99,9 +100,6 @@ export default function VehiclesPage() {
                                     />
                                 </TabsContent>
                                 <TabsContent value="rigs">
-                                     <div className="flex justify-end my-4">
-                                        {canEdit && <Button onClick={() => handleAddOrEdit('rig', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add Rig/Compressor</Button>}
-                                    </div>
                                     <RigCompressorTable 
                                         data={rigCompressors} 
                                         onEdit={(v) => handleAddOrEdit('rig', v)} 
