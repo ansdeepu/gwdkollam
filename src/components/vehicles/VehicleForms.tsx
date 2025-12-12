@@ -86,7 +86,7 @@ export function DepartmentVehicleForm({ initialData, onSubmit, onClose }: FormPr
                         <FormField name="fuelConsumptionRate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Fuel Consumption Rate</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                     </div>
                     <div className="space-y-2 pt-4 border-t">
-                        <h4 className="font-medium text-sm">Certificate Validity</h4>
+                        <h4 className="font-medium text-sm text-primary">Certificate Validity</h4>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <FormField name="fitnessExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Fitness</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                             <FormField name="taxExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tax</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
@@ -152,7 +152,7 @@ export function HiredVehicleForm({ initialData, onSubmit, onClose }: FormProps<H
                             <FormField name="fuelConsumption" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Fuel Consumption</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                         </div>
                         <div className="space-y-2 pt-4 border-t">
-                            <h4 className="font-medium text-sm">Certificate Validity</h4>
+                            <h4 className="font-medium text-sm text-primary">Certificate Validity</h4>
                              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <FormField name="fitnessExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Fitness</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                                 <FormField name="taxExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tax</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
