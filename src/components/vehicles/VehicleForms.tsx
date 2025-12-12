@@ -13,7 +13,7 @@ import { Loader2, Save, X } from "lucide-react";
 import { DepartmentVehicleSchema, HiredVehicleSchema, RigCompressorSchema } from "@/lib/schemas";
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from "@/lib/schemas";
 import { ScrollArea } from "../ui/scroll-area";
-import { format, isValid, parseISO } from 'date-fns';
+import { format, isValid } from "date-fns";
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
@@ -87,7 +87,7 @@ export function DepartmentVehicleForm({ initialData, onSubmit, onClose }: FormPr
                     </div>
                     <div className="space-y-2 pt-4 border-t">
                         <h4 className="font-medium text-sm">Certificate Validity</h4>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <FormField name="fitnessExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Fitness</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                             <FormField name="taxExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tax</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                             <FormField name="insuranceExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Insurance</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
@@ -118,7 +118,7 @@ export function HiredVehicleForm({ initialData, onSubmit, onClose }: FormProps<H
             vehicleClass: initialData?.vehicleClass || '',
             rcStatus: initialData?.rcStatus || '',
             fuelConsumption: initialData?.fuelConsumption || '',
-            hireCharges: initialData?.hireCharges,
+            hireCharges: initialData?.hireCharges || undefined,
             agreementValidity: formatDateForInput(initialData?.agreementValidity),
             registrationDate: formatDateForInput(initialData?.registrationDate),
             fitnessExpiry: formatDateForInput(initialData?.fitnessExpiry),
@@ -148,12 +148,12 @@ export function HiredVehicleForm({ initialData, onSubmit, onClose }: FormProps<H
                             <FormField name="vehicleClass" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Vehicle Class</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                             <FormField name="registrationDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Registration Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                             <FormField name="rcStatus" control={form.control} render={({ field }) => ( <FormItem><FormLabel>RC Status</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
-                            <FormField name="hireCharges" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Hire Charges</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''}/></FormControl><FormMessage/></FormItem> )}/>
+                            <FormField name="hireCharges" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Hire Charges</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                             <FormField name="fuelConsumption" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Fuel Consumption</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                         </div>
                         <div className="space-y-2 pt-4 border-t">
                             <h4 className="font-medium text-sm">Certificate Validity</h4>
-                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <FormField name="fitnessExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Fitness</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                                 <FormField name="taxExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tax</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                                 <FormField name="insuranceExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Insurance</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
