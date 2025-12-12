@@ -20,6 +20,7 @@ import ExcelJS from 'exceljs';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { formatDateSafe } from '@/components/vehicles/VehicleForms';
+import { DepartmentVehicleTable, HiredVehicleTable, RigCompressorTable } from '@/components/vehicles/VehicleTables';
 
 export default function VehiclesPage() {
     const { setHeader } = usePageHeader();
@@ -103,12 +104,14 @@ export default function VehiclesPage() {
         // Auto-width columns
         sheet.columns.forEach(column => {
             let maxLength = 0;
-            column.eachCell!({ includeEmpty: true }, cell => {
-                const columnLength = cell.value ? cell.value.toString().length : 10;
-                if (columnLength > maxLength) {
-                    maxLength = columnLength;
-                }
-            });
+            if(column.eachCell){
+                column.eachCell({ includeEmpty: true }, cell => {
+                    const columnLength = cell.value ? cell.value.toString().length : 10;
+                    if (columnLength > maxLength) {
+                        maxLength = columnLength;
+                    }
+                });
+            }
             column.width = maxLength < 15 ? 15 : maxLength + 2;
         });
 
