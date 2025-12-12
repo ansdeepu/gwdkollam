@@ -567,7 +567,7 @@ export const HiredVehicleSchema = z.object({
     taxExpiry: optionalDateSchema,
     insuranceExpiry: optionalDateSchema,
     pollutionExpiry: optionalDateSchema,
-    fuelConsumption: z.string().optional(),
+    permitExpiry: optionalDateSchema,
 });
 export type HiredVehicle = z.infer<typeof HiredVehicleSchema>;
 
@@ -586,9 +586,4 @@ export const RigCompressorSchema = z.object({
 export type RigCompressor = z.infer<typeof RigCompressorSchema>;
     
 
-
-
-
-
-
-
+    

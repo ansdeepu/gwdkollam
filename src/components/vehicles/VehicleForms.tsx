@@ -134,7 +134,6 @@ export function HiredVehicleForm({ initialData, onFormSubmit, onClose }: FormPro
             model: initialData?.model || '',
             vehicleClass: initialData?.vehicleClass || '',
             rcStatus: initialData?.rcStatus || '',
-            fuelConsumption: initialData?.fuelConsumption || '',
             hireCharges: initialData?.hireCharges || undefined,
             agreementValidity: formatDateForInput(initialData?.agreementValidity),
             registrationDate: formatDateForInput(initialData?.registrationDate),
@@ -142,6 +141,7 @@ export function HiredVehicleForm({ initialData, onFormSubmit, onClose }: FormPro
             taxExpiry: formatDateForInput(initialData?.taxExpiry),
             insuranceExpiry: formatDateForInput(initialData?.insuranceExpiry),
             pollutionExpiry: formatDateForInput(initialData?.pollutionExpiry),
+            permitExpiry: formatDateForInput(initialData?.permitExpiry),
         } as any,
     });
 
@@ -181,7 +181,6 @@ export function HiredVehicleForm({ initialData, onFormSubmit, onClose }: FormPro
                                 )}
                             />
                             <FormField name="hireCharges" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Hire Charges</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
-                            <FormField name="fuelConsumption" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Fuel Consumption</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                         </div>
                         <div className="space-y-2 pt-4 border-t">
                             <h4 className="font-medium text-sm text-primary">Certificate Validity</h4>
@@ -190,6 +189,7 @@ export function HiredVehicleForm({ initialData, onFormSubmit, onClose }: FormPro
                                 <FormField name="taxExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tax</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                                 <FormField name="insuranceExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Insurance</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                                 <FormField name="pollutionExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Pollution</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                                <FormField name="permitExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Permit</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                             </div>
                         </div>
                     </div>
@@ -209,13 +209,14 @@ export function HiredVehicleForm({ initialData, onFormSubmit, onClose }: FormPro
 export function RigCompressorForm({ initialData, onFormSubmit, onClose }: FormProps<RigCompressor>) {
     const form = useForm<RigCompressor>({
         resolver: zodResolver(RigCompressorSchema),
-        defaultValues: initialData || {
-            typeOfRigUnit: '',
-            registrationNumber: '',
-            compressorDetails: '',
-            fuelConsumption: '',
-            remarks: '',
-            status: 'Active',
+        defaultValues: {
+            id: initialData?.id || undefined,
+            typeOfRigUnit: initialData?.typeOfRigUnit || '',
+            registrationNumber: initialData?.registrationNumber || '',
+            compressorDetails: initialData?.compressorDetails || '',
+            fuelConsumption: initialData?.fuelConsumption || '',
+            remarks: initialData?.remarks || '',
+            status: initialData?.status || 'Active',
         },
     });
 
@@ -233,7 +234,7 @@ export function RigCompressorForm({ initialData, onFormSubmit, onClose }: FormPr
                 <div className="p-6 pt-0 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField name="typeOfRigUnit" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Type of Rig Unit</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
-                        <FormField name="registrationNumber" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Registration Number</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                        <FormField name="registrationNumber" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Vehicle Reg. No</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                         <FormField name="status" control={form.control} render={({ field }) => ( 
                             <FormItem>
                                 <FormLabel>Status</FormLabel>
@@ -262,3 +263,5 @@ export function RigCompressorForm({ initialData, onFormSubmit, onClose }: FormPr
         </Form>
     );
 }
+
+    
