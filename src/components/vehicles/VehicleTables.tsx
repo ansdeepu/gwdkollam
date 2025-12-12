@@ -57,7 +57,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {data.map(v => (
+                    {(data || []).map(v => (
                         <TableRow key={v.id}>
                             <TableCell>{v.registrationNumber}</TableCell>
                             <TableCell>{v.model}</TableCell>
@@ -106,7 +106,7 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehi
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {data.map(v => (
+                    {(data || []).map(v => (
                         <TableRow key={v.id}>
                             <TableCell>{v.registrationNumber}</TableCell>
                             <TableCell>{v.model}</TableCell>
@@ -153,7 +153,7 @@ export function RigCompressorTable({ data, onEdit, onDelete, canEdit }: RigCompr
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {data.map(u => (
+                    {(data || []).map(u => (
                         <TableRow key={u.id}>
                             <TableCell>{u.typeOfRigUnit}</TableCell>
                             <TableCell>{u.registrationNumber}</TableCell>
