@@ -536,13 +536,17 @@ export default function AgencyRegistrationPage() {
   const canEdit = isEditor;
 
   useEffect(() => {
+    let title = 'Rig Registration';
     if (selectedApplicationId) {
-      let title = isReadOnly ? `View Rig Registration` : `Edit Rig Registration`;
-      if (selectedApplicationId === 'new') title = 'New Rig Registration';
-      setHeader(title, 'Manage all details related to an agency and its rigs.');
-    } else {
-      setHeader('Rig Registration', 'Manage agency and rig registrations.');
+      const app = allAgencyApplications.find((a: AgencyApplication) => a.id === selectedApplicationId);
+      const appName = app?.agencyName || 'New Application';
+      if (selectedApplicationId === 'new') {
+        title = 'New Rig Registration';
+      } else {
+        title = isReadOnly ? `View: ${appName}` : `Edit: ${appName}`;
+      }
     }
+    setHeader(title, 'Manage agency and rig registrations.');
   }, [selectedApplicationId, isReadOnly, setHeader, allAgencyApplications]);
 
   const createDefaultOwner = (): OwnerInfo => ({ name: '', address: '', mobile: '', secondaryMobile: '' });
@@ -1225,7 +1229,14 @@ export default function AgencyRegistrationPage() {
                         {/* Section 1: Application Details */}
                         <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
                             <AccordionItem value="item-1">
-                                <AccordionTrigger className="text-xl font-semibold text-primary">1. Application Details</AccordionTrigger>
+                               <div className="flex items-center justify-between py-4">
+                                <h2 className="text-xl font-semibold text-primary flex-1">1. Application Details</h2>
+                                {!isReadOnly && (
+                                    <div className="flex items-center gap-2">
+                                        <Button type="button" variant="outline" size="sm" onClick={() => openDialog('addPartner', { index: 'new' })}><UserPlus className="mr-2 h-4 w-4"/> Add Partner</Button>
+                                    </div>
+                                )}
+                               </div>
                                 <AccordionContent className="pt-4 space-y-4">
                                      <div className="grid md:grid-cols-3 gap-4">
                                         <FormField name="fileNo" render={({ field }) => <FormItem><FormLabel>File No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isReadOnly} /></FormControl><FormMessage /></FormItem>} />
@@ -1235,9 +1246,6 @@ export default function AgencyRegistrationPage() {
                                      <div className="space-y-2">
                                         <div className="flex justify-between items-center">
                                             <h4 className="font-medium">Owner Details</h4>
-                                            {!isReadOnly && (
-                                                <Button type="button" variant="outline" size="sm" onClick={() => openDialog('addPartner', { index: 'new' })}><UserPlus className="mr-2 h-4 w-4"/> Add Partner</Button>
-                                            )}
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-2 border rounded-md items-end">
                                             <FormItem className="md:col-span-1">
@@ -1439,7 +1447,7 @@ export default function AgencyRegistrationPage() {
                 </Card>
             </form>
             <Dialog open={dialogState.type === 'editAgencyReg'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-3xl flex flex-col p-0">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-2xl">
                   <AgencyRegistrationDialogContent
                       initialData={dialogState.data?.regData}
                       onConfirm={handleConfirmAgencyReg}
@@ -2115,3 +2123,6 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
     
+
+
+      
