@@ -1,4 +1,3 @@
-
 // src/app/dashboard/vehicles/page.tsx
 "use client";
 
@@ -6,17 +5,19 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Loader2, PlusCircle, Truck, FileDown } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Loader2, PlusCircle, Truck, FileDown, AlertTriangle, CalendarClock } from 'lucide-react';
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from '@/lib/schemas';
 import { DepartmentVehicleForm, HiredVehicleForm, RigCompressorForm } from '@/components/vehicles/VehicleForms';
 import { useAuth } from '@/hooks/useAuth';
 import ExcelJS from 'exceljs';
-import { format } from 'date-fns';
+import { format, isValid, addDays, isBefore, isAfter } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { DepartmentVehicleTable, HiredVehicleTable, RigCompressorTable } from '@/components/vehicles/VehicleTables';
 import { useDataStore } from '@/hooks/use-data-store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
@@ -37,6 +38,81 @@ const formatDateSafe = (d: any): string => {
     return date ? format(date, 'dd/MM/yyyy') : 'N/A';
 };
 
+interface ExpiryInfo {
+    vehicleRegNo: string;
+    vehicleType: 'Department' | 'Hired';
+    certificateType: string;
+    expiryDate: Date;
+}
+
+function ExpiryAlertDialog({ 
+    isOpen, 
+    onClose, 
+    expiringSoon, 
+    expired 
+}: { 
+    isOpen: boolean; 
+    onClose: () => void; 
+    expiringSoon: ExpiryInfo[]; 
+    expired: ExpiryInfo[];
+}) {
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-0">
+                <DialogHeader className="p-6 pb-4">
+                    <DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-6 w-6 text-destructive"/>Vehicle Expiry Alerts</DialogTitle>
+                    <DialogDescription>Review certificates that have expired or are expiring within the next 30 days.</DialogDescription>
+                </DialogHeader>
+                <div className="flex-1 min-h-0 px-6 py-4">
+                    <ScrollArea className="h-full pr-4">
+                        <div className="space-y-6">
+                            <section>
+                                <h3 className="text-lg font-semibold text-destructive mb-2 flex items-center gap-2"><AlertTriangle className="h-5 w-5"/>Expired Certificates ({expired.length})</h3>
+                                {expired.length > 0 ? (
+                                    <Table>
+                                        <TableHeader><TableRow><TableHead>Vehicle Reg. No</TableHead><TableHead>Type</TableHead><TableHead>Certificate</TableHead><TableHead>Expired On</TableHead></TableRow></TableHeader>
+                                        <TableBody>
+                                            {expired.map((item, index) => (
+                                                <TableRow key={index} className="bg-destructive/10">
+                                                    <TableCell className="font-medium">{item.vehicleRegNo}</TableCell>
+                                                    <TableCell>{item.vehicleType}</TableCell>
+                                                    <TableCell>{item.certificateType}</TableCell>
+                                                    <TableCell>{formatDateSafe(item.expiryDate)}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                ) : <p className="text-sm text-muted-foreground text-center py-4">No expired certificates.</p>}
+                            </section>
+                            <section>
+                                <h3 className="text-lg font-semibold text-orange-600 mb-2 flex items-center gap-2"><CalendarClock className="h-5 w-5"/>Expiring Within 30 Days ({expiringSoon.length})</h3>
+                                 {expiringSoon.length > 0 ? (
+                                    <Table>
+                                        <TableHeader><TableRow><TableHead>Vehicle Reg. No</TableHead><TableHead>Type</TableHead><TableHead>Certificate</TableHead><TableHead>Expires On</TableHead></TableRow></TableHeader>
+                                        <TableBody>
+                                            {expiringSoon.map((item, index) => (
+                                                <TableRow key={index} className="bg-orange-500/10">
+                                                    <TableCell className="font-medium">{item.vehicleRegNo}</TableCell>
+                                                    <TableCell>{item.vehicleType}</TableCell>
+                                                    <TableCell>{item.certificateType}</TableCell>
+                                                    <TableCell>{formatDateSafe(item.expiryDate)}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                 ) : <p className="text-sm text-muted-foreground text-center py-4">No certificates expiring soon.</p>}
+                            </section>
+                        </div>
+                    </ScrollArea>
+                </div>
+                <DialogFooter className="p-6 pt-4 border-t">
+                    <Button onClick={onClose}>Close</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 export default function VehiclesPage() {
     const { setHeader } = usePageHeader();
     const { user } = useAuth();
@@ -52,6 +128,7 @@ export default function VehiclesPage() {
     const [isDepartmentDialogOpen, setIsDepartmentDialogOpen] = useState(false);
     const [isHiredDialogOpen, setIsHiredDialogOpen] = useState(false);
     const [isRigDialogOpen, setIsRigDialogOpen] = useState(false);
+    const [isExpiryAlertOpen, setIsExpiryAlertOpen] = useState(false);
 
     const [editingDepartmentVehicle, setEditingDepartmentVehicle] = useState<DepartmentVehicle | null>(null);
     const [editingHiredVehicle, setEditingHiredVehicle] = useState<HiredVehicle | null>(null);
@@ -60,6 +137,52 @@ export default function VehiclesPage() {
     useEffect(() => {
         setHeader("Vehicle & Rig Management", "Manage department, hired, and rig/compressor vehicles and units.");
     }, [setHeader]);
+    
+    const { expired, expiringSoon } = useMemo(() => {
+        const today = new Date();
+        const thirtyDaysFromNow = addDays(today, 30);
+        const expiredList: ExpiryInfo[] = [];
+        const expiringSoonList: ExpiryInfo[] = [];
+    
+        const checkDates = (vehicle: DepartmentVehicle | HiredVehicle, type: 'Department' | 'Hired') => {
+            const dateFields: Array<{ key: keyof (DepartmentVehicle | HiredVehicle), label: string }> = [
+                { key: 'fitnessExpiry', label: 'Fitness' },
+                { key: 'taxExpiry', label: 'Tax' },
+                { key: 'insuranceExpiry', label: 'Insurance' },
+                { key: 'pollutionExpiry', label: 'Pollution' },
+                { key: 'fuelTestExpiry', label: 'Fuel Test' },
+                { key: 'agreementValidity', label: 'Agreement' },
+                { key: 'permitExpiry', label: 'Permit' },
+            ];
+
+            for (const { key, label } of dateFields) {
+                const expiryDate = safeParseDate((vehicle as any)[key]);
+                if (expiryDate && isValid(expiryDate)) {
+                    if (isBefore(expiryDate, today)) {
+                        expiredList.push({ vehicleRegNo: vehicle.registrationNumber, vehicleType: type, certificateType: label, expiryDate });
+                    } else if (isAfter(expiryDate, today) && isBefore(expiryDate, thirtyDaysFromNow)) {
+                        expiringSoonList.push({ vehicleRegNo: vehicle.registrationNumber, vehicleType: type, certificateType: label, expiryDate });
+                    }
+                }
+            }
+        };
+
+        allDepartmentVehicles.forEach(v => checkDates(v, 'Department'));
+        allHiredVehicles.forEach(v => checkDates(v, 'Hired'));
+        
+        expiredList.sort((a,b) => a.expiryDate.getTime() - b.expiryDate.getTime());
+        expiringSoonList.sort((a,b) => a.expiryDate.getTime() - b.expiryDate.getTime());
+
+        return { expired: expiredList, expiringSoon: expiringSoonList };
+    }, [allDepartmentVehicles, allHiredVehicles]);
+
+    useEffect(() => {
+        // Open the dialog automatically if there are any alerts
+        if (!isLoading && (expired.length > 0 || expiringSoon.length > 0)) {
+            setIsExpiryAlertOpen(true);
+        }
+    }, [isLoading, expired, expiringSoon]);
+
 
     const handleAddOrEdit = (type: 'department' | 'hired' | 'rig', data: any) => {
         if(type === 'department') {
@@ -190,6 +313,8 @@ export default function VehiclesPage() {
 
     return (
         <div className="space-y-6">
+            <ExpiryAlertDialog isOpen={isExpiryAlertOpen} onClose={() => setIsExpiryAlertOpen(false)} expired={expired} expiringSoon={expiringSoon} />
+
             {isLoading ? (
                  <div className="flex justify-center items-center h-64">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
