@@ -561,7 +561,7 @@ export const HiredVehicleSchema = z.object({
     agreementValidity: optionalDateSchema,
     vehicleClass: z.string().optional(),
     registrationDate: optionalDateSchema,
-    rcStatus: z.string().optional(),
+    rcStatus: z.enum(rcStatusOptions).optional(),
     hireCharges: optionalNumber(),
     fitnessExpiry: optionalDateSchema,
     taxExpiry: optionalDateSchema,
@@ -571,16 +571,21 @@ export const HiredVehicleSchema = z.object({
 });
 export type HiredVehicle = z.infer<typeof HiredVehicleSchema>;
 
+export const rigStatusOptions = ["Active", "Garaged"] as const;
+export type RigStatus = typeof rigStatusOptions[number];
+
 export const RigCompressorSchema = z.object({
     id: z.string().optional(),
     typeOfRigUnit: z.string().min(1, "Type of Rig Unit is required."),
     registrationNumber: z.string().optional(),
+    status: z.enum(rigStatusOptions).default('Active').optional(),
     compressorDetails: z.string().optional(),
     fuelConsumption: z.string().optional(),
     remarks: z.string().optional(),
 });
 export type RigCompressor = z.infer<typeof RigCompressorSchema>;
     
+
 
 
 

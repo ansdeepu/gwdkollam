@@ -125,7 +125,7 @@ export default function VehiclesPage() {
                 break;
             case 'rig':
                 data = allRigCompressors;
-                headers = ["Type of Rig Unit", "Registration Number", "Compressor Details", "Fuel Consumption", "Remarks"];
+                headers = ["Type of Rig Unit", "Status", "Registration Number", "Compressor Details", "Fuel Consumption", "Remarks"];
                 sheetName = 'Rig and Compressor';
                 fileNamePrefix = 'GWD_Rig_Compressor';
                 break;
@@ -181,6 +181,11 @@ export default function VehiclesPage() {
         presentHiredVehicles: allHiredVehicles.filter(v => v.rcStatus !== 'Garaged'),
         historyHiredVehicles: allHiredVehicles.filter(v => v.rcStatus === 'Garaged'),
     }), [allHiredVehicles]);
+
+    const { presentRigCompressors, historyRigCompressors } = useMemo(() => ({
+        presentRigCompressors: allRigCompressors.filter(v => v.status !== 'Garaged'),
+        historyRigCompressors: allRigCompressors.filter(v => v.status === 'Garaged'),
+    }), [allRigCompressors]);
 
 
     return (
@@ -242,7 +247,7 @@ export default function VehiclesPage() {
                             </CardHeader>
                             <CardContent>
                                 <RigCompressorTable 
-                                    data={allRigCompressors} 
+                                    data={presentRigCompressors} 
                                     onEdit={(v) => handleAddOrEdit('rig', v)} 
                                     onDelete={deleteRigCompressor}
                                     canEdit={canEdit}
@@ -273,6 +278,19 @@ export default function VehiclesPage() {
                                     data={historyHiredVehicles} 
                                     onEdit={(v) => handleAddOrEdit('hired', v)} 
                                     onDelete={deleteHiredVehicle}
+                                    canEdit={canEdit}
+                                />
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Rig & Compressor Units (Garaged)</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <RigCompressorTable 
+                                    data={historyRigCompressors} 
+                                    onEdit={(v) => handleAddOrEdit('rig', v)} 
+                                    onDelete={deleteRigCompressor}
                                     canEdit={canEdit}
                                 />
                             </CardContent>

@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save, X } from "lucide-react";
-import { DepartmentVehicleSchema, HiredVehicleSchema, RigCompressorSchema, rcStatusOptions } from "@/lib/schemas";
+import { DepartmentVehicleSchema, HiredVehicleSchema, RigCompressorSchema, rcStatusOptions, rigStatusOptions } from "@/lib/schemas";
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from "@/lib/schemas";
 import { ScrollArea } from "../ui/scroll-area";
 import { format, isValid } from "date-fns";
@@ -162,7 +162,22 @@ export function HiredVehicleForm({ initialData, onFormSubmit, onClose }: FormPro
                              <FormField name="agreementValidity" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Agreement Validity</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                             <FormField name="vehicleClass" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Vehicle Class</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                             <FormField name="registrationDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Registration Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
-                            <FormField name="rcStatus" control={form.control} render={({ field }) => ( <FormItem><FormLabel>RC Status</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                            <FormField
+                                name="rcStatus"
+                                control={form.control}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>RC Status</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl>
+                                            <SelectContent>
+                                                {rcStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                             <FormField name="hireCharges" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Hire Charges</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                             <FormField name="fuelConsumption" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Fuel Consumption</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                         </div>
@@ -198,6 +213,7 @@ export function RigCompressorForm({ initialData, onFormSubmit, onClose }: FormPr
             compressorDetails: initialData?.compressorDetails || '',
             fuelConsumption: initialData?.fuelConsumption || '',
             remarks: initialData?.remarks || '',
+            status: initialData?.status || 'Active',
         },
     });
 
@@ -215,8 +231,20 @@ export function RigCompressorForm({ initialData, onFormSubmit, onClose }: FormPr
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField name="typeOfRigUnit" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Type of Rig Unit</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                         <FormField name="registrationNumber" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Registration Number</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
-                        <FormField name="compressorDetails" control={form.control} render={({ field }) => ( <FormItem className="md:col-span-2"><FormLabel>Compressor Details</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                        <FormField name="status" control={form.control} render={({ field }) => ( 
+                            <FormItem>
+                                <FormLabel>Status</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl>
+                                    <SelectContent>
+                                        {rigStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage/>
+                            </FormItem>
+                        )}/>
                         <FormField name="fuelConsumption" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Fuel Consumption</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                        <FormField name="compressorDetails" control={form.control} render={({ field }) => ( <FormItem className="md:col-span-2"><FormLabel>Compressor Details</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                         <FormField name="remarks" control={form.control} render={({ field }) => ( <FormItem className="md:col-span-2"><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                     </div>
                 </div>
