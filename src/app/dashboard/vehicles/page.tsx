@@ -8,11 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, PlusCircle, Truck, FileDown } from 'lucide-react';
-import { DepartmentVehicleSchema, HiredVehicleSchema, RigCompressorSchema } from '@/lib/schemas';
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from '@/lib/schemas';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Form } from '@/components/ui/form';
 import { DepartmentVehicleForm, HiredVehicleForm, RigCompressorForm } from '@/components/vehicles/VehicleForms';
 import { useVehicles } from '@/hooks/useVehicles';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,6 +17,7 @@ import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { formatDateSafe } from '@/components/vehicles/VehicleForms';
 import { DepartmentVehicleTable, HiredVehicleTable, RigCompressorTable } from '@/components/vehicles/VehicleTables';
+
 
 export default function VehiclesPage() {
     const { setHeader } = usePageHeader();
