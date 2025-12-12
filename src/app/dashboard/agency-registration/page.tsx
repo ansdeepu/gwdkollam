@@ -1710,17 +1710,15 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
             </DialogHeader>
             <div className="flex-1 min-h-0">
                 <ScrollArea className="h-full px-6 py-4 no-scrollbar">
-                    <div className="space-y-6">
-                        <div className="space-y-4 rounded-lg border p-4">
-                            <div className="grid grid-cols-2 gap-4 items-end">
-                                <div className="space-y-2">
-                                    <Label htmlFor="agencyRegistrationNo">Agency Reg. No.</Label>
-                                    <Input id="agencyRegistrationNo" value={data.agencyRegistrationNo} onChange={(e) => setData(d => ({ ...d, agencyRegistrationNo: e.target.value }))} />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="agencyRegistrationDate">Reg. Date</Label>
-                                    <Input id="agencyRegistrationDate" type="date" value={data.agencyRegistrationDate} onChange={(e) => setData(d => ({ ...d, agencyRegistrationDate: e.target.value }))} />
-                                </div>
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4 items-end border p-4 rounded-lg">
+                            <div className="space-y-2">
+                                <Label htmlFor="agencyRegistrationNo">Agency Reg. No.</Label>
+                                <Input id="agencyRegistrationNo" value={data.agencyRegistrationNo} onChange={(e) => setData(d => ({ ...d, agencyRegistrationNo: e.target.value }))} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="agencyRegistrationDate">Reg. Date</Label>
+                                <Input id="agencyRegistrationDate" type="date" value={data.agencyRegistrationDate} onChange={(e) => setData(d => ({ ...d, agencyRegistrationDate: e.target.value }))} />
                             </div>
                         </div>
                         <div className="space-y-4 rounded-lg border p-4">
