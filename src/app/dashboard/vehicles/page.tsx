@@ -203,7 +203,7 @@ export default function VehiclesPage() {
                     <TabsContent value="present" className="mt-4 space-y-6">
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between">
-                                <CardTitle>Department Vehicles</CardTitle>
+                                <CardTitle>Department Vehicles ({presentDepartmentVehicles.length})</CardTitle>
                                  <div className="flex items-center gap-2">
                                     {canEdit && <Button onClick={() => handleAddOrEdit('department', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
                                     <Button variant="outline" onClick={() => handleExportExcel('department')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
@@ -221,7 +221,7 @@ export default function VehiclesPage() {
 
                         <Card>
                              <CardHeader className="flex flex-row items-center justify-between">
-                                <CardTitle>Hired Vehicles</CardTitle>
+                                <CardTitle>Hired Vehicles ({presentHiredVehicles.length})</CardTitle>
                                  <div className="flex items-center gap-2">
                                     {canEdit && <Button onClick={() => handleAddOrEdit('hired', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
                                     <Button variant="outline" onClick={() => handleExportExcel('hired')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
@@ -239,7 +239,7 @@ export default function VehiclesPage() {
 
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between">
-                                <CardTitle>Rig & Compressor Units</CardTitle>
+                                <CardTitle>Rig & Compressor Units ({presentRigCompressors.length})</CardTitle>
                                  <div className="flex items-center gap-2">
                                     {canEdit && <Button onClick={() => handleAddOrEdit('rig', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
                                     <Button variant="outline" onClick={() => handleExportExcel('rig')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>

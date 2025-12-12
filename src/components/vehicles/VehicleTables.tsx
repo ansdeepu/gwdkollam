@@ -67,30 +67,30 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Sl. No</TableHead>
-                        <TableHead>Reg. No</TableHead>
-                        <TableHead>Model</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Class</TableHead>
-                        <TableHead>Reg. Date</TableHead>
-                        <TableHead>RC Status</TableHead>
-                        <TableHead>Fuel Rate</TableHead>
-                        {canEdit && <TableHead className="text-right">Actions</TableHead>}
+                        <TableHead className="p-2 text-xs">Sl. No</TableHead>
+                        <TableHead className="p-2 text-xs">Reg. No</TableHead>
+                        <TableHead className="p-2 text-xs">Model</TableHead>
+                        <TableHead className="p-2 text-xs">Type</TableHead>
+                        <TableHead className="p-2 text-xs">Class</TableHead>
+                        <TableHead className="p-2 text-xs">Reg. Date</TableHead>
+                        <TableHead className="p-2 text-xs">RC Status</TableHead>
+                        <TableHead className="p-2 text-xs">Fuel Rate</TableHead>
+                        {canEdit && <TableHead className="text-right p-2 text-xs">Actions</TableHead>}
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {(data || []).map((v, index) => (
                         <TableRow key={v.id}>
-                            <TableCell>{index + 1}</TableCell>
-                            <TableCell>{v.registrationNumber}</TableCell>
-                            <TableCell>{v.model}</TableCell>
-                            <TableCell>{v.typeOfVehicle}</TableCell>
-                            <TableCell>{v.vehicleClass}</TableCell>
-                            <TableCell>{formatDateSafe(v.registrationDate)}</TableCell>
-                            <TableCell>{v.rcStatus}</TableCell>
-                            <TableCell>{v.fuelConsumptionRate}</TableCell>
+                            <TableCell className="p-2 text-xs">{index + 1}</TableCell>
+                            <TableCell className="p-2 text-xs">{v.registrationNumber}</TableCell>
+                            <TableCell className="p-2 text-xs">{v.model}</TableCell>
+                            <TableCell className="p-2 text-xs">{v.typeOfVehicle}</TableCell>
+                            <TableCell className="p-2 text-xs">{v.vehicleClass}</TableCell>
+                            <TableCell className="p-2 text-xs">{formatDateSafe(v.registrationDate)}</TableCell>
+                            <TableCell className="p-2 text-xs">{v.rcStatus}</TableCell>
+                            <TableCell className="p-2 text-xs">{v.fuelConsumptionRate}</TableCell>
                             {canEdit && (
-                                <TableCell className="text-right">
+                                <TableCell className="text-right p-1">
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <Button variant="ghost" size="icon" onClick={() => onEdit(v)}><Eye className="h-4 w-4"/></Button>
@@ -131,24 +131,24 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehi
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Sl. No</TableHead>
-                        <TableHead>Reg. No</TableHead>
-                        <TableHead>Model</TableHead>
-                        <TableHead>Agreement Validity</TableHead>
-                        <TableHead>Hire Charges</TableHead>
-                        {canEdit && <TableHead className="text-right">Actions</TableHead>}
+                        <TableHead className="p-2 text-xs">Sl. No</TableHead>
+                        <TableHead className="p-2 text-xs">Reg. No</TableHead>
+                        <TableHead className="p-2 text-xs">Model</TableHead>
+                        <TableHead className="p-2 text-xs">Agreement Validity</TableHead>
+                        <TableHead className="p-2 text-xs">Hire Charges</TableHead>
+                        {canEdit && <TableHead className="text-right p-2 text-xs">Actions</TableHead>}
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {(data || []).map((v, index) => (
                         <TableRow key={v.id}>
-                            <TableCell>{index + 1}</TableCell>
-                            <TableCell>{v.registrationNumber}</TableCell>
-                            <TableCell>{v.model}</TableCell>
-                            <TableCell>{formatDateSafe(v.agreementValidity)}</TableCell>
-                            <TableCell>{v.hireCharges}</TableCell>
+                            <TableCell className="p-2 text-xs">{index + 1}</TableCell>
+                            <TableCell className="p-2 text-xs">{v.registrationNumber}</TableCell>
+                            <TableCell className="p-2 text-xs">{v.model}</TableCell>
+                            <TableCell className="p-2 text-xs">{formatDateSafe(v.agreementValidity)}</TableCell>
+                            <TableCell className="p-2 text-xs">{v.hireCharges}</TableCell>
                              {canEdit && (
-                                <TableCell className="text-right">
+                                <TableCell className="text-right p-1">
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <Button variant="ghost" size="icon" onClick={() => onEdit(v)}><Eye className="h-4 w-4"/></Button>
@@ -189,28 +189,28 @@ export function RigCompressorTable({ data, onEdit, onDelete, canEdit }: RigCompr
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Sl. No</TableHead>
-                        <TableHead>Type of Rig Unit</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Rig Vehicle Reg. No</TableHead>
-                        <TableHead>Compressor Vehicle Reg. No</TableHead>
-                        <TableHead>Supporting Vehicle Reg. No</TableHead>
-                        <TableHead>Compressor Details</TableHead>
-                        {canEdit && <TableHead className="text-right">Actions</TableHead>}
+                        <TableHead className="p-2 text-xs">Sl. No</TableHead>
+                        <TableHead className="p-2 text-xs">Type of Rig Unit</TableHead>
+                        <TableHead className="p-2 text-xs">Status</TableHead>
+                        <TableHead className="p-2 text-xs">Rig Vehicle Reg. No</TableHead>
+                        <TableHead className="p-2 text-xs">Compressor Vehicle Reg. No</TableHead>
+                        <TableHead className="p-2 text-xs">Supporting Vehicle Reg. No</TableHead>
+                        <TableHead className="p-2 text-xs">Compressor Details</TableHead>
+                        {canEdit && <TableHead className="text-right p-2 text-xs">Actions</TableHead>}
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {(data || []).map((u, index) => (
                         <TableRow key={u.id}>
-                            <TableCell>{index + 1}</TableCell>
-                            <TableCell>{u.typeOfRigUnit}</TableCell>
-                            <TableCell>{u.status}</TableCell>
-                            <TableCell>{u.rigVehicleRegNo}</TableCell>
-                            <TableCell>{u.compressorVehicleRegNo}</TableCell>
-                            <TableCell>{u.supportingVehicleRegNo}</TableCell>
-                            <TableCell>{u.compressorDetails}</TableCell>
+                            <TableCell className="p-2 text-xs">{index + 1}</TableCell>
+                            <TableCell className="p-2 text-xs">{u.typeOfRigUnit}</TableCell>
+                            <TableCell className="p-2 text-xs">{u.status}</TableCell>
+                            <TableCell className="p-2 text-xs">{u.rigVehicleRegNo}</TableCell>
+                            <TableCell className="p-2 text-xs">{u.compressorVehicleRegNo}</TableCell>
+                            <TableCell className="p-2 text-xs">{u.supportingVehicleRegNo}</TableCell>
+                            <TableCell className="p-2 text-xs">{u.compressorDetails}</TableCell>
                             {canEdit && (
-                                <TableCell className="text-right">
+                                <TableCell className="text-right p-1">
                                     <Tooltip>
                                         <TooltipTrigger asChild>
                                             <Button variant="ghost" size="icon" onClick={() => onEdit(u)}><Eye className="h-4 w-4"/></Button>
