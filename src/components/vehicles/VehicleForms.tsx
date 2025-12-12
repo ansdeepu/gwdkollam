@@ -38,11 +38,11 @@ const formatDateForInput = (date: any): string => {
 
 interface FormProps<T> {
     initialData: T | null;
-    onSubmit: (data: T) => Promise<void>;
+    onFormSubmit: (data: T) => Promise<void>;
     onClose: () => void;
 }
 
-export function DepartmentVehicleForm({ initialData, onSubmit, onClose }: FormProps<DepartmentVehicle>) {
+export function DepartmentVehicleForm({ initialData, onFormSubmit, onClose }: FormProps<DepartmentVehicle>) {
     const form = useForm<DepartmentVehicle>({
         resolver: zodResolver(DepartmentVehicleSchema),
         defaultValues: {
@@ -62,7 +62,7 @@ export function DepartmentVehicleForm({ initialData, onSubmit, onClose }: FormPr
     });
 
     const handleSubmit = async (data: DepartmentVehicle) => {
-        await onSubmit(data);
+        await onFormSubmit(data);
         onClose();
     };
 
@@ -108,7 +108,7 @@ export function DepartmentVehicleForm({ initialData, onSubmit, onClose }: FormPr
     );
 }
 
-export function HiredVehicleForm({ initialData, onSubmit, onClose }: FormProps<HiredVehicle>) {
+export function HiredVehicleForm({ initialData, onFormSubmit, onClose }: FormProps<HiredVehicle>) {
     const form = useForm<HiredVehicle>({
         resolver: zodResolver(HiredVehicleSchema),
         defaultValues: {
@@ -128,7 +128,7 @@ export function HiredVehicleForm({ initialData, onSubmit, onClose }: FormProps<H
     });
 
     const handleSubmit = async (data: HiredVehicle) => {
-        await onSubmit(data);
+        await onFormSubmit(data);
         onClose();
     };
 
@@ -173,7 +173,7 @@ export function HiredVehicleForm({ initialData, onSubmit, onClose }: FormProps<H
     );
 }
 
-export function RigCompressorForm({ initialData, onSubmit, onClose }: FormProps<RigCompressor>) {
+export function RigCompressorForm({ initialData, onFormSubmit, onClose }: FormProps<RigCompressor>) {
     const form = useForm<RigCompressor>({
         resolver: zodResolver(RigCompressorSchema),
         defaultValues: {
@@ -186,7 +186,7 @@ export function RigCompressorForm({ initialData, onSubmit, onClose }: FormProps<
     });
 
     const handleSubmit = async (data: RigCompressor) => {
-        await onSubmit(data);
+        await onFormSubmit(data);
         onClose();
     };
 
