@@ -1,9 +1,10 @@
+
 // src/app/dashboard/vehicles/page.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, PlusCircle, Truck, FileDown } from 'lucide-react';
