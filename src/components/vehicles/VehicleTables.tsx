@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from "@/lib/schemas";
-import { formatDateSafe } from '../e-tender/utils';
+import { formatDateSafe } from '@/app/dashboard/vehicles/page';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { Loader2 } from 'lucide-react';
@@ -46,6 +46,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
             <Table>
                 <TableHeader>
                     <TableRow>
+                        <TableHead>Sl. No</TableHead>
                         <TableHead>Reg. No</TableHead>
                         <TableHead>Model</TableHead>
                         <TableHead>Type</TableHead>
@@ -57,8 +58,9 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {(data || []).map(v => (
+                    {(data || []).map((v, index) => (
                         <TableRow key={v.id}>
+                            <TableCell>{index + 1}</TableCell>
                             <TableCell>{v.registrationNumber}</TableCell>
                             <TableCell>{v.model}</TableCell>
                             <TableCell>{v.typeOfVehicle}</TableCell>
@@ -98,6 +100,7 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehi
             <Table>
                 <TableHeader>
                     <TableRow>
+                        <TableHead>Sl. No</TableHead>
                         <TableHead>Reg. No</TableHead>
                         <TableHead>Model</TableHead>
                         <TableHead>Agreement Validity</TableHead>
@@ -106,8 +109,9 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehi
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {(data || []).map(v => (
+                    {(data || []).map((v, index) => (
                         <TableRow key={v.id}>
+                            <TableCell>{index + 1}</TableCell>
                             <TableCell>{v.registrationNumber}</TableCell>
                             <TableCell>{v.model}</TableCell>
                             <TableCell>{formatDateSafe(v.agreementValidity)}</TableCell>
@@ -144,6 +148,7 @@ export function RigCompressorTable({ data, onEdit, onDelete, canEdit }: RigCompr
             <Table>
                 <TableHeader>
                     <TableRow>
+                        <TableHead>Sl. No</TableHead>
                         <TableHead>Type of Rig Unit</TableHead>
                         <TableHead>Vehicle Reg. No</TableHead>
                         <TableHead>Compressor Details</TableHead>
@@ -153,8 +158,9 @@ export function RigCompressorTable({ data, onEdit, onDelete, canEdit }: RigCompr
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {(data || []).map(u => (
+                    {(data || []).map((u, index) => (
                         <TableRow key={u.id}>
+                            <TableCell>{index + 1}</TableCell>
                             <TableCell>{u.typeOfRigUnit}</TableCell>
                             <TableCell>{u.registrationNumber}</TableCell>
                             <TableCell>{u.compressorDetails}</TableCell>
