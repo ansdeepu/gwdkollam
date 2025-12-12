@@ -12,7 +12,29 @@ import { Loader2, Save, X } from "lucide-react";
 import { DepartmentVehicleSchema, HiredVehicleSchema, RigCompressorSchema } from "@/lib/schemas";
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from "@/lib/schemas";
 import { ScrollArea } from "../ui/scroll-area";
-import { formatDateForInput } from '@/app/dashboard/vehicles/page';
+import { format, isValid, parseISO } from 'date-fns';
+
+const safeParseDate = (dateValue: any): Date | null => {
+  if (!dateValue) return null;
+  if (dateValue instanceof Date) return dateValue;
+  if (typeof dateValue === 'object' && dateValue !== null && typeof (dateValue as any).seconds === 'number') {
+    return new Date((dateValue as any).seconds * 1000);
+  }
+  if (typeof dateValue === 'string') {
+    const parsed = new Date(dateValue);
+    if (!isNaN(parsed.getTime())) return parsed;
+  }
+  return null;
+};
+
+const formatDateForInput = (date: any): string => {
+    if (!date) return '';
+    const d = safeParseDate(date);
+    if (d && isValid(d)) {
+        return format(d, 'yyyy-MM-dd');
+    }
+    return '';
+};
 
 interface FormProps<T> {
     initialData: T | null;
