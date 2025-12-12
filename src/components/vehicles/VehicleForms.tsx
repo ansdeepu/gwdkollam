@@ -64,7 +64,6 @@ export function DepartmentVehicleForm({ initialData, onFormSubmit, onClose }: Fo
 
     const handleSubmit = async (data: DepartmentVehicle) => {
         await onFormSubmit(data);
-        onClose();
     };
 
     return (
@@ -130,7 +129,6 @@ export function HiredVehicleForm({ initialData, onFormSubmit, onClose }: FormPro
 
     const handleSubmit = async (data: HiredVehicle) => {
         await onFormSubmit(data);
-        onClose();
     };
 
     return (
@@ -188,7 +186,6 @@ export function RigCompressorForm({ initialData, onFormSubmit, onClose }: FormPr
 
     const handleSubmit = async (data: RigCompressor) => {
         await onFormSubmit(data);
-        onClose();
     };
 
     return (
