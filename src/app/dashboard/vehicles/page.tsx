@@ -3,8 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePageHeader } from '@/hooks/usePageHeader';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, PlusCircle, Truck, FileDown } from 'lucide-react';
@@ -157,48 +156,58 @@ export default function VehiclesPage() {
                             <Button variant="outline" onClick={handleExportExcel}><FileDown className="h-4 w-4 mr-2" /> Export Excel</Button>
                         </div>
                     )}
-                    <Tabs defaultValue="department">
-                        <TabsList className="grid w-full grid-cols-3">
-                            <TabsTrigger value="department">Department Vehicles</TabsTrigger>
-                            <TabsTrigger value="hired">Hired Vehicles</TabsTrigger>
-                            <TabsTrigger value="rigs">Rig & Compressor</TabsTrigger>
-                        </TabsList>
-                        
-                        {isLoading ? (
-                             <div className="flex justify-center items-center h-64">
-                                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                             </div>
-                        ) : (
-                            <>
-                                <TabsContent value="department" className="mt-4">
-                                    <DepartmentVehicleTable 
-                                        data={departmentVehicles} 
-                                        onEdit={(v) => handleAddOrEdit('department', v)} 
-                                        onDelete={useDeleteDepartmentVehicle()} 
-                                        canEdit={canEdit}
-                                    />
-                                </TabsContent>
-                                <TabsContent value="hired" className="mt-4">
-                                    <HiredVehicleTable 
-                                        data={hiredVehicles} 
-                                        onEdit={(v) => handleAddOrEdit('hired', v)} 
-                                        onDelete={useDeleteHiredVehicle()}
-                                        canEdit={canEdit}
-                                    />
-                                </TabsContent>
-                                <TabsContent value="rigs" className="mt-4">
-                                    <RigCompressorTable 
-                                        data={rigCompressors} 
-                                        onEdit={(v) => handleAddOrEdit('rig', v)} 
-                                        onDelete={useDeleteRigCompressor()}
-                                        canEdit={canEdit}
-                                    />
-                                </TabsContent>
-                            </>
-                        )}
-                    </Tabs>
                 </CardContent>
             </Card>
+
+            {isLoading ? (
+                 <div className="flex justify-center items-center h-64">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                 </div>
+            ) : (
+                <div className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Department Vehicles</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <DepartmentVehicleTable 
+                                data={departmentVehicles} 
+                                onEdit={(v) => handleAddOrEdit('department', v)} 
+                                onDelete={useDeleteDepartmentVehicle()} 
+                                canEdit={canEdit}
+                            />
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Hired Vehicles</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <HiredVehicleTable 
+                                data={hiredVehicles} 
+                                onEdit={(v) => handleAddOrEdit('hired', v)} 
+                                onDelete={useDeleteHiredVehicle()}
+                                canEdit={canEdit}
+                            />
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Rig & Compressor Units</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <RigCompressorTable 
+                                data={rigCompressors} 
+                                onEdit={(v) => handleAddOrEdit('rig', v)} 
+                                onDelete={useDeleteRigCompressor()}
+                                canEdit={canEdit}
+                            />
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
 
             <Dialog open={isDepartmentDialogOpen} onOpenChange={setIsDepartmentDialogOpen}>
                 <DialogContent className="max-w-4xl">
