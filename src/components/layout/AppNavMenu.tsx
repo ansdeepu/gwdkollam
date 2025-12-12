@@ -34,7 +34,7 @@ export const allNavItems: NavItem[] = [
   { href: '/dashboard/ars', label: 'ARS', icon: Waves },
   { href: '/dashboard/agency-registration', label: 'Rig Registration', icon: ClipboardList },
   { href: '/dashboard/e-tender', label: 'e-Tender', icon: Hammer, roles: ['editor', 'viewer'] },
-  { href: '/dashboard/vehicles', label: 'Vehicles', icon: Truck },
+  { href: '/dashboard/vehicles', label: 'Vehicle & Rig', icon: Truck },
   { href: '/dashboard/pending-updates', label: 'Pending Actions', icon: Hourglass, roles: ['editor'] },
   { href: '/dashboard/reports', label: 'Reports', icon: FileText },
   { href: '/dashboard/progress-report', label: 'Progress Reports', icon: BarChart3 },

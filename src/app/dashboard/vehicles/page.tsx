@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, PlusCircle, Truck, FileDown } from 'lucide-react';
@@ -66,7 +66,7 @@ export default function VehiclesPage() {
     const [editingRigCompressor, setEditingRigCompressor] = useState<RigCompressor | null>(null);
     
     useEffect(() => {
-        setHeader("Vehicle Management", "Manage department, hired, and rig/compressor vehicles.");
+        setHeader("Vehicle & Rig Management", "Manage department, hired, and rig/compressor vehicles and units.");
     }, [setHeader]);
 
     const handleAddOrEdit = (type: 'department' | 'hired' | 'rig', data: any) => {
