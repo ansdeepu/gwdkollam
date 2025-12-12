@@ -1279,18 +1279,16 @@ export default function AgencyRegistrationPage() {
                         </Accordion>
                          
                         <Accordion type="single" collapsible defaultValue="item-1">
-                          <AccordionItem value="item-1">
-                            <div className="flex justify-between items-center py-4">
-                                <AccordionTrigger className="text-xl font-semibold text-primary flex-1 py-0">
-                                    <span>2. Application Fees</span>
-                                </AccordionTrigger>
-                                {!isReadOnly && (
-                                    <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('addFee', {}) }}>
-                                        <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
-                                    </Button>
-                                )}
-                            </div>
-                            <AccordionContent className="pt-4 space-y-4">
+                            <AccordionItem value="item-1">
+                                <div className="flex items-center justify-between py-4">
+                                    <h2 className="text-xl font-semibold text-primary flex-1">2. Application Fees</h2>
+                                    {!isReadOnly && (
+                                        <Button type="button" variant="outline" size="sm" onClick={() => openDialog('addFee', {})}>
+                                            <PlusCircle className="mr-2 h-4 w-4" /> Add Fee
+                                        </Button>
+                                    )}
+                                </div>
+                                <AccordionContent className="pt-4 space-y-4">
                                 {feeFields.length > 0 ? feeFields.map((field, index) => (
                                     <div key={field.id} className="p-4 border rounded-lg bg-secondary/20">
                                       <div className="flex justify-between items-center mb-2">
@@ -1327,11 +1325,9 @@ export default function AgencyRegistrationPage() {
                         <Accordion type="single" collapsible defaultValue="item-1">
                           <AccordionItem value="item-1">
                             <div className="flex justify-between items-center py-4">
-                                <AccordionTrigger className="text-xl font-semibold text-primary flex-1 py-0">
-                                    <span>3. Agency Registration</span>
-                                </AccordionTrigger>
+                                <h2 className="text-xl font-semibold text-primary flex-1">3. Agency Registration</h2>
                                 {!isReadOnly && (
-                                    <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); openDialog('editAgencyReg', { regData: form.getValues() }) }}>
+                                    <Button type="button" variant="outline" size="sm" onClick={() => openDialog('editAgencyReg', { regData: form.getValues() })}>
                                         <Edit className="mr-2 h-4 w-4" /> Add
                                     </Button>
                                 )}
@@ -1355,11 +1351,9 @@ export default function AgencyRegistrationPage() {
                         <Accordion type="single" collapsible defaultValue="item-1">
                             <AccordionItem value="item-1">
                                 <div className="flex justify-between items-center py-4">
-                                    <AccordionTrigger className="text-xl font-semibold text-primary flex-1 py-0">
-                                        <span>4. Rig Registration ({activeRigs.length} Active)</span>
-                                    </AccordionTrigger>
+                                    <h2 className="text-xl font-semibold text-primary flex-1">4. Rig Registration ({activeRigs.length} Active)</h2>
                                     {!isReadOnly && (
-                                        <Button type="button" variant="outline" size="sm" className="mr-4" onClick={(e) => { e.stopPropagation(); handleAddRig(); }}>
+                                        <Button type="button" variant="outline" size="sm" onClick={handleAddRig}>
                                             <PlusCircle className="mr-2 h-4 w-4" /> Add Rig
                                         </Button>
                                     )}
@@ -1389,7 +1383,7 @@ export default function AgencyRegistrationPage() {
                         {hasCancelledRigs && (
                             <Accordion type="single" collapsible defaultValue="item-1">
                                 <AccordionItem value="item-1">
-                                <AccordionTrigger className="text-xl font-semibold text-destructive">5. Cancelled Rigs ({cancelledRigs.length})</AccordionTrigger>
+                                <h2 className="text-xl font-semibold text-destructive py-4">5. Cancelled Rigs ({cancelledRigs.length})</h2>
                                 <AccordionContent className="pt-4 space-y-4">
                                     <Accordion type="multiple" className="w-full space-y-2">
                                     {cancelledRigs.map(({ field, originalIndex }, displayIndex) => (
@@ -1469,7 +1463,7 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
             <Dialog open={dialogState.type === 'editFee' || dialogState.type === 'addFee'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-xl flex flex-col p-0">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-xl">
                     <ApplicationFeeDialogContent
                         initialData={dialogState.type === 'editFee' ? dialogState.data?.fee : createDefaultFee()}
                         onConfirm={handleConfirmFeeChange}
@@ -1712,11 +1706,11 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
                 <ScrollArea className="h-full px-6 py-4 no-scrollbar">
                     <div className="space-y-4">
                         <div className="grid grid-cols-3 gap-4 items-end border p-4 rounded-lg">
-                            <div className="space-y-2 col-span-1">
+                            <div className="space-y-2 col-span-2">
                                 <Label htmlFor="agencyRegistrationNo">Agency Reg. No.</Label>
                                 <Input id="agencyRegistrationNo" value={data.agencyRegistrationNo} onChange={(e) => setData(d => ({ ...d, agencyRegistrationNo: e.target.value }))} />
                             </div>
-                            <div className="space-y-2 col-span-2">
+                            <div className="space-y-2 col-span-1">
                                 <Label htmlFor="agencyRegistrationDate">Reg. Date</Label>
                                 <Input id="agencyRegistrationDate" type="date" value={data.agencyRegistrationDate} onChange={(e) => setData(d => ({ ...d, agencyRegistrationDate: e.target.value }))} />
                             </div>
@@ -2117,5 +2111,7 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
 
+
+    
 
     
