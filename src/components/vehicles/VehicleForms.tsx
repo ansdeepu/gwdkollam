@@ -1,4 +1,3 @@
-
 // src/components/vehicles/VehicleForms.tsx
 "use client";
 
@@ -76,8 +75,7 @@ export function DepartmentVehicleForm({ initialData, onFormSubmit, onClose }: Fo
                     <DialogTitle>{initialData ? 'Edit' : 'Add'} Department Vehicle</DialogTitle>
                     <DialogDescription>Fill in the details for the vehicle.</DialogDescription>
                 </DialogHeader>
-                <ScrollArea className="max-h-[70vh] px-6">
-                <div className="space-y-4">
+                <div className="px-6 py-4 space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <FormField name="registrationNumber" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Registration Number</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                         <FormField name="model" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
@@ -113,7 +111,6 @@ export function DepartmentVehicleForm({ initialData, onFormSubmit, onClose }: Fo
                         </div>
                     </div>
                 </div>
-                </ScrollArea>
                 <DialogFooter className="p-6 pt-4">
                     <Button type="button" variant="outline" onClick={onClose} disabled={form.formState.isSubmitting}>Cancel</Button>
                     <Button type="submit" disabled={form.formState.isSubmitting}>
