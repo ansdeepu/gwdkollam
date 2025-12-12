@@ -1,4 +1,3 @@
-
 // src/app/dashboard/vehicles/page.tsx
 "use client";
 
@@ -10,12 +9,12 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, PlusCircle, Truck, FileDown } from 'lucide-react';
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from '@/lib/schemas';
 import { DepartmentVehicleForm, HiredVehicleForm, RigCompressorForm } from '@/components/vehicles/VehicleForms';
-import { useVehicles } from '@/hooks/useVehicles';
 import { useAuth } from '@/hooks/useAuth';
 import ExcelJS from 'exceljs';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { DepartmentVehicleTable, HiredVehicleTable, RigCompressorTable } from '@/components/vehicles/VehicleTables';
+import { useDataStore } from '@/hooks/use-data-store';
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
@@ -43,11 +42,20 @@ export default function VehiclesPage() {
     const canEdit = user?.role === 'editor';
 
     const {
-        departmentVehicles, addDepartmentVehicle, updateDepartmentVehicle, deleteDepartmentVehicle,
-        hiredVehicles, addHiredVehicle, updateHiredVehicle, deleteHiredVehicle,
-        rigCompressors, addRigCompressor, updateRigCompressor, deleteRigCompressor,
-        isLoading
-    } = useVehicles();
+        allDepartmentVehicles: departmentVehicles,
+        addDepartmentVehicle,
+        updateDepartmentVehicle,
+        deleteDepartmentVehicle,
+        allHiredVehicles: hiredVehicles,
+        addHiredVehicle,
+        updateHiredVehicle,
+        deleteHiredVehicle,
+        allRigCompressors: rigCompressors,
+        addRigCompressor,
+        updateRigCompressor,
+        deleteRigCompressor,
+        isLoading,
+    } = useDataStore();
 
     const [isDepartmentDialogOpen, setIsDepartmentDialogOpen] = useState(false);
     const [isHiredDialogOpen, setIsHiredDialogOpen] = useState(false);
