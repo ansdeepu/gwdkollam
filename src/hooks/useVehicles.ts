@@ -8,6 +8,8 @@ import type { DepartmentVehicle, HiredVehicle, RigCompressor } from '@/lib/schem
 import { useAuth } from './useAuth';
 import { toast } from './use-toast';
 import { useDataStore } from './use-data-store';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 const db = getFirestore(app);
 
@@ -32,9 +34,23 @@ export function useVehicles() {
             if (!user) throw new Error("User must be logged in.");
             const payload = { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
             if ('id' in payload) delete (payload as any).id;
-            await addDoc(collection(db, collectionName), payload);
-            toast({ title: 'Item Added', description: 'The new item has been saved.' });
-            refetch();
+
+            addDoc(collection(db, collectionName), payload)
+                .then(() => {
+                    toast({ title: 'Item Added', description: 'The new item has been saved.' });
+                    refetch();
+                })
+                .catch(error => {
+                    if (error.code === 'permission-denied') {
+                        errorEmitter.emit('permission-error', new FirestorePermissionError({
+                            path: `/${collectionName}`,
+                            operation: 'create',
+                            requestResourceData: payload,
+                        }));
+                    } else {
+                        toast({ title: "Error Adding Item", description: error.message, variant: "destructive" });
+                    }
+                });
         }, [user, refetch]);
 
     // Generic function to update a document
@@ -45,18 +61,46 @@ export function useVehicles() {
             const docRef = doc(db, collectionName, data.id);
             const payload = { ...data, updatedAt: serverTimestamp() };
             if ('id' in payload) delete (payload as any).id;
-            await updateDoc(docRef, payload);
-            toast({ title: 'Item Updated', description: 'Your changes have been saved.' });
-            refetch();
+            
+            updateDoc(docRef, payload)
+                .then(() => {
+                    toast({ title: 'Item Updated', description: 'Your changes have been saved.' });
+                    refetch();
+                })
+                .catch(error => {
+                    if (error.code === 'permission-denied') {
+                        errorEmitter.emit('permission-error', new FirestorePermissionError({
+                            path: docRef.path,
+                            operation: 'update',
+                            requestResourceData: payload,
+                        }));
+                    } else {
+                        toast({ title: "Error Updating Item", description: error.message, variant: "destructive" });
+                    }
+                });
         }, [user, refetch]);
 
     // Generic function to delete a document
     const deleteVehicle = (collectionName: string, refetch: () => void) =>
         useCallback(async (id: string, name: string) => {
             if (!user) throw new Error("User must be logged in.");
-            await deleteDoc(doc(db, collectionName, id));
-            toast({ title: 'Item Deleted', description: `${name} has been removed.` });
-            refetch();
+            const docRef = doc(db, collectionName, id);
+            
+            deleteDoc(docRef)
+                .then(() => {
+                    toast({ title: 'Item Deleted', description: `${name} has been removed.` });
+                    refetch();
+                })
+                .catch(error => {
+                    if (error.code === 'permission-denied') {
+                        errorEmitter.emit('permission-error', new FirestorePermissionError({
+                            path: docRef.path,
+                            operation: 'delete',
+                        }));
+                    } else {
+                        toast({ title: "Error Deleting Item", description: error.message, variant: "destructive" });
+                    }
+                });
         }, [user, refetch]);
 
     return {

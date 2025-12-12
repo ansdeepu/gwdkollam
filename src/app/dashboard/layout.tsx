@@ -1,4 +1,3 @@
-
 // src/app/dashboard/layout.tsx
 "use client";
 
@@ -20,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { useAuth, updateUserLastActive } from '@/hooks/useAuth';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import FirebaseErrorListener from '@/components/FirebaseErrorListener';
 
 const IDLE_TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
 const LAST_ACTIVE_UPDATE_INTERVAL = 5 * 60 * 1000; // Update Firestore lastActiveAt at most once per 5 minutes
@@ -240,6 +240,7 @@ function InnerDashboardLayout({ children }: { children: React.ReactNode }) {
       <div className="flex h-screen w-full overflow-hidden">
         <AppSidebar />
         <SidebarInset className="flex flex-col flex-1 overflow-hidden">
+           <FirebaseErrorListener />
            <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/95 backdrop-blur-sm">
                 <HeaderContent />
             </header>
