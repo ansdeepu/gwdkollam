@@ -101,6 +101,22 @@ service cloud.firestore {
       allow write: if isEditor();
     }
 
+    // === Vehicle Management ===
+    match /departmentVehicles/{docId} {
+      allow read: if canReadCollection();
+      allow write: if isEditor();
+    }
+
+    match /hiredVehicles/{docId} {
+      allow read: if canReadCollection();
+      allow write: if isEditor();
+    }
+
+    match /rigCompressors/{docId} {
+      allow read: if canReadCollection();
+      allow write: if isEditor();
+    }
+
     // === App Settings (Dropdowns, etc.) ===
     match /officeAddresses/{docId} {
       allow read: if isApproved();
