@@ -411,7 +411,7 @@ const SidebarContent = React.forwardRef<
       ref={ref}
       data-sidebar="content"
       className={cn(
-        "flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto no-scrollbar group-data-[collapsible=icon]:overflow-hidden",
+        "flex min-h-0 flex-1 flex-col gap-1 no-scrollbar group-data-[collapsible=icon]:overflow-hidden",
         className
       )}
       {...props}
@@ -536,7 +536,7 @@ const sidebarMenuButtonVariants = cva(
     },
     defaultVariants: {
       variant: "default",
-      size: "default",
+      size: "compact",
     },
   }
 )
@@ -554,7 +554,7 @@ const SidebarMenuButton = React.forwardRef<
       asChild = false,
       isActive = false,
       variant = "default",
-      size = "default",
+      size = "compact",
       tooltip,
       className,
       ...props
