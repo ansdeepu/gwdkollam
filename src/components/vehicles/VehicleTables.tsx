@@ -211,11 +211,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                 <TableHeader>
                     <TableRow>
                         <TableHead className="p-2 text-sm">Sl. No</TableHead>
-                        <TableHead className="p-2 text-sm">Reg. No</TableHead>
-                        <TableHead className="p-2 text-sm">Model</TableHead>
-                        <TableHead className="p-2 text-sm">Type</TableHead>
-                        <TableHead className="p-2 text-sm">Class</TableHead>
-                        <TableHead className="p-2 text-sm">Reg. Date</TableHead>
+                        <TableHead className="p-2 text-sm min-w-[200px]">Reg. No</TableHead>
                         <TableHead className="p-2 text-sm">Fitness</TableHead>
                         <TableHead className="p-2 text-sm">Tax</TableHead>
                         <TableHead className="p-2 text-sm">Insurance</TableHead>
@@ -228,15 +224,15 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                     {(data || []).map((v, index) => (
                         <TableRow key={v.id}>
                             <TableCell className="p-2 text-sm">{index + 1}</TableCell>
-                            <TableCell className="p-2 text-sm font-medium">
+                            <TableCell className="p-2 text-sm font-medium whitespace-normal break-words">
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
-                                    {v.registrationNumber}
+                                    <div className="flex flex-col">
+                                        <span className="font-bold">{v.registrationNumber}</span>
+                                        <span className="text-muted-foreground">{v.model} - {v.typeOfVehicle} ({v.vehicleClass})</span>
+                                        <span className="text-muted-foreground text-xs">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
+                                    </div>
                                 </button>
                             </TableCell>
-                            <TableCell className="p-2 text-sm">{v.model || '-'}</TableCell>
-                            <TableCell className="p-2 text-sm">{v.typeOfVehicle || '-'}</TableCell>
-                            <TableCell className="p-2 text-sm">{v.vehicleClass || '-'}</TableCell>
-                            <TableCell className="p-2 text-sm">{formatDateSafe(v.registrationDate)}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.fitnessExpiry)}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.taxExpiry)}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.insuranceExpiry)}</TableCell>
