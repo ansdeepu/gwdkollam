@@ -83,7 +83,9 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
                             <TableCell className="p-2 text-xs font-medium whitespace-normal break-words">
                                 <div className="flex flex-col">
                                     <span>{v.registrationNumber}</span>
-                                    <span className="text-muted-foreground text-xs">{v.model}, {v.typeOfVehicle}, {v.vehicleClass}</span>
+                                    <span className="text-muted-foreground">{v.model}</span>
+                                    <span className="text-muted-foreground">{v.typeOfVehicle}</span>
+                                    <span className="text-muted-foreground">{v.vehicleClass}</span>
                                 </div>
                             </TableCell>
                             <TableCell className="p-2 text-xs">{formatDateSafe(v.fitnessExpiry)}</TableCell>
