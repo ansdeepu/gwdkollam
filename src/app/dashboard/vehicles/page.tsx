@@ -5,7 +5,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Loader2, PlusCircle, Truck, FileDown, AlertTriangle, CalendarClock } from 'lucide-react';
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from '@/lib/schemas';
 import { DepartmentVehicleForm, HiredVehicleForm, RigCompressorForm } from '@/components/vehicles/VehicleForms';
@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import ExcelJS from 'exceljs';
 import { format, isValid, addDays, isBefore, isAfter } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
-import { DepartmentVehicleTable, HiredVehicleTable, RigCompressorTable } from '@/components/vehicles/VehicleTables';
+import { DepartmentVehicleTable, HiredVehicleTable, RigCompressorTable, VehicleViewDialog } from '@/components/vehicles/VehicleTables';
 import { useDataStore } from '@/hooks/use-data-store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -142,6 +142,9 @@ export default function VehiclesPage() {
     const [editingHiredVehicle, setEditingHiredVehicle] = useState<HiredVehicle | null>(null);
     const [editingRigCompressor, setEditingRigCompressor] = useState<RigCompressor | null>(null);
     
+    const [viewingVehicle, setViewingVehicle] = useState<DepartmentVehicle | HiredVehicle | RigCompressor | null>(null);
+    const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+
     useEffect(() => {
         setHeader("Vehicle & Rig Management", "Manage department, hired, and rig/compressor vehicles and units.");
     }, [setHeader]);
@@ -206,6 +209,11 @@ export default function VehiclesPage() {
         }
     };
     
+    const handleView = (vehicle: DepartmentVehicle | HiredVehicle | RigCompressor) => {
+        setViewingVehicle(vehicle);
+        setIsViewDialogOpen(true);
+    };
+
     const handleDepartmentFormSubmit = async (data: DepartmentVehicle) => {
         if (editingDepartmentVehicle) {
             await updateDepartmentVehicle(data);
@@ -323,6 +331,10 @@ export default function VehiclesPage() {
     return (
         <div className="space-y-6">
             <ExpiryAlertDialog isOpen={expiryAlertType !== null} onClose={() => setExpiryAlertType(null)} vehiclesWithAlerts={vehiclesWithAlerts} alertType={expiryAlertType}/>
+            
+            <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+                <VehicleViewDialog vehicle={viewingVehicle} onClose={() => setIsViewDialogOpen(false)} />
+            </Dialog>
 
             {isLoading ? (
                  <div className="flex justify-center items-center h-64">
@@ -350,6 +362,7 @@ export default function VehiclesPage() {
                                     onEdit={(v) => handleAddOrEdit('department', v)} 
                                     onDelete={deleteDepartmentVehicle} 
                                     canEdit={canEdit}
+                                    onView={handleView}
                                 />
                             </CardContent>
                         </Card>
@@ -369,6 +382,7 @@ export default function VehiclesPage() {
                                     onEdit={(v) => handleAddOrEdit('hired', v)} 
                                     onDelete={deleteHiredVehicle}
                                     canEdit={canEdit}
+                                    onView={handleView}
                                 />
                             </CardContent>
                         </Card>
@@ -387,6 +401,7 @@ export default function VehiclesPage() {
                                     onEdit={(v) => handleAddOrEdit('rig', v)} 
                                     onDelete={deleteRigCompressor}
                                     canEdit={canEdit}
+                                    onView={handleView}
                                 />
                             </CardContent>
                         </Card>
@@ -402,6 +417,7 @@ export default function VehiclesPage() {
                                     onEdit={(v) => handleAddOrEdit('department', v)} 
                                     onDelete={deleteDepartmentVehicle} 
                                     canEdit={canEdit}
+                                    onView={handleView}
                                 />
                             </CardContent>
                         </Card>
@@ -415,6 +431,7 @@ export default function VehiclesPage() {
                                     onEdit={(v) => handleAddOrEdit('hired', v)} 
                                     onDelete={deleteHiredVehicle}
                                     canEdit={canEdit}
+                                    onView={handleView}
                                 />
                             </CardContent>
                         </Card>
@@ -428,6 +445,7 @@ export default function VehiclesPage() {
                                     onEdit={(v) => handleAddOrEdit('rig', v)} 
                                     onDelete={deleteRigCompressor}
                                     canEdit={canEdit}
+                                    onView={handleView}
                                 />
                             </CardContent>
                         </Card>

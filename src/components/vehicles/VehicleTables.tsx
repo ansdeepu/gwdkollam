@@ -10,9 +10,13 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useState } from "react";
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
+import { DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../ui/dialog";
+import { ScrollArea } from "../ui/scroll-area";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 interface CommonTableProps {
     canEdit: boolean;
+    onView: (vehicle: any) => void;
 }
 interface DepartmentVehicleTableProps extends CommonTableProps {
     data: DepartmentVehicle[];
@@ -49,7 +53,85 @@ const formatDateSafe = (d: any): string => {
     return date ? format(date, 'dd/MM/yyyy') : '-';
 };
 
-export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: DepartmentVehicleTableProps) {
+const DetailRow = ({ label, value }: { label: string, value?: string | number | null }) => {
+    if (value === null || value === undefined || value === '') return null;
+    return (
+        <div className="grid grid-cols-2 text-sm">
+            <span className="text-muted-foreground">{label}:</span>
+            <span className="font-semibold">{value}</span>
+        </div>
+    );
+};
+
+export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVehicle | HiredVehicle | RigCompressor | null, onClose: () => void }) {
+    if (!vehicle) return null;
+
+    let title = "Vehicle Details";
+    let details: React.ReactNode;
+
+    if ('registrationNumber' in vehicle) { // Department or Hired Vehicle
+        title = vehicle.registrationNumber;
+        const v = vehicle as DepartmentVehicle | HiredVehicle;
+        details = (
+             <div className="space-y-4">
+                <DetailRow label="Model" value={v.model} />
+                <DetailRow label="Vehicle Class" value={v.vehicleClass} />
+                <DetailRow label="Registration Date" value={formatDateSafe(v.registrationDate)} />
+                <DetailRow label="RC Status" value={v.rcStatus} />
+                {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
+                {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
+                {'hireCharges' in v && <DetailRow label="Hire Charges" value={v.hireCharges?.toLocaleString('en-IN')} />}
+                {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
+                
+                <div className="pt-4 mt-4 border-t">
+                    <h4 className="font-semibold text-primary mb-2">Certificates</h4>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                        <DetailRow label="Fitness Expiry" value={formatDateSafe(v.fitnessExpiry)} />
+                        <DetailRow label="Tax Expiry" value={formatDateSafe(v.taxExpiry)} />
+                        <DetailRow label="Insurance Expiry" value={formatDateSafe(v.insuranceExpiry)} />
+                        <DetailRow label="Pollution Expiry" value={formatDateSafe(v.pollutionExpiry)} />
+                        {'fuelTestExpiry' in v && <DetailRow label="Fuel Test Expiry" value={formatDateSafe(v.fuelTestExpiry)} />}
+                        {'permitExpiry' in v && <DetailRow label="Permit Expiry" value={formatDateSafe(v.permitExpiry)} />}
+                    </div>
+                </div>
+            </div>
+        );
+    } else { // RigCompressor
+        title = (vehicle as RigCompressor).typeOfRigUnit;
+        const u = vehicle as RigCompressor;
+        details = (
+            <div className="space-y-4">
+                <DetailRow label="Type of Rig Unit" value={u.typeOfRigUnit} />
+                <DetailRow label="Status" value={u.status} />
+                <DetailRow label="Fuel Consumption" value={u.fuelConsumption} />
+                <DetailRow label="Rig Vehicle Reg. No" value={u.rigVehicleRegNo} />
+                <DetailRow label="Compressor Vehicle Reg. No" value={u.compressorVehicleRegNo} />
+                <DetailRow label="Supporting Vehicle Reg. No" value={u.supportingVehicleRegNo} />
+                <DetailRow label="Compressor Details" value={u.compressorDetails} />
+                <DetailRow label="Remarks" value={u.remarks} />
+            </div>
+        );
+    }
+
+    return (
+        <DialogContent className="max-w-2xl">
+            <DialogHeader>
+                <DialogTitle>{title}</DialogTitle>
+                <DialogDescription>
+                    A detailed overview of the selected vehicle or unit.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="p-6 pt-0">
+                {details}
+            </div>
+            <DialogFooter>
+                <Button onClick={onClose} variant="outline">Close</Button>
+            </DialogFooter>
+        </DialogContent>
+    );
+}
+
+export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView }: DepartmentVehicleTableProps) {
     const [itemToDelete, setItemToDelete] = useState<DepartmentVehicle | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -82,13 +164,15 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
                         <TableRow key={v.id}>
                             <TableCell className="p-2 text-sm">{index + 1}</TableCell>
                             <TableCell className="p-2 text-sm font-medium whitespace-normal break-words">
-                                <div className="flex flex-col">
-                                    <span>{v.registrationNumber}</span>
-                                    <span className="text-muted-foreground">{v.model}</span>
-                                    <span className="text-muted-foreground">{v.typeOfVehicle}</span>
-                                    <span className="text-muted-foreground">{v.vehicleClass}</span>
-                                    <span className="text-muted-foreground">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
-                                </div>
+                                <button onClick={() => onView(v)} className="text-left hover:underline">
+                                    <div className="flex flex-col">
+                                        <span className="font-bold">{v.registrationNumber}</span>
+                                        <span className="text-muted-foreground">{v.model}</span>
+                                        <span className="text-muted-foreground">{v.typeOfVehicle}</span>
+                                        <span className="text-muted-foreground">{v.vehicleClass}</span>
+                                        <span className="text-muted-foreground">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
+                                    </div>
+                                </button>
                             </TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.fitnessExpiry)}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.taxExpiry)}</TableCell>
@@ -100,9 +184,9 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
                                 <TableCell className="text-right p-1">
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" onClick={() => onEdit(v)}><Eye className="h-4 w-4"/></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => onEdit(v)}><Edit className="h-4 w-4"/></Button>
                                         </TooltipTrigger>
-                                        <TooltipContent><p>View / Edit</p></TooltipContent>
+                                        <TooltipContent><p>Edit</p></TooltipContent>
                                     </Tooltip>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
@@ -121,7 +205,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
     );
 }
 
-export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehicleTableProps) {
+export function HiredVehicleTable({ data, onEdit, onDelete, canEdit, onView }: HiredVehicleTableProps) {
      const [itemToDelete, setItemToDelete] = useState<HiredVehicle | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -155,12 +239,14 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehi
                         <TableRow key={v.id}>
                             <TableCell className="p-2 text-sm">{index + 1}</TableCell>
                             <TableCell className="p-2 text-sm font-medium whitespace-normal break-words">
-                                <div className="flex flex-col">
-                                    <span>{v.registrationNumber}</span>
-                                    <span className="text-muted-foreground">{v.model}</span>
-                                    <span className="text-muted-foreground">{v.vehicleClass}</span>
-                                    <span className="text-muted-foreground">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
-                                </div>
+                                <button onClick={() => onView(v)} className="text-left hover:underline">
+                                    <div className="flex flex-col">
+                                        <span className="font-bold">{v.registrationNumber}</span>
+                                        <span className="text-muted-foreground">{v.model}</span>
+                                        <span className="text-muted-foreground">{v.vehicleClass}</span>
+                                        <span className="text-muted-foreground">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
+                                    </div>
+                                </button>
                             </TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.agreementValidity)}</TableCell>
                             <TableCell className="p-2 text-sm">{v.hireCharges?.toLocaleString('en-IN') || '-'}</TableCell>
@@ -173,9 +259,9 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehi
                                 <TableCell className="text-right p-1">
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" onClick={() => onEdit(v)}><Eye className="h-4 w-4"/></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => onEdit(v)}><Edit className="h-4 w-4"/></Button>
                                         </TooltipTrigger>
-                                        <TooltipContent><p>View / Edit</p></TooltipContent>
+                                        <TooltipContent><p>Edit</p></TooltipContent>
                                     </Tooltip>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
@@ -194,7 +280,7 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehi
     );
 }
 
-export function RigCompressorTable({ data, onEdit, onDelete, canEdit }: RigCompressorTableProps) {
+export function RigCompressorTable({ data, onEdit, onDelete, canEdit, onView }: RigCompressorTableProps) {
      const [itemToDelete, setItemToDelete] = useState<RigCompressor | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -224,7 +310,11 @@ export function RigCompressorTable({ data, onEdit, onDelete, canEdit }: RigCompr
                     {(data || []).map((u, index) => (
                         <TableRow key={u.id}>
                             <TableCell className="p-2 text-sm">{index + 1}</TableCell>
-                            <TableCell className="p-2 text-sm">{u.typeOfRigUnit || '-'}</TableCell>
+                            <TableCell className="p-2 text-sm">
+                                <button onClick={() => onView(u)} className="text-left hover:underline font-bold">
+                                    {u.typeOfRigUnit || '-'}
+                                </button>
+                            </TableCell>
                             <TableCell className="p-2 text-sm">{u.rigVehicleRegNo || '-'}</TableCell>
                             <TableCell className="p-2 text-sm">{u.compressorVehicleRegNo || '-'}</TableCell>
                             <TableCell className="p-2 text-sm">{u.supportingVehicleRegNo || '-'}</TableCell>
@@ -233,9 +323,9 @@ export function RigCompressorTable({ data, onEdit, onDelete, canEdit }: RigCompr
                                 <TableCell className="text-right p-1">
                                     <Tooltip>
                                         <TooltipTrigger asChild>
-                                            <Button variant="ghost" size="icon" onClick={() => onEdit(u)}><Eye className="h-4 w-4"/></Button>
+                                            <Button variant="ghost" size="icon" onClick={() => onEdit(u)}><Edit className="h-4 w-4"/></Button>
                                         </TooltipTrigger>
-                                        <TooltipContent><p>View / Edit</p></TooltipContent>
+                                        <TooltipContent><p>Edit</p></TooltipContent>
                                     </Tooltip>
                                     <Tooltip>
                                         <TooltipTrigger asChild>
