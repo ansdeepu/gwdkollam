@@ -1,3 +1,4 @@
+
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
@@ -127,18 +128,14 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                 </DialogHeader>
                 <div className="bg-orange-50 font-serif text-black p-4 border-2 border-black max-w-4xl mx-auto my-8">
                     <div className="text-center mb-2">
-                        <h1 className="font-bold text-lg">CERTIFICATE OF REGISTRATION</h1>
+                        <h1 className="font-bold text-lg">VEHICLE REGISTRATION</h1>
                         <p className="text-xs font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
                     </div>
 
                     <div className="grid grid-cols-12 gap-2">
-                        {/* Left Side: Emblem and Chip */}
+                        {/* Left Side: Empty space where emblem was */}
                         <div className="col-span-3 flex flex-col items-center space-y-2">
-                             <Image src="https://i.postimg.cc/PqYp5d6B/kerala-logo-png-3.png" alt="Emblem" width={48} height={48} className="w-12 h-12" data-ai-hint="emblem logo" />
-                            <p className="text-xs font-bold writing-vertical-rl rotate-180">Form 23A</p>
-                            <div className="w-20 h-20 bg-gray-300 border-2 border-gray-500 grid grid-cols-4 grid-rows-4 gap-px p-1">
-                                {Array(16).fill(0).map((_, i) => <div key={i} className="bg-gray-400 border border-gray-500"></div>)}
-                            </div>
+                            {/* Placeholder for vertical space */}
                         </div>
 
                         {/* Right Side: Details */}
@@ -187,7 +184,6 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                         <div className="text-center">
                             <div className="w-24 h-10 border-b border-dashed border-black"></div>
                             <p className="text-xs font-bold">Signing Authority</p>
-                            <p className="text-[10px]">BHOPAL RTO</p>
                         </div>
                     </div>
                 </div>
