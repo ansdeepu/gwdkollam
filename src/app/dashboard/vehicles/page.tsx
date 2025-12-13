@@ -1,3 +1,4 @@
+
 // src/app/dashboard/vehicles/page.tsx
 "use client";
 
@@ -5,7 +6,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Loader2, PlusCircle, Truck, FileDown, AlertTriangle, CalendarClock } from 'lucide-react';
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from '@/lib/schemas';
 import { DepartmentVehicleForm, HiredVehicleForm, RigCompressorForm } from '@/components/vehicles/VehicleForms';
@@ -33,9 +34,9 @@ const safeParseDate = (dateValue: any): Date | null => {
 };
 
 const formatDateSafe = (d: any): string => {
-    if (!d) return 'N/A';
+    if (!d) return '-';
     const date = safeParseDate(d);
-    return date ? format(date, 'dd/MM/yyyy') : 'N/A';
+    return date ? format(date, 'dd/MM/yyyy') : '-';
 };
 
 interface ExpiryInfo {
