@@ -1,4 +1,3 @@
-
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
@@ -90,7 +89,7 @@ const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     const hasAlert = status === 'Expired' || status === 'Expiring Soon';
 
     return (
-        <div className="flex justify-between items-center text-sm py-1.5 border-b border-border/50 last:border-b-0">
+        <div className="flex justify-between items-center text-sm py-1">
             <span className="font-medium flex items-center gap-2">
                 {hasAlert && <AlertTriangle className={cn("h-4 w-4", colorClass)} />}
                 {label}
@@ -109,7 +108,6 @@ const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     );
 };
 
-
 export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVehicle | HiredVehicle | RigCompressor | null, onClose: () => void }) {
     if (!vehicle) return null;
 
@@ -120,19 +118,22 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         title = vehicle.registrationNumber;
         const v = vehicle as DepartmentVehicle | HiredVehicle;
         details = (
-            <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <DetailRow label="Model" value={v.model} />
-                    <DetailRow label="Vehicle Class" value={v.vehicleClass} />
-                    {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
-                    <DetailRow label="RC Status" value={v.rcStatus} />
-                    {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
-                    {'hireCharges' in v && <DetailRow label="Hire Charges" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}`: '-'} />}
-                    <DetailRow label="Date of Registration" value={formatDateSafe(v.registrationDate)} />
-                    {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                    <h4 className="font-semibold text-primary text-sm">Vehicle Particulars</h4>
+                    <div className="space-y-3">
+                      <DetailRow label="Model" value={v.model} />
+                      <DetailRow label="Vehicle Class" value={v.vehicleClass} />
+                      {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
+                      <DetailRow label="RC Status" value={v.rcStatus} />
+                      {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
+                      {'hireCharges' in v && <DetailRow label="Hire Charges" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}`: '-'} />}
+                      <DetailRow label="Date of Registration" value={formatDateSafe(v.registrationDate)} />
+                      {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
+                    </div>
                 </div>
-                 <div className="space-y-2 pt-4 border-t">
-                     <h4 className="font-semibold text-primary text-sm mb-1">Certificate Validity</h4>
+                 <div className="space-y-4">
+                     <h4 className="font-semibold text-primary text-sm">Certificate Validity</h4>
                      <div className="space-y-1">
                         <CertificateRow label="Fitness" date={v.fitnessExpiry} />
                         <CertificateRow label="Tax" date={v.taxExpiry} />
@@ -164,17 +165,14 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     }
 
     return (
-        <DialogContent className="max-w-xl p-0">
-            <div className="p-4 bg-secondary text-secondary-foreground rounded-t-lg">
-                <DialogTitle className="text-xl font-bold">{title}</DialogTitle>
-                <DialogDescription className="text-secondary-foreground/80">
-                    Official Record - Ground Water Department
-                </DialogDescription>
-            </div>
-            <div className="p-6">
+        <DialogContent className="max-w-2xl">
+            <DialogHeader>
+                 <DialogTitle className="text-xl font-bold text-primary">{title}</DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
                 {details}
             </div>
-            <DialogFooter className="p-6 pt-2">
+            <DialogFooter>
                 <Button onClick={onClose} variant="outline" className="w-full">Close</Button>
             </DialogFooter>
         </DialogContent>
@@ -213,11 +211,14 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                     {(data || []).map((v, index) => (
                         <TableRow key={v.id}>
                             <TableCell className="p-2 text-sm">{index + 1}</TableCell>
-                            <TableCell className="p-2 text-sm font-medium">
+                            <TableCell className="p-2 text-sm font-medium whitespace-normal break-words">
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
-                                        <span className="text-muted-foreground text-xs">{v.model}</span>
+                                        <span className="text-muted-foreground">{v.model}</span>
+                                        <span className="text-muted-foreground text-xs">{v.typeOfVehicle}</span>
+                                        <span className="text-muted-foreground text-xs">{v.vehicleClass}</span>
+                                        <span className="text-muted-foreground text-xs">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
                                     </div>
                                 </button>
                             </TableCell>
