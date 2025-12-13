@@ -10,9 +10,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useState, useMemo } from "react";
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogDescription } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogDescription, DialogTitle } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
-import { Card, CardContent } from "../ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
 import Image from "next/image";
@@ -170,7 +170,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         details = (
              <Card className="shadow-none border-0">
                 <CardHeader>
-                    <h3 className="text-xl font-bold">{u.typeOfRigUnit}</h3>
+                    <CardTitle className="text-xl font-bold">{u.typeOfRigUnit}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                      <DetailRow label="Status" value={u.status} />
