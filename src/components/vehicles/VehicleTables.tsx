@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useState } from "react";
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogDescription } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogDescription, DialogTitle } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
 import { Card, CardContent } from "../ui/card";
 import { cn } from "@/lib/utils";
@@ -116,7 +116,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                 </DialogHeader>
                  <div className="bg-blue-600 text-white rounded-t-lg p-4 text-center relative">
                     <Truck className="h-8 w-8 mx-auto mb-2" />
-                    <p className="font-bold text-lg tracking-wider leading-tight text-center break-words whitespace-nowrap">{v.registrationNumber}</p>
+                    <p className="font-bold text-lg tracking-wider leading-tight text-center whitespace-nowrap">{v.registrationNumber}</p>
                 </div>
 
                 <div className="p-6 space-y-4">
@@ -169,7 +169,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     }
 
     return (
-        <DialogContent className="max-w-xl p-0">
+        <DialogContent className="max-w-md p-0">
              {details}
             <DialogFooter className="p-4 pt-0 sm:justify-center">
                 <Button onClick={onClose} variant="secondary" className="w-full sm:w-auto">Close</Button>
