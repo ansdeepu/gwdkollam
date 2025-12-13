@@ -75,7 +75,7 @@ const DetailRow = ({ label, value, isUppercase = false, valueClass, labelClass }
     const displayValue = (value === null || value === undefined || value === '') ? '-' : String(value);
     
     return (
-        <div className="text-left">
+        <div className="flex justify-between items-baseline">
             <p className={cn("text-xs text-gray-500", labelClass)}>{label}</p>
             <p className={cn("font-bold text-sm text-black", valueClass, isUppercase && 'uppercase')}>{displayValue}</p>
         </div>
@@ -129,19 +129,42 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     <p className="text-3xl font-bold tracking-widest pt-2">{v.registrationNumber}</p>
                     <p className="text-base font-semibold">{v.typeOfVehicle || 'N/A'}</p>
                 </div>
-
-                 {/* Top Details Grid */}
-                <div className="space-y-3 border-t-2 border-b-2 border-black py-3 mb-4">
-                   <div className="grid grid-cols-4 gap-x-4">
+                
+                <div className="space-y-4">
+                    {/* Top Details Grid */}
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-2 border-t-2 border-b-2 border-black py-3">
                         <DetailRow label="Regd. date" value={formatDateSafe(v.registrationDate)} />
                         <DetailRow label="Owner" value="Ground Water Department" />
                         <DetailRow label="Address" value="Kollam, Kerala" />
-                        <DetailRow label="Class" value={v.vehicleClass} valueClass="uppercase" />
-                    </div>
-                    <div className="grid grid-cols-4 gap-x-4">
-                        <DetailRow label="Mfg" value={v.model} />
-                        <DetailRow label="Rc status" value={v.rcStatus} />
-                         <DetailRow label="Fuel consumption" value={isDepartment ? (v as DepartmentVehicle).fuelConsumptionRate : '-'} />
+                        <DetailRow label="Class" value={v.vehicleClass} isUppercase={true} />
+                        <div/>
+                        <div/>
+                        <div className="col-span-1 space-y-1">
+                            <h4 className="text-xs text-gray-500">Mfg</h4>
+                            <p className="font-bold text-sm">{isHired ? (v as HiredVehicle).model || '-' : (v as DepartmentVehicle).model || '-'}</p>
+                        </div>
+                        <div className="col-span-1 space-y-1">
+                            <h4 className="text-xs text-gray-500">RC status</h4>
+                            <p className="font-bold text-sm">{v.rcStatus || '-'}</p>
+                        </div>
+                        {isDepartment && (
+                            <div className="col-span-1 space-y-1">
+                                <h4 className="text-xs text-gray-500">Fuel consumption</h4>
+                                <p className="font-bold text-sm">{(v as DepartmentVehicle).fuelConsumptionRate || '-'}</p>
+                            </div>
+                        )}
+                         {isHired && (
+                            <>
+                                <div className="col-span-1 space-y-1">
+                                    <h4 className="text-xs text-gray-500">Agreement Validity</h4>
+                                    <p className="font-bold text-sm">{formatDateSafe((v as HiredVehicle).agreementValidity)}</p>
+                                </div>
+                                <div className="col-span-1 space-y-1">
+                                    <h4 className="text-xs text-gray-500">Hire Charges</h4>
+                                    <p className="font-bold text-sm">{ (v as HiredVehicle).hireCharges ? `Rs. ${(v as HiredVehicle).hireCharges?.toLocaleString('en-IN')}` : '-'}</p>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -189,7 +212,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     }
     
     return (
-        <DialogContent className={cn("p-0 border-0 bg-transparent shadow-none w-auto", dialogWidthClass)}>
+        <DialogContent className={cn("p-0 border-0 bg-transparent shadow-none", dialogWidthClass)}>
             <DialogHeader className="sr-only">
                 <DialogTitle>Details for {title}</DialogTitle>
                 <DialogDescription>Viewing details for vehicle or unit {title}.</DialogDescription>
