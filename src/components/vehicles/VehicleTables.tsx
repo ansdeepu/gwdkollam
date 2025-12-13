@@ -145,6 +145,8 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehi
                         <TableHead className="p-2 text-xs">Fitness</TableHead>
                         <TableHead className="p-2 text-xs">Tax</TableHead>
                         <TableHead className="p-2 text-xs">Insurance</TableHead>
+                        <TableHead className="p-2 text-xs">Pollution</TableHead>
+                        <TableHead className="p-2 text-xs">Permit</TableHead>
                         {canEdit && <TableHead className="text-right p-2 text-xs">Actions</TableHead>}
                     </TableRow>
                 </TableHeader>
@@ -165,6 +167,8 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehi
                             <TableCell className="p-2 text-xs">{formatDateSafe(v.fitnessExpiry)}</TableCell>
                             <TableCell className="p-2 text-xs">{formatDateSafe(v.taxExpiry)}</TableCell>
                             <TableCell className="p-2 text-xs">{formatDateSafe(v.insuranceExpiry)}</TableCell>
+                            <TableCell className="p-2 text-xs">{formatDateSafe(v.pollutionExpiry)}</TableCell>
+                            <TableCell className="p-2 text-xs">{formatDateSafe(v.permitExpiry)}</TableCell>
                              {canEdit && (
                                 <TableCell className="text-right p-1">
                                     <Tooltip>
