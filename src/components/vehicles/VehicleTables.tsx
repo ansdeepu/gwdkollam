@@ -1,4 +1,3 @@
-
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
@@ -11,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useState } from "react";
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogDescription, DialogFooter } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
 import { Card, CardContent } from "../ui/card";
 import { cn } from "@/lib/utils";
@@ -87,7 +86,7 @@ const DetailRow = ({ label, value }: { label: string, value?: string | number | 
     return (
         <div className="text-xs">
             <span className="font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
-            <p className="font-bold text-black whitespace-nowrap">{displayValue}</p>
+            <p className="font-bold text-black whitespace-pre-wrap break-words">{displayValue}</p>
         </div>
     );
 };
@@ -459,4 +458,3 @@ const ConfirmDeleteDialog = ({ isOpen, onOpenChange, onConfirm, itemName, isDele
         </AlertDialogContent>
     </AlertDialog>
 );
-
