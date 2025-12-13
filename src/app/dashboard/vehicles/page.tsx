@@ -52,27 +52,34 @@ interface ExpiryInfo {
 function ExpiryAlertDialog({ 
     isOpen, 
     onClose, 
-    vehiclesWithAlerts
+    vehiclesWithAlerts,
+    alertType
 }: { 
     isOpen: boolean; 
     onClose: () => void; 
     vehiclesWithAlerts: ExpiryInfo[];
+    alertType: 'Department' | 'Hired' | null;
 }) {
+    const filteredAlerts = useMemo(() => {
+        if (!alertType) return [];
+        return vehiclesWithAlerts.filter(v => v.vehicleType === alertType);
+    }, [vehiclesWithAlerts, alertType]);
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-0">
                 <DialogHeader className="p-6 pb-4">
                     <DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-6 w-6 text-destructive"/>Vehicle Expiry Alerts</DialogTitle>
-                    <DialogDescription>Review certificates that have expired or are expiring within the next 30 days.</DialogDescription>
+                    <DialogDescription>Review certificates that have expired or are expiring within the next 30 days for {alertType} Vehicles.</DialogDescription>
                 </DialogHeader>
                 <div className="flex-1 min-h-0 px-6 py-4">
                     <ScrollArea className="h-full pr-4">
                        <div className="space-y-4">
-                           {vehiclesWithAlerts.length > 0 ? (
-                               vehiclesWithAlerts.map((vehicle) => (
+                           {filteredAlerts.length > 0 ? (
+                               filteredAlerts.map((vehicle) => (
                                    <Card key={vehicle.vehicleRegNo} className="bg-secondary/30">
                                        <CardHeader className="p-3">
-                                           <CardTitle className="text-base">{vehicle.vehicleRegNo} <span className="text-sm font-medium text-muted-foreground">({vehicle.vehicleType})</span></CardTitle>
+                                           <CardTitle className="text-base">{vehicle.vehicleRegNo}</CardTitle>
                                        </CardHeader>
                                        <CardContent className="p-3 pt-0">
                                            <Table>
@@ -100,7 +107,7 @@ function ExpiryAlertDialog({
                                ))
                            ) : (
                                <div className="text-center py-10">
-                                   <p className="text-muted-foreground">No expired or expiring certificates found.</p>
+                                   <p className="text-muted-foreground">No expired or expiring certificates found for this section.</p>
                                </div>
                            )}
                        </div>
@@ -129,7 +136,7 @@ export default function VehiclesPage() {
     const [isDepartmentDialogOpen, setIsDepartmentDialogOpen] = useState(false);
     const [isHiredDialogOpen, setIsHiredDialogOpen] = useState(false);
     const [isRigDialogOpen, setIsRigDialogOpen] = useState(false);
-    const [isExpiryAlertOpen, setIsExpiryAlertOpen] = useState(false);
+    const [expiryAlertType, setExpiryAlertType] = useState<'Department' | 'Hired' | null>(null);
 
     const [editingDepartmentVehicle, setEditingDepartmentVehicle] = useState<DepartmentVehicle | null>(null);
     const [editingHiredVehicle, setEditingHiredVehicle] = useState<HiredVehicle | null>(null);
@@ -244,7 +251,7 @@ export default function VehiclesPage() {
                 break;
             case 'hired':
                 data = allHiredVehicles;
-                headers = ["Registration Number", "Model", "Agreement Validity", "Vehicle Class", "Registration Date", "RC Status", "Hire Charges", "Fuel Consumption"];
+                headers = ["Registration Number", "Model", "Agreement Validity", "Vehicle Class", "Registration Date", "RC Status", "Hire Charges", "Fitness Expiry", "Tax Expiry", "Insurance Expiry", "Pollution Expiry", "Permit Expiry"];
                 sheetName = 'Hired Vehicles';
                 fileNamePrefix = 'GWD_Hired_Vehicles';
                 break;
@@ -315,7 +322,7 @@ export default function VehiclesPage() {
 
     return (
         <div className="space-y-6">
-            <ExpiryAlertDialog isOpen={isExpiryAlertOpen} onClose={() => setIsExpiryAlertOpen(false)} vehiclesWithAlerts={vehiclesWithAlerts} />
+            <ExpiryAlertDialog isOpen={expiryAlertType !== null} onClose={() => setExpiryAlertType(null)} vehiclesWithAlerts={vehiclesWithAlerts} alertType={expiryAlertType}/>
 
             {isLoading ? (
                  <div className="flex justify-center items-center h-64">
@@ -332,7 +339,7 @@ export default function VehiclesPage() {
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle>Department Vehicles ({presentDepartmentVehicles.length})</CardTitle>
                                  <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm" onClick={() => setIsExpiryAlertOpen(true)}><AlertTriangle className="h-4 w-4 mr-2"/>Expiry Alerts</Button>
+                                    <Button variant="outline" size="sm" onClick={() => setExpiryAlertType('Department')}><AlertTriangle className="h-4 w-4 mr-2"/>Expiry Alerts</Button>
                                     {canEdit && <Button size="sm" onClick={() => handleAddOrEdit('department', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
                                     <Button variant="outline" size="sm" onClick={() => handleExportExcel('department')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
                                 </div>
@@ -351,7 +358,7 @@ export default function VehiclesPage() {
                              <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle>Hired Vehicles ({presentHiredVehicles.length})</CardTitle>
                                  <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm" onClick={() => setIsExpiryAlertOpen(true)}><AlertTriangle className="h-4 w-4 mr-2"/>Expiry Alerts</Button>
+                                    <Button variant="outline" size="sm" onClick={() => setExpiryAlertType('Hired')}><AlertTriangle className="h-4 w-4 mr-2"/>Expiry Alerts</Button>
                                     {canEdit && <Button size="sm" onClick={() => handleAddOrEdit('hired', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
                                     <Button variant="outline" size="sm" onClick={() => handleExportExcel('hired')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
                                 </div>
