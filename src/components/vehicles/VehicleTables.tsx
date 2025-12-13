@@ -73,6 +73,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
                         <TableHead className="p-2 text-xs">Insurance</TableHead>
                         <TableHead className="p-2 text-xs">Pollution</TableHead>
                         <TableHead className="p-2 text-xs">Fuel Test</TableHead>
+                        <TableHead className="p-2 text-xs">Fuel Consumption Rate</TableHead>
                         {canEdit && <TableHead className="text-right p-2 text-xs">Actions</TableHead>}
                     </TableRow>
                 </TableHeader>
@@ -86,6 +87,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
                                     <span className="text-muted-foreground">{v.model}</span>
                                     <span className="text-muted-foreground">{v.typeOfVehicle}</span>
                                     <span className="text-muted-foreground">{v.vehicleClass}</span>
+                                    <span className="text-muted-foreground">{formatDateSafe(v.registrationDate)}</span>
                                 </div>
                             </TableCell>
                             <TableCell className="p-2 text-xs">{formatDateSafe(v.fitnessExpiry)}</TableCell>
@@ -93,6 +95,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
                             <TableCell className="p-2 text-xs">{formatDateSafe(v.insuranceExpiry)}</TableCell>
                             <TableCell className="p-2 text-xs">{formatDateSafe(v.pollutionExpiry)}</TableCell>
                             <TableCell className="p-2 text-xs">{formatDateSafe(v.fuelTestExpiry)}</TableCell>
+                            <TableCell className="p-2 text-xs">{v.fuelConsumptionRate}</TableCell>
                             {canEdit && (
                                 <TableCell className="text-right p-1">
                                     <Tooltip>
