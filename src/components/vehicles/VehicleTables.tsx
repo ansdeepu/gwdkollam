@@ -74,11 +74,11 @@ const getExpiryStatus = (expiryDate: Date | null): { status: 'Expired' | 'Expiri
 
 
 const DetailRow = ({ label, value }: { label: string, value?: string | number | null }) => {
-    if (value === null || value === undefined || value === '') return null;
+    const displayValue = (value === null || value === undefined || value === '') ? '-' : value;
     return (
         <div className="grid grid-cols-2 text-sm">
             <span className="text-muted-foreground">{label}:</span>
-            <span className="font-semibold">{value}</span>
+            <span className="font-semibold">{displayValue}</span>
         </div>
     );
 };
@@ -136,12 +136,12 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     <CardHeader><CardTitle className="text-base">Vehicle Information</CardTitle></CardHeader>
                     <CardContent className="space-y-2">
                         <DetailRow label="Model" value={v.model} />
+                        {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
                         <DetailRow label="Vehicle Class" value={v.vehicleClass} />
                         <DetailRow label="Registration Date" value={formatDateSafe(v.registrationDate)} />
                         <DetailRow label="RC Status" value={v.rcStatus} />
-                        {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
                         {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
-                        {'hireCharges' in v && <DetailRow label="Hire Charges" value={`₹ ${v.hireCharges?.toLocaleString('en-IN')}`} />}
+                        {'hireCharges' in v && <DetailRow label="Hire Charges" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}`: '-'} />}
                         {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
                     </CardContent>
                 </Card>
