@@ -4,16 +4,16 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Eye, Building, Truck } from "lucide-react";
+import { Edit, Trash2, Eye, Building, Truck, AlertTriangle } from "lucide-react";
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from "@/lib/schemas";
 import { format, isValid, isBefore, addDays } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogDescription, DialogFooter } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Card, CardContent, CardHeader } from "../ui/card";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
 
@@ -109,10 +109,10 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         const v = vehicle as DepartmentVehicle | HiredVehicle;
         title = `Details for ${v.registrationNumber}`;
         details = (
-             <div className="relative font-sans text-sm bg-white rounded-lg shadow-lg p-6 border border-gray-300 w-full max-w-xl mx-auto my-8">
-                <DialogHeader>
-                    <DialogTitle className="sr-only">{title}</DialogTitle>
-                    <DialogDescription className="sr-only">Details for {title}.</DialogDescription>
+            <div className="relative font-sans text-sm bg-white rounded-lg shadow-lg p-6 border border-gray-300 w-full max-w-xl mx-auto my-8">
+                <DialogHeader className="sr-only">
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogDescription>Details for {title}.</DialogDescription>
                 </DialogHeader>
                 {/* Header */}
                 <div className="text-center mb-4 border-b-2 border-black pb-2">
@@ -183,7 +183,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     }
 
     return (
-        <DialogContent className="max-w-4xl p-0 bg-transparent border-0 shadow-none">
+        <DialogContent className="max-w-xl p-0 bg-transparent border-0 shadow-none">
             <DialogHeader className="sr-only">
                 <DialogTitle>{title}</DialogTitle>
                 <DialogDescription>Details for {title}.</DialogDescription>
@@ -428,3 +428,5 @@ const ConfirmDeleteDialog = ({ isOpen, onOpenChange, onConfirm, itemName, isDele
         </AlertDialogContent>
     </AlertDialog>
 );
+
+    
