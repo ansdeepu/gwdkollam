@@ -1,5 +1,3 @@
-
-
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
@@ -1470,7 +1468,7 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
             <AlertDialog open={deletingPartnerIndex !== null} onOpenChange={() => setDeletingPartnerIndex(null)}>
-                <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
+                <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>This will remove this partner from the list. This action cannot be undone.</AlertDialogDescription>
@@ -1482,7 +1480,7 @@ export default function AgencyRegistrationPage() {
                 </AlertDialogContent>
             </AlertDialog>
             <AlertDialog open={deletingFeeIndex !== null} onOpenChange={() => setDeletingFeeIndex(null)}>
-                <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
+                <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>This will remove this application fee from the form. This action cannot be undone.</AlertDialogDescription>
@@ -1494,7 +1492,7 @@ export default function AgencyRegistrationPage() {
                 </AlertDialogContent>
             </AlertDialog>
             <AlertDialog open={dialogState.type === 'cancel'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
+                <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Cancel Rig Registration</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -1511,7 +1509,7 @@ export default function AgencyRegistrationPage() {
                 </AlertDialogContent>
             </AlertDialog>
              <AlertDialog open={dialogState.type === 'deleteRig'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
+                <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -1525,7 +1523,7 @@ export default function AgencyRegistrationPage() {
                 </AlertDialogContent>
             </AlertDialog>
             <AlertDialog open={dialogState.type === 'activate'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
+                <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Activate Rig</AlertDialogTitle>
                         <AlertDialogDescription>Are you sure you want to reactivate this rig?</AlertDialogDescription>
@@ -1537,7 +1535,7 @@ export default function AgencyRegistrationPage() {
                 </AlertDialogContent>
             </AlertDialog>
             <AlertDialog open={!!deletingRenewal} onOpenChange={() => setDeletingRenewal(null)}>
-                <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
+                <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
@@ -1655,7 +1653,7 @@ export default function AgencyRegistrationPage() {
         </CardContent>
       </Card>
       <AlertDialog open={!!deletingApplicationId} onOpenChange={() => setDeletingApplicationId(null)}>
-        <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -2107,4 +2105,5 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
       
+
 

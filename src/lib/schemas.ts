@@ -143,6 +143,7 @@ export const arsTypeOfSchemeOptions = [
 
 
 import { SiteDetailSchema, fileStatusOptions, constituencyOptions } from './schemas/DataEntrySchema';
+import type { SiteDetailFormData } from './schemas/DataEntrySchema';
 
 export const ArsEntrySchema = z.object({
   fileNo: z.string().min(1, 'File No. is required.'),
@@ -234,7 +235,7 @@ const formatDateHelper = (date: Date | string | null | undefined): string => {
 };
 
 import { DataEntryFormData, applicationTypeDisplayMap, SitePurpose } from './schemas/DataEntrySchema';
-type ReportableEntry = DataEntryFormData | ArsEntryFormData;
+type ReportableEntry = (DataEntryFormData | ArsEntryFormData) & { [key: string]: any };
 
 export const reportableFields: Array<{ id: string; label: string; accessor: (entry: ReportableEntry) => any, purpose?: SitePurpose[], arsApplicable?: boolean, arsOnly?: boolean }> = [
   // === Main File Details ===
@@ -298,9 +299,9 @@ export const reportableFields: Array<{ id: string; label: string; accessor: (ent
   { id: 'arsFillings', label: 'ARS # Fillings', accessor: (entry) => (entry as any).arsNumberOfFillings, arsOnly: true },
 
   // --- Work Status ---
-  { id: 'siteWorkStatus', label: 'Work Status', accessor: (entry) => (entry as any).workStatus || (entry as any).arsStatus, arsOnly: true },
-  { id: 'siteCompletionDate', label: 'Completion Date', accessor: (entry) => formatDateHelper((entry as any).dateOfCompletion), arsOnly: true },
-  { id: 'siteTotalExpenditure', label: 'Site Expenditure (₹)', accessor: (entry) => (entry as any).totalExpenditure, arsOnly: true },
+  { id: 'siteWorkStatus', label: 'Work Status', accessor: (entry) => (entry as any).workStatus || (entry as any).arsStatus, arsApplicable: true },
+  { id: 'siteCompletionDate', label: 'Completion Date', accessor: (entry) => formatDateHelper((entry as any).dateOfCompletion), arsApplicable: true },
+  { id: 'siteTotalExpenditure', label: 'Site Expenditure (₹)', accessor: (entry) => (entry as any).totalExpenditure, arsApplicable: true },
   
 ];
 
@@ -447,7 +448,7 @@ export type ApplicationFee = z.infer<typeof ApplicationFeeSchema>;
 
 export const RigRenewalSchema = z.object({
     id: z.string(),
-    renewalDate: z.preprocess((val) => (val ? toDateOrNull(val) : null), z.date({ required_error: "Renewal date is required." })),
+    renewalDate: optionalDateSchema,
     renewalFee: optionalNumber("Renewal fee is required."),
     paymentDate: optionalDateSchema,
     challanNo: z.string().optional(),
@@ -586,7 +587,3 @@ export const RigCompressorSchema = z.object({
     remarks: z.string().optional(),
 });
 export type RigCompressor = z.infer<typeof RigCompressorSchema>;
-    
-
-    
-

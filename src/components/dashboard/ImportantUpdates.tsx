@@ -23,17 +23,19 @@ interface AlertItem {
 
 export default function ImportantUpdates({ allFileEntries }: ImportantUpdatesProps) {
   const { user } = useAuth();
-  const { getPendingUpdates } = usePendingUpdates();
+  const { subscribeToPendingUpdates } = usePendingUpdates();
   const [rejectedUpdates, setRejectedUpdates] = useState<PendingUpdate[]>([]);
 
   useEffect(() => {
-    if (user?.role === 'supervisor' && user.uid) {
-      getPendingUpdates(null, user.uid).then(updates => {
-        const rejected = updates.filter(u => u.status === 'rejected');
+    if (user?.role !== 'supervisor' || !user.uid) return;
+
+    const unsubscribe = subscribeToPendingUpdates(updates => {
+        const rejected = updates.filter(u => u.status === 'rejected' && u.submittedByUid === user.uid);
         setRejectedUpdates(rejected);
-      });
-    }
-  }, [user, getPendingUpdates]);
+    });
+
+    return () => unsubscribe();
+  }, [user, subscribeToPendingUpdates]);
 
   const alerts = useMemo(() => {
     const newAlerts: AlertItem[] = [];

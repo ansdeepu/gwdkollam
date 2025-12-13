@@ -100,16 +100,18 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
               <div className={cn("space-y-3", enableTodayScrolling && "marquee-content-birthdays")}>
                 <Dialog open={!!selectedBirthday} onOpenChange={() => setSelectedBirthday(null)}>
                   {todayBirthdayList.map((staff, index) => (
-                    <button key={index} onClick={() => setSelectedBirthday(staff)} className="w-full p-2 rounded-md bg-pink-500/10 hover:bg-pink-500/20 transition-colors flex items-center gap-3 text-left">
-                      <Avatar className="h-10 w-10 border-2 border-pink-200">
-                        <AvatarImage src={staff.photoUrl || undefined} alt={staff.name} />
-                        <AvatarFallback className="bg-pink-100 text-pink-700 font-bold">{getInitials(staff.name)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-semibold text-pink-700 text-xs -mb-1 flex items-center gap-1.5"><Gift className="h-3 w-3" />Happy Birthday!</p>
-                        <p className="font-bold text-sm text-pink-800">{staff.name}</p>
-                      </div>
-                    </button>
+                    <DialogTrigger key={index} asChild>
+                      <button key={index} onClick={() => setSelectedBirthday(staff)} className="w-full p-2 rounded-md bg-pink-500/10 hover:bg-pink-500/20 transition-colors flex items-center gap-3 text-left">
+                        <Avatar className="h-10 w-10 border-2 border-pink-200">
+                          <AvatarImage src={staff.photoUrl || undefined} alt={staff.name} />
+                          <AvatarFallback className="bg-pink-100 text-pink-700 font-bold">{getInitials(staff.name)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-semibold text-pink-700 text-xs -mb-1 flex items-center gap-1.5"><Gift className="h-3 w-3" />Happy Birthday!</p>
+                          <p className="font-bold text-sm text-pink-800">{staff.name}</p>
+                        </div>
+                      </button>
+                    </DialogTrigger>
                   ))}
                   <DialogContent>
                     <div className="p-4 flex flex-col items-center text-center relative overflow-hidden">

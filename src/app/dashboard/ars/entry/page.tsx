@@ -122,13 +122,13 @@ export default function ArsEntryPage() {
     const { user, fetchAllUsers } = useAuth();
     const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
     const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
-    const { allLsgConstituencyMaps, allArsEntries, addArsEntry, deleteArsEntry } = useDataStore();
+    const { allLsgConstituencyMaps } = useDataStore();
     
     const entryIdToEdit = searchParams.get('id');
     const approveUpdateId = searchParams.get("approveUpdateId");
     const pageToReturnTo = searchParams.get('page');
     
-    const { isLoading: entriesLoading, getArsEntryById, updateArsEntry } = useArsEntries();
+    const { isLoading: entriesLoading, getArsEntryById, updateArsEntry, addArsEntry } = useArsEntries();
     const { createArsPendingUpdate, getPendingUpdateById, hasPendingUpdateForFile } = usePendingUpdates();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
@@ -527,7 +527,5 @@ export default function ArsEntryPage() {
         </div>
     );
 }
-
-    
 
     
