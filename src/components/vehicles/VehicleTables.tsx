@@ -1,4 +1,3 @@
-
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
@@ -68,13 +67,12 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
                 <TableHeader>
                     <TableRow>
                         <TableHead className="p-2 text-xs">Sl. No</TableHead>
-                        <TableHead className="p-2 text-xs">Reg. No</TableHead>
-                        <TableHead className="p-2 text-xs">Model</TableHead>
-                        <TableHead className="p-2 text-xs">Type</TableHead>
-                        <TableHead className="p-2 text-xs">Class</TableHead>
-                        <TableHead className="p-2 text-xs">Reg. Date</TableHead>
-                        <TableHead className="p-2 text-xs">RC Status</TableHead>
-                        <TableHead className="p-2 text-xs">Fuel Rate</TableHead>
+                        <TableHead className="p-2 text-xs min-w-[200px]">Reg. No</TableHead>
+                        <TableHead className="p-2 text-xs">Fitness</TableHead>
+                        <TableHead className="p-2 text-xs">Tax</TableHead>
+                        <TableHead className="p-2 text-xs">Insurance</TableHead>
+                        <TableHead className="p-2 text-xs">Pollution</TableHead>
+                        <TableHead className="p-2 text-xs">Fuel Test</TableHead>
                         {canEdit && <TableHead className="text-right p-2 text-xs">Actions</TableHead>}
                     </TableRow>
                 </TableHeader>
@@ -82,13 +80,17 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
                     {(data || []).map((v, index) => (
                         <TableRow key={v.id}>
                             <TableCell className="p-2 text-xs">{index + 1}</TableCell>
-                            <TableCell className="p-2 text-xs">{v.registrationNumber}</TableCell>
-                            <TableCell className="p-2 text-xs">{v.model}</TableCell>
-                            <TableCell className="p-2 text-xs">{v.typeOfVehicle}</TableCell>
-                            <TableCell className="p-2 text-xs">{v.vehicleClass}</TableCell>
-                            <TableCell className="p-2 text-xs">{formatDateSafe(v.registrationDate)}</TableCell>
-                            <TableCell className="p-2 text-xs">{v.rcStatus}</TableCell>
-                            <TableCell className="p-2 text-xs">{v.fuelConsumptionRate}</TableCell>
+                            <TableCell className="p-2 text-xs font-medium">
+                                <div className="flex flex-col">
+                                    <span>{v.registrationNumber}</span>
+                                    <span className="text-muted-foreground text-xs">{v.model}, {v.typeOfVehicle}, {v.vehicleClass}</span>
+                                </div>
+                            </TableCell>
+                            <TableCell className="p-2 text-xs">{formatDateSafe(v.fitnessExpiry)}</TableCell>
+                            <TableCell className="p-2 text-xs">{formatDateSafe(v.taxExpiry)}</TableCell>
+                            <TableCell className="p-2 text-xs">{formatDateSafe(v.insuranceExpiry)}</TableCell>
+                            <TableCell className="p-2 text-xs">{formatDateSafe(v.pollutionExpiry)}</TableCell>
+                            <TableCell className="p-2 text-xs">{formatDateSafe(v.fuelTestExpiry)}</TableCell>
                             {canEdit && (
                                 <TableCell className="text-right p-1">
                                     <Tooltip>
