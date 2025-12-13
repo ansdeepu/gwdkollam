@@ -136,10 +136,12 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehi
                 <TableHeader>
                     <TableRow>
                         <TableHead className="p-2 text-xs">Sl. No</TableHead>
-                        <TableHead className="p-2 text-xs">Reg. No</TableHead>
-                        <TableHead className="p-2 text-xs">Model</TableHead>
+                        <TableHead className="p-2 text-xs min-w-[200px]">Reg. No</TableHead>
                         <TableHead className="p-2 text-xs">Agreement Validity</TableHead>
                         <TableHead className="p-2 text-xs">Hire Charges</TableHead>
+                        <TableHead className="p-2 text-xs">Fitness</TableHead>
+                        <TableHead className="p-2 text-xs">Tax</TableHead>
+                        <TableHead className="p-2 text-xs">Insurance</TableHead>
                         {canEdit && <TableHead className="text-right p-2 text-xs">Actions</TableHead>}
                     </TableRow>
                 </TableHeader>
@@ -147,10 +149,19 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehi
                     {(data || []).map((v, index) => (
                         <TableRow key={v.id}>
                             <TableCell className="p-2 text-xs">{index + 1}</TableCell>
-                            <TableCell className="p-2 text-xs">{v.registrationNumber}</TableCell>
-                            <TableCell className="p-2 text-xs">{v.model}</TableCell>
+                            <TableCell className="p-2 text-xs font-medium whitespace-normal break-words">
+                                <div className="flex flex-col">
+                                    <span>{v.registrationNumber}</span>
+                                    <span className="text-muted-foreground">{v.model}</span>
+                                    <span className="text-muted-foreground">{v.vehicleClass}</span>
+                                    <span className="text-muted-foreground">{formatDateSafe(v.registrationDate)}</span>
+                                </div>
+                            </TableCell>
                             <TableCell className="p-2 text-xs">{formatDateSafe(v.agreementValidity)}</TableCell>
-                            <TableCell className="p-2 text-xs">{v.hireCharges}</TableCell>
+                            <TableCell className="p-2 text-xs">{v.hireCharges?.toLocaleString('en-IN')}</TableCell>
+                            <TableCell className="p-2 text-xs">{formatDateSafe(v.fitnessExpiry)}</TableCell>
+                            <TableCell className="p-2 text-xs">{formatDateSafe(v.taxExpiry)}</TableCell>
+                            <TableCell className="p-2 text-xs">{formatDateSafe(v.insuranceExpiry)}</TableCell>
                              {canEdit && (
                                 <TableCell className="text-right p-1">
                                     <Tooltip>
