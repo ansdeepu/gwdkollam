@@ -1,4 +1,3 @@
-
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
@@ -212,6 +211,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                     <TableRow>
                         <TableHead className="p-2 text-sm">Sl. No</TableHead>
                         <TableHead className="p-2 text-sm min-w-[200px]">Reg. No</TableHead>
+                        <TableHead className="p-2 text-sm">Fuel Consumption Rate</TableHead>
                         <TableHead className="p-2 text-sm">Fitness</TableHead>
                         <TableHead className="p-2 text-sm">Tax</TableHead>
                         <TableHead className="p-2 text-sm">Insurance</TableHead>
@@ -233,6 +233,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                                     </div>
                                 </button>
                             </TableCell>
+                            <TableCell className="p-2 text-sm">{v.fuelConsumptionRate || '-'}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.fitnessExpiry)}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.taxExpiry)}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.insuranceExpiry)}</TableCell>
@@ -420,5 +421,3 @@ const ConfirmDeleteDialog = ({ isOpen, onOpenChange, onConfirm, itemName, isDele
         </AlertDialogContent>
     </AlertDialog>
 );
-
-    
