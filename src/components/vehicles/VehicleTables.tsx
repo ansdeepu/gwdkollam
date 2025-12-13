@@ -228,7 +228,9 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
-                                        <span className="text-muted-foreground">{v.model} - {v.typeOfVehicle} ({v.vehicleClass})</span>
+                                        <span className="text-muted-foreground">{v.model}</span>
+                                        <span className="text-muted-foreground">{v.typeOfVehicle}</span>
+                                        <span className="text-muted-foreground">{v.vehicleClass}</span>
                                         <span className="text-muted-foreground text-xs">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
                                     </div>
                                 </button>
