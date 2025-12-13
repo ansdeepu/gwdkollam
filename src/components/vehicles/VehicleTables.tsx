@@ -170,6 +170,12 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
 
     return (
         <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle className="text-xl tracking-wider text-blue-800">{title}</DialogTitle>
+              <DialogDescription>
+                Detailed information for the selected vehicle/unit.
+              </DialogDescription>
+            </DialogHeader>
             <div className="p-8 border-2 border-blue-200 bg-blue-50/50 rounded-lg">
                 <div className="text-center mb-6 border-b-2 border-blue-200 pb-4">
                     <BadgeCheck className="h-10 w-10 mx-auto text-blue-600 mb-2" />
@@ -207,7 +213,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                         <TableHead className="p-2 text-sm">Sl. No</TableHead>
                         <TableHead className="p-2 text-sm min-w-[150px]">Reg. No</TableHead>
                         <TableHead className="p-2 text-sm">Model</TableHead>
-                        <TableHead className="p-2 text-sm">Type of Vehicle</TableHead>
+                        <TableHead className="p-2 text-sm whitespace-normal">Type of Vehicle</TableHead>
                         <TableHead className="p-2 text-sm whitespace-normal">Fuel Consumption Rate</TableHead>
                         <TableHead className="p-2 text-sm">Fitness</TableHead>
                         <TableHead className="p-2 text-sm">Tax</TableHead>
@@ -419,5 +425,7 @@ const ConfirmDeleteDialog = ({ isOpen, onOpenChange, onConfirm, itemName, isDele
         </AlertDialogContent>
     </AlertDialog>
 );
+
+    
 
     
