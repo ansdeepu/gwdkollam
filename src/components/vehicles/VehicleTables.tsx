@@ -64,7 +64,7 @@ const getExpiryStatus = (expiryDate: Date | null): { status: 'Expired' | 'Expiri
     const thirtyDaysFromNow = addDays(today, 30);
 
     if (isBefore(expiryDate, today)) {
-        return { status: 'Expired', colorClass: 'text-red-500 font-bold' };
+        return { status: 'Expired', colorClass: 'text-destructive font-bold' };
     }
     if (isBefore(expiryDate, thirtyDaysFromNow)) {
         return { status: 'Expiring Soon', colorClass: 'text-orange-500 font-semibold' };
@@ -109,10 +109,10 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         const v = vehicle as DepartmentVehicle | HiredVehicle;
         title = `Details for ${v.registrationNumber}`;
         details = (
-            <div className="relative font-sans text-xs bg-white rounded-lg shadow-lg p-6 border border-gray-300 w-full max-w-2xl mx-auto my-8">
-                 <DialogHeader className="sr-only">
-                    <DialogTitle>{title}</DialogTitle>
-                    <DialogDescription>Details for {title}.</DialogDescription>
+             <div className="relative font-sans text-xs bg-white rounded-lg shadow-lg p-6 border border-gray-300 w-full max-w-4xl mx-auto my-8">
+                <DialogHeader>
+                    <DialogTitle className="sr-only">{title}</DialogTitle>
+                    <DialogDescription className="sr-only">Details for {title}.</DialogDescription>
                 </DialogHeader>
                 {/* Header */}
                 <div className="text-center mb-4 border-b-2 border-black pb-2">
@@ -123,17 +123,13 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-12 gap-x-6">
                     {/* Left Section */}
-                    <div className="col-span-4 space-y-3">
-                        <div className="flex items-center gap-3">
-                           <Truck className="h-12 w-12 text-gray-500" />
-                            <div>
-                                <p className="font-bold text-lg text-black tracking-wider leading-tight">{v.registrationNumber}</p>
-                            </div>
-                        </div>
+                     <div className="col-span-3 space-y-3 flex flex-col items-center justify-center">
+                        <Truck className="h-16 w-16 text-gray-400" />
+                        <p className="font-bold text-lg text-black tracking-wider leading-tight">{v.registrationNumber}</p>
                     </div>
 
                     {/* Right Section */}
-                    <div className="col-span-8 grid grid-cols-2 gap-x-6 gap-y-2">
+                    <div className="col-span-9 grid grid-cols-2 gap-x-6 gap-y-2">
                         <DetailRow label="Regd. Date" value={formatDateSafe(v.registrationDate)} />
                         <DetailRow label="Class" value={v.vehicleClass} />
                         {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
@@ -169,7 +165,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         details = (
              <Card className="max-w-2xl mx-auto my-8">
                 <CardHeader>
-                    <CardTitle>{u.typeOfRigUnit}</CardTitle>
+                    <DialogTitle>{u.typeOfRigUnit}</DialogTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <DetailRow label="Status" value={u.status} />
@@ -292,7 +288,7 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit, onView }: H
                 <TableHeader>
                     <TableRow>
                         <TableHead className="p-2 text-sm">Sl. No</TableHead>
-                        <TableHead className="p-2 text-sm min-w-[200px]">Reg. No</TableHead>
+                        <TableHead className="p-2 text-sm min-w-[200px]">Vehicle Details</TableHead>
                         <TableHead className="p-2 text-sm">Agreement Validity</TableHead>
                         <TableHead className="p-2 text-sm">Hire Charges</TableHead>
                         <TableHead className="p-2 text-sm">Fitness</TableHead>
@@ -311,7 +307,9 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit, onView }: H
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
-                                        <span className="text-muted-foreground">{v.model}</span>
+                                        <span className="text-muted-foreground text-xs">{v.model}</span>
+                                        <span className="text-muted-foreground text-xs">{v.vehicleClass}</span>
+                                        <span className="text-muted-foreground text-xs">Reg: {formatDateSafe(v.registrationDate)}</span>
                                     </div>
                                 </button>
                             </TableCell>
@@ -415,7 +413,7 @@ const ConfirmDeleteDialog = ({ isOpen, onOpenChange, onConfirm, itemName, isDele
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <DialogTitle>Are you sure?</DialogTitle>
                 <AlertDialogDescription>
                     This action will permanently delete <strong>{itemName || 'this item'}</strong>. This cannot be undone.
                 </AlertDialogDescription>
