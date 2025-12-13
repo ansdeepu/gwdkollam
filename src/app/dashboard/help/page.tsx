@@ -1,10 +1,11 @@
 
       
+      
 // src/app/dashboard/help/page.tsx
 "use client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { HelpCircle, LifeBuoy, Building, Server, LayoutDashboard, ScrollText, MapPin, ImageUp, Hammer, Code, Bot, Palette } from "lucide-react";
+import { HelpCircle, LifeBuoy, Building, Server, LayoutDashboard, ScrollText, MapPin, ImageUp, Hammer, Code, Bot, Palette, Truck } from "lucide-react";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
@@ -155,6 +156,18 @@ export default function HelpPage() {
                  </ul>
               </AccordionContent>
             </AccordionItem>
+            <AccordionItem value="item-13">
+              <AccordionTrigger>What is the Vehicle & Rig Management page for?</AccordionTrigger>
+              <AccordionContent>
+                The Vehicle & Rig Management page is a centralized module for tracking all vehicles and heavy machinery operated by the department. It is divided into three main sections:
+                <ul className="list-disc pl-6 mt-2 space-y-2 text-sm">
+                  <li><strong>Department Vehicles:</strong> Manages vehicles owned by the department. Tracks details like model, registration, and expiry dates for fitness, tax, insurance, and pollution certificates.</li>
+                  <li><strong>Hired Vehicles:</strong> Manages vehicles hired from external agencies. Tracks agreement validity, hire charges, and certificate expiries.</li>
+                  <li><strong>Rig & Compressor Units:</strong> Manages departmental rigs, compressors, and their associated vehicles.</li>
+                </ul>
+                The module also includes an "Expiry Alerts" feature to proactively notify about certificates that are expired or expiring soon.
+              </AccordionContent>
+            </AccordionItem>
             <AccordionItem value="item-5">
               <AccordionTrigger>How do supervisors submit updates?</AccordionTrigger>
               <AccordionContent>
@@ -238,5 +251,5 @@ export default function HelpPage() {
     </div>
   );
 }
-
+      
     
