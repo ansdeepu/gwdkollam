@@ -87,14 +87,13 @@ const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     const { status, colorClass } = getExpiryStatus(expiryDate);
 
     return (
-        <div className="flex justify-between items-center text-sm py-1">
-            <span className="font-medium flex items-center gap-2">
-                {label}
-            </span>
+        <div className="flex justify-between items-center text-sm py-1.5">
+            <span className="font-medium">{label}</span>
             <div className="text-right">
                 <span className={cn("font-mono font-semibold", colorClass)}>
                     {formatDateSafe(date)}
                 </span>
+                 <span className={cn("ml-2 text-xs", colorClass)}>({status})</span>
             </div>
         </div>
     );
@@ -110,7 +109,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         title = vehicle.registrationNumber;
         const v = vehicle as DepartmentVehicle | HiredVehicle;
         details = (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 <div className="space-y-4">
                     <h4 className="font-semibold text-primary text-base border-b pb-2">Vehicle Particulars</h4>
                     <DetailRow label="Model" value={v.model} />
@@ -122,7 +121,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     <DetailRow label="Date of Registration" value={formatDateSafe(v.registrationDate)} />
                     {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
                 </div>
-                 <div className="space-y-4">
+                 <div className="space-y-2">
                      <h4 className="font-semibold text-primary text-base border-b pb-2">Certificate Validity</h4>
                      <div className="space-y-2">
                         <CertificateRow label="Fitness" date={v.fitnessExpiry} />
@@ -155,14 +154,14 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     }
 
     return (
-        <DialogContent className="max-w-4xl">
-            <DialogHeader>
-                 <DialogTitle className="text-2xl font-bold text-primary bg-primary/10 p-4 rounded-t-lg -m-6 mb-0 text-center">{title}</DialogTitle>
-            </DialogHeader>
-            <div className="pt-10 pb-4 px-2">
+        <DialogContent className="max-w-4xl p-0">
+             <div className="bg-primary text-primary-foreground p-4 rounded-t-lg">
+                <DialogTitle className="text-2xl font-bold tracking-wider">{title}</DialogTitle>
+             </div>
+            <div className="pt-6 pb-4 px-6">
                 {details}
             </div>
-            <DialogFooter>
+            <DialogFooter className="p-6 pt-2">
                 <Button onClick={onClose} variant="outline" className="w-full">Close</Button>
             </DialogFooter>
         </DialogContent>
