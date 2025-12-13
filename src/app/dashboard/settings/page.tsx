@@ -495,7 +495,7 @@ export default function SettingsPage() {
 
       <Dialog open={isListDialogOpen} onOpenChange={setIsListDialogOpen}>
         <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="sm:max-w-md">
-          <DialogHeader className="p-6 pb-4">
+          <DialogHeader>
             <DialogTitle>{listDialogContent.title}</DialogTitle>
             <DialogDescription>Total count: {listDialogContent.items.length}</DialogDescription>
           </DialogHeader>
