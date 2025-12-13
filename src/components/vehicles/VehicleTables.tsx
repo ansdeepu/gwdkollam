@@ -213,8 +213,8 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                         <TableHead className="p-2 text-sm">Sl. No</TableHead>
                         <TableHead className="p-2 text-sm min-w-[150px]">Reg. No</TableHead>
                         <TableHead className="p-2 text-sm">Model</TableHead>
-                        <TableHead className="p-2 text-sm whitespace-normal">Type of Vehicle</TableHead>
-                        <TableHead className="p-2 text-sm whitespace-normal">Fuel Consumption Rate</TableHead>
+                        <TableHead className="p-2 text-sm">Type of Vehicle</TableHead>
+                        <TableHead className="p-2 text-sm">Vehicle Class</TableHead>
                         <TableHead className="p-2 text-sm">Fitness</TableHead>
                         <TableHead className="p-2 text-sm">Tax</TableHead>
                         <TableHead className="p-2 text-sm">Insurance</TableHead>
@@ -237,7 +237,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                             </TableCell>
                             <TableCell className="p-2 text-sm">{v.model || '-'}</TableCell>
                             <TableCell className="p-2 text-sm">{v.typeOfVehicle || '-'}</TableCell>
-                            <TableCell className="p-2 text-sm">{v.fuelConsumptionRate || '-'}</TableCell>
+                            <TableCell className="p-2 text-sm">{v.vehicleClass || '-'}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.fitnessExpiry)}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.taxExpiry)}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.insuranceExpiry)}</TableCell>
