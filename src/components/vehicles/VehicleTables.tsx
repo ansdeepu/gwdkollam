@@ -73,7 +73,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
                         <TableHead className="p-2 text-xs">Insurance</TableHead>
                         <TableHead className="p-2 text-xs">Pollution</TableHead>
                         <TableHead className="p-2 text-xs">Fuel Test</TableHead>
-                        <TableHead className="p-2 text-xs">Fuel Consumption Rate</TableHead>
+                        <TableHead className="p-2 text-xs whitespace-normal">Fuel Consumption Rate</TableHead>
                         {canEdit && <TableHead className="text-right p-2 text-xs">Actions</TableHead>}
                     </TableRow>
                 </TableHeader>
