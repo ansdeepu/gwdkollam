@@ -225,7 +225,7 @@ export default function BiddersListPage() {
             </Dialog>
 
             <AlertDialog open={!!bidderToDelete} onOpenChange={() => setBidderToDelete(null)}>
-                <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
+                <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>This will permanently delete the bidder <strong>{bidderToDelete?.name}</strong>. This cannot be undone.</AlertDialogDescription>
@@ -270,5 +270,3 @@ export default function BiddersListPage() {
         </div>
     );
 }
-
-
