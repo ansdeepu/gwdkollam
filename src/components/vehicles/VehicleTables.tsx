@@ -76,9 +76,9 @@ const DetailRow = ({ label, value }: { label: string, value?: string | number | 
     const displayValue = (value === null || value === undefined || value === '') ? '-' : String(value);
     
     return (
-        <div className="text-left">
-            <p className="text-xs text-gray-500 capitalize">{label}</p>
-            <p className="font-semibold text-black">{displayValue}</p>
+        <div className="text-center">
+            <p className="text-sm text-gray-500">{label}</p>
+            <p className="font-bold text-lg text-black">{displayValue}</p>
         </div>
     );
 };
@@ -89,9 +89,9 @@ const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     const { colorClass } = getExpiryStatus(dateObject);
 
     return (
-        <div className="flex flex-col text-left">
-            <span className="text-xs text-gray-500">{label}</span>
-            <span className={cn("font-semibold", colorClass)}>
+        <div className="flex flex-col text-center">
+            <span className="text-sm text-gray-500">{label}</span>
+            <span className={cn("font-bold text-lg", colorClass)}>
                 {displayDate}
             </span>
         </div>
@@ -104,7 +104,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
 
     let details: React.ReactNode;
     const isRigCompressor = !('registrationNumber' in vehicle);
-    const dialogWidthClass = isRigCompressor ? "max-w-md" : "max-w-xl";
+    const dialogWidthClass = isRigCompressor ? "max-w-md" : "max-w-4xl";
     const title = isRigCompressor ? (vehicle as RigCompressor).typeOfRigUnit : (vehicle as DepartmentVehicle).registrationNumber;
 
     if ('registrationNumber' in vehicle) {
@@ -113,44 +113,25 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         const isDepartment = 'fuelConsumptionRate' in v;
 
         details = (
-            <div className="font-serif text-black p-4 border-2 border-black bg-white print:border-0 print:shadow-none w-[210mm] min-h-[297mm] flex flex-col">
-                 <div className="text-center mb-2 flex-shrink-0">
-                    <h1 className="font-bold text-lg tracking-wider">VEHICLE REGISTRATION</h1>
-                    <p className="text-xs font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
-                </div>
-                 <div className="text-center py-2 my-2 flex-shrink-0">
-                    <span className="block font-bold text-2xl text-black tracking-wider whitespace-nowrap">{v.registrationNumber.toUpperCase()}</span>
-                    <span className="block font-semibold text-lg text-gray-800 capitalize">{v.typeOfVehicle}</span>
-                </div>
-                <div className="border-t-2 border-b-2 border-black py-4 my-2 flex-shrink-0">
-                    <div className="grid grid-cols-4 gap-x-4 gap-y-6">
-                        <DetailRow label="Regd. date" value={formatDateSafe(v.registrationDate)} />
-                        <DetailRow label="Owner" value={isDepartment ? "Ground Water Department" : "Hired"}/>
-                        <DetailRow label="Address" value="Kollam, Kerala"/>
-                        <DetailRow label="Class" value={v.vehicleClass} />
-                        <DetailRow label="Mfg" value={v.model} />
-                        <DetailRow label="RC Status" value={v.rcStatus} />
-                        <DetailRow label="Fuel Consumption" value={(v as DepartmentVehicle).fuelConsumptionRate || '-'} />
-                        <DetailRow label="" value={null} />
-                    </div>
-                </div>
-                <div className="flex-grow pt-4">
-                    <h3 className="text-center font-bold text-base mb-4">Certificate Validity</h3>
-                    <div className="grid grid-cols-3 gap-x-6 gap-y-6 px-4">
-                        <CertificateRow label="Fitness" date={v.fitnessExpiry} />
-                        <CertificateRow label="Tax" date={v.taxExpiry} />
-                        <CertificateRow label="Insurance" date={v.insuranceExpiry} />
-                        <CertificateRow label="Pollution" date={v.pollutionExpiry} />
-                        {isDepartment && <CertificateRow label="Fuel Test" date={(v as DepartmentVehicle).fuelTestExpiry} />}
-                        {isHired && <CertificateRow label="Permit" date={v.permitExpiry} />}
-                    </div>
-                </div>
-                 <div className="border-t-2 border-black mt-auto flex-shrink-0 pt-12 flex justify-end">
-                    <div className="text-center">
-                        <p className="text-xs font-bold">signing authority</p>
-                    </div>
-                </div>
-            </div>
+          <div className="w-full max-w-3xl mx-auto border-2 border-black bg-white p-6 font-sans">
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                  <DetailRow label="Mfg" value={v.model} />
+                  <DetailRow label="RC Status" value={v.rcStatus} />
+                  <DetailRow label="Fuel Consumption" value={(v as DepartmentVehicle).fuelConsumptionRate || '-'} />
+              </div>
+              <Separator className="bg-black my-4 h-[2px]" />
+              <div className="text-center my-4">
+                  <h3 className="font-bold text-lg tracking-wide">Certificate Validity</h3>
+              </div>
+              <div className="grid grid-cols-3 gap-y-6">
+                  <CertificateRow label="Fitness" date={v.fitnessExpiry} />
+                  <CertificateRow label="Tax" date={v.taxExpiry} />
+                  <CertificateRow label="Insurance" date={v.insuranceExpiry} />
+                  <CertificateRow label="Pollution" date={v.pollutionExpiry} />
+                  {isDepartment && <CertificateRow label="Fuel Test" date={(v as DepartmentVehicle).fuelTestExpiry} />}
+                  {isHired && <CertificateRow label="Permit" date={v.permitExpiry} />}
+              </div>
+          </div>
         );
     } else {
         const u = vehicle as RigCompressor;
