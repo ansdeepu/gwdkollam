@@ -11,9 +11,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useState } from "react";
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogDescription, DialogFooter, DialogTitle } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogDescription } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
-import { Card, CardContent, CardHeader } from "../ui/card";
+import { Card, CardContent } from "../ui/card";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
 
@@ -78,7 +78,7 @@ const DetailRow = ({ label, value }: { label: string, value?: string | number | 
     return (
         <div className="text-sm">
             <span className="block text-xs font-medium text-gray-500 uppercase tracking-wider">{label}</span>
-            <span className="block font-semibold text-gray-800 break-words">{displayValue}</span>
+            <span className="block font-semibold text-gray-800">{displayValue}</span>
         </div>
     );
 };
@@ -109,63 +109,47 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         const v = vehicle as DepartmentVehicle | HiredVehicle;
         title = `Details for ${v.registrationNumber}`;
         details = (
-            <div className="relative font-sans text-sm bg-white rounded-lg shadow-lg p-6 border border-gray-300 w-full max-w-xl mx-auto my-8">
+            <>
                 <DialogHeader className="sr-only">
                     <DialogTitle>{title}</DialogTitle>
                     <DialogDescription>Details for {title}.</DialogDescription>
                 </DialogHeader>
-                {/* Header */}
-                 <div className="text-center mb-4 pb-2">
-                    <div className="flex flex-col items-center justify-center">
-                        <Truck className="h-12 w-12 text-gray-400" />
-                        <p className="font-bold text-lg text-black tracking-wider leading-tight text-center break-words">{v.registrationNumber}</p>
-                    </div>
+                 <div className="bg-blue-600 text-white rounded-t-lg p-4 text-center relative">
+                    <Truck className="h-8 w-8 mx-auto mb-2" />
+                    <p className="font-bold text-lg tracking-wider leading-tight text-center break-words whitespace-nowrap">{v.registrationNumber}</p>
                 </div>
-                
-                {/* Main Content Grid */}
-                <div className="grid grid-cols-12 gap-x-6">
-                    {/* Left Section */}
-                     <div className="col-span-12 space-y-1 flex flex-col items-center justify-center">
-                        <h2 className="text-sm font-bold tracking-widest text-black">VEHICLE REGISTRATION</h2>
-                        <p className="text-xs text-gray-600">GROUND WATER DEPARTMENT, KOLLAM</p>
-                    </div>
 
-                    {/* Right Section */}
-                    <div className="col-span-12 grid grid-cols-2 gap-x-6 gap-y-2 mt-4">
-                        <DetailRow label="Regd. Date" value={formatDateSafe(v.registrationDate)} />
-                        <DetailRow label="Class" value={v.vehicleClass} />
-                        {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
+                <div className="p-6 space-y-4">
+                     <div className="grid grid-cols-2 gap-4">
                         <DetailRow label="Model" value={v.model} />
-                        <DetailRow label="RC Status" value={v.rcStatus} />
-                         {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
+                        <DetailRow label="Class" value={v.vehicleClass} />
+                         {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
+                        <DetailRow label="Regd. Date" value={formatDateSafe(v.registrationDate)} />
+                        {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
                         {'hireCharges' in v && <DetailRow label="Hire Charges" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}`: '-'} />}
                         {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
+                         <DetailRow label="RC Status" value={v.rcStatus} />
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t">
+                        <h4 className="text-center font-semibold text-sm uppercase text-gray-500 mb-2">Certificate Validity</h4>
+                        <div className="space-y-1">
+                             <CertificateRow label="Fitness" date={v.fitnessExpiry} />
+                             <CertificateRow label="Tax" date={v.taxExpiry} />
+                             <CertificateRow label="Insurance" date={v.insuranceExpiry} />
+                             <CertificateRow label="Pollution" date={v.pollutionExpiry} />
+                             {'fuelTestExpiry' in v && <CertificateRow label="Fuel Test" date={v.fuelTestExpiry} />}
+                             {'permitExpiry' in v && <CertificateRow label="Permit" date={v.permitExpiry} />}
+                        </div>
                     </div>
                 </div>
-
-                {/* Certificate Section */}
-                <div className="mt-4 pt-3 border-t-2 border-dashed border-gray-400">
-                    <h4 className="text-center font-bold text-xs uppercase text-gray-600 mb-2">Certificate Validity</h4>
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-0.5 text-xs">
-                        <CertificateRow label="Fitness" date={v.fitnessExpiry} />
-                        <CertificateRow label="Tax" date={v.taxExpiry} />
-                        <CertificateRow label="Insurance" date={v.insuranceExpiry} />
-                        <CertificateRow label="Pollution" date={v.pollutionExpiry} />
-                        {'fuelTestExpiry' in v && <CertificateRow label="Fuel Test" date={v.fuelTestExpiry} />}
-                        {'permitExpiry' in v && <CertificateRow label="Permit" date={v.permitExpiry} />}
-                    </div>
-                </div>
-
-                <div className="text-right mt-4">
-                    <p className="text-[10px] font-bold text-gray-800">AUTHORISED SIGNATORY</p>
-                </div>
-            </div>
+            </>
         );
     } else { // RigCompressor
         title = (vehicle as RigCompressor).typeOfRigUnit;
         const u = vehicle as RigCompressor;
         details = (
-             <Card className="max-w-2xl mx-auto my-8">
+             <Card className="shadow-none border-0">
                 <CardHeader>
                     <DialogTitle>{u.typeOfRigUnit}</DialogTitle>
                 </CardHeader>
@@ -185,13 +169,9 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     }
 
     return (
-        <DialogContent className="max-w-xl p-0 bg-transparent border-0 shadow-none">
-            <DialogHeader className="sr-only">
-                <DialogTitle>{title}</DialogTitle>
-                <DialogDescription>Details for {title}.</DialogDescription>
-            </DialogHeader>
-            {details}
-            <DialogFooter className="p-6 pt-2 items-center justify-center">
+        <DialogContent className="max-w-xl p-0">
+             {details}
+            <DialogFooter className="p-4 pt-0 sm:justify-center">
                 <Button onClick={onClose} variant="secondary" className="w-full sm:w-auto">Close</Button>
             </DialogFooter>
         </DialogContent>
@@ -230,7 +210,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                     {(data || []).map((v, index) => (
                         <TableRow key={v.id}>
                             <TableCell className="p-2 text-sm">{index + 1}</TableCell>
-                            <TableCell className="p-2 text-sm font-medium whitespace-normal break-words">
+                            <TableCell className="p-2 text-sm font-medium">
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
@@ -305,7 +285,7 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit, onView }: H
                     {(data || []).map((v, index) => (
                         <TableRow key={v.id}>
                             <TableCell className="p-2 text-sm">{index + 1}</TableCell>
-                            <TableCell className="p-2 text-sm font-medium whitespace-normal break-words">
+                             <TableCell className="p-2 text-sm font-medium">
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
                                      <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
