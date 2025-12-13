@@ -73,7 +73,7 @@ export default function AppSidebar() {
   const avatarColorClass = getColorClass(user?.name || user?.email || 'user');
 
   return (
-    <Sidebar side="left" variant="sidebar" collapsible="icon">
+    <Sidebar side="left" variant="sidebar" collapsible="icon" className="flex flex-col">
       <SidebarHeader className="p-4 border-b border-sidebar-border">
         <Link href="/dashboard" className="flex items-center gap-2">
           <Image 
@@ -92,7 +92,7 @@ export default function AppSidebar() {
       <SidebarContent className="flex-1 p-2">
         <AppNavMenu />
       </SidebarContent>
-      <SidebarFooter className="p-2 border-t border-sidebar-border">
+      <SidebarFooter className="p-2 border-t border-sidebar-border mt-auto">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton className="w-full h-auto p-2" tooltip={{children: user?.name || "User Profile", side: "right", align: "center"}}>

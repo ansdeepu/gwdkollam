@@ -1,4 +1,3 @@
-
 // src/components/layout/AppNavMenu.tsx
 "use client";
 
@@ -36,7 +35,7 @@ export const allNavItems: NavItem[] = [
   { href: '/dashboard/vehicles', label: 'Vehicle & Rig', icon: Truck },
   { href: '/dashboard/pending-updates', label: 'Pending Actions', icon: Hourglass, roles: ['editor'] },
   { href: '/dashboard/reports', label: 'Reports', icon: FileText },
-  { href: '/dashboard/progress-report', label: 'Progress Reports', icon: BarChart3 },
+  { href: '/dashboard/progress-report', label: 'Progress Reports', icon: BarChart3, roles: ['editor', 'viewer'] },
   { href: '/dashboard/report-format-suggestion', label: 'Report Builders', icon: ClipboardList, roles: ['editor', 'viewer'] },
   { href: '/dashboard/gwd-rates', label: 'GWD Rates', icon: DollarSign },
   { href: '/dashboard/establishment', label: 'Establishment', icon: Briefcase, roles: ['editor', 'viewer'] },
@@ -85,7 +84,7 @@ export default function AppNavMenu() {
   };
 
   return (
-    <SidebarMenu>
+    <SidebarMenu className="gap-1">
       {accessibleNavItems.map((item, index) => (
         <SidebarMenuItem key={item.href}>
             <div className="flex items-center w-full group">
