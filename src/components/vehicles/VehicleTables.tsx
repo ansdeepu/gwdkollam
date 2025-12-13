@@ -83,30 +83,17 @@ const DetailRow = ({ label, value, isUppercase = false }: { label: string, value
     );
 };
 
-const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
+const CertificateItem = ({ label, date }: { label: string, date?: any }) => {
     const displayDate = formatDateSafe(date);
     const dateObject = safeParseDate(date);
     const { colorClass } = getExpiryStatus(dateObject);
 
     return (
-        <div className="flex items-baseline justify-between w-full">
+        <div className="flex flex-col items-center">
             <span className="text-sm text-gray-500">{label}</span>
-            <span className={cn("font-bold text-sm", colorClass)}>
+            <span className={cn("font-bold text-sm mt-1", colorClass)}>
                 {displayDate}
             </span>
-        </div>
-    );
-};
-
-const CertificateRowCombined = ({ label, date }: { label: string, date?: any }) => {
-    const displayDate = formatDateSafe(date);
-    const dateObject = safeParseDate(date);
-    const { colorClass } = getExpiryStatus(dateObject);
-
-    return (
-        <div className="flex items-center justify-start gap-4">
-            <span className="text-sm text-gray-500">{label}</span>
-            <span className={cn("font-bold text-sm", colorClass)}>{displayDate}</span>
         </div>
     );
 };
@@ -135,7 +122,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     <h2 className="font-bold text-sm tracking-wider">VEHICLE REGISTRATION</h2>
                     <p className="text-xs font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
                     <p className="text-3xl font-bold tracking-widest pt-2">{v.registrationNumber}</p>
-                    <p className="text-base font-semibold">{v.typeOfVehicle || 'N/A'}</p>
+                    <p className="text-base font-semibold">{v.typeOfVehicle || v.model || 'N/A'}</p>
                 </div>
                 
                 <div className="space-y-2">
@@ -164,20 +151,20 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                 {/* Certificate Section */}
                 <div className="pt-4 mt-4 mb-4 border-t-2 border-black">
                     <h3 className="text-center font-bold text-sm mb-4">Certificate Validity</h3>
-                    <div className="grid grid-cols-[1fr_auto_1fr] gap-x-6 gap-y-4 items-center">
-                        {/* Row 1 */}
-                        <CertificateRow label="Fitness" date={v.fitnessExpiry} />
-                        <CertificateRowCombined label="Tax" date={v.taxExpiry} />
-                        <CertificateRow label="Insurance" date={v.insuranceExpiry} />
-
-                        {/* Row 2 */}
-                        <CertificateRow label="Pollution" date={v.pollutionExpiry} />
-                        {isDepartment ? (
-                            <CertificateRowCombined label="Fuel Test" date={(v as DepartmentVehicle).fuelTestExpiry} />
-                        ) : isHired ? (
-                             <CertificateRowCombined label="Permit" date={(v as HiredVehicle).permitExpiry}/>
-                        ) : <div />}
-                        <div />
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-3 gap-x-4">
+                            <CertificateItem label="Fitness" date={v.fitnessExpiry} />
+                            <CertificateItem label="Tax" date={v.taxExpiry} />
+                            <CertificateItem label="Insurance" date={v.insuranceExpiry} />
+                        </div>
+                        <div className="grid grid-cols-3 gap-x-4 pt-2">
+                            <CertificateItem label="Pollution" date={v.pollutionExpiry} />
+                             {isDepartment ? (
+                                <CertificateItem label="Fuel Test" date={(v as DepartmentVehicle).fuelTestExpiry} />
+                            ) : isHired ? (
+                                <CertificateItem label="Permit" date={(v as HiredVehicle).permitExpiry}/>
+                            ) : <div />}
+                        </div>
                     </div>
                 </div>
                 
