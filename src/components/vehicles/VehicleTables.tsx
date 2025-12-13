@@ -98,11 +98,6 @@ const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
                 <span className={cn("font-mono font-semibold", colorClass)}>
                     {formatDateSafe(date)}
                 </span>
-                {hasAlert && (
-                     <span className={cn("block text-xs", colorClass)}>
-                        {status === 'Expired' ? `Expired ${Math.abs(daysRemaining || 0)}d ago` : `${daysRemaining}d left`}
-                    </span>
-                )}
             </div>
         </div>
     );
@@ -118,22 +113,20 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         title = vehicle.registrationNumber;
         const v = vehicle as DepartmentVehicle | HiredVehicle;
         details = (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                    <h4 className="font-semibold text-primary text-sm">Vehicle Particulars</h4>
-                    <div className="space-y-3">
-                      <DetailRow label="Model" value={v.model} />
-                      <DetailRow label="Vehicle Class" value={v.vehicleClass} />
-                      {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
-                      <DetailRow label="RC Status" value={v.rcStatus} />
-                      {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
-                      {'hireCharges' in v && <DetailRow label="Hire Charges" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}`: '-'} />}
-                      <DetailRow label="Date of Registration" value={formatDateSafe(v.registrationDate)} />
-                      {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                <div className="space-y-3">
+                    <h4 className="font-semibold text-primary text-sm border-b pb-1">Vehicle Particulars</h4>
+                    <DetailRow label="Model" value={v.model} />
+                    <DetailRow label="Vehicle Class" value={v.vehicleClass} />
+                    {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
+                    <DetailRow label="RC Status" value={v.rcStatus} />
+                    {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
+                    {'hireCharges' in v && <DetailRow label="Hire Charges" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}`: '-'} />}
+                    <DetailRow label="Date of Registration" value={formatDateSafe(v.registrationDate)} />
+                    {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
                 </div>
-                 <div className="space-y-4">
-                     <h4 className="font-semibold text-primary text-sm">Certificate Validity</h4>
+                 <div className="space-y-3">
+                     <h4 className="font-semibold text-primary text-sm border-b pb-1">Certificate Validity</h4>
                      <div className="space-y-1">
                         <CertificateRow label="Fitness" date={v.fitnessExpiry} />
                         <CertificateRow label="Tax" date={v.taxExpiry} />
@@ -165,11 +158,11 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     }
 
     return (
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl">
             <DialogHeader>
-                 <DialogTitle className="text-xl font-bold text-primary">{title}</DialogTitle>
+                 <DialogTitle className="text-2xl font-bold text-primary bg-primary/10 p-4 rounded-t-lg -m-6 mb-0 text-center">{title}</DialogTitle>
             </DialogHeader>
-            <div className="py-4">
+            <div className="pt-8 pb-4">
                 {details}
             </div>
             <DialogFooter>
