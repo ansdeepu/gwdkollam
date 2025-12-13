@@ -41,20 +41,22 @@ const formatDateSafe = (d: any): string => {
 interface ExpiryInfo {
     vehicleRegNo: string;
     vehicleType: 'Department' | 'Hired';
-    certificateType: string;
-    expiryDate: Date;
+    certificates: {
+        type: string;
+        expiryDate: Date;
+        status: 'Expired' | 'Expiring Soon';
+    }[];
 }
+
 
 function ExpiryAlertDialog({ 
     isOpen, 
     onClose, 
-    expiringSoon, 
-    expired 
+    vehiclesWithAlerts
 }: { 
     isOpen: boolean; 
     onClose: () => void; 
-    expiringSoon: ExpiryInfo[]; 
-    expired: ExpiryInfo[];
+    vehiclesWithAlerts: ExpiryInfo[];
 }) {
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -65,44 +67,43 @@ function ExpiryAlertDialog({
                 </DialogHeader>
                 <div className="flex-1 min-h-0 px-6 py-4">
                     <ScrollArea className="h-full pr-4">
-                        <div className="space-y-6">
-                            <section>
-                                <h3 className="text-lg font-semibold text-destructive mb-2 flex items-center gap-2"><AlertTriangle className="h-5 w-5"/>Expired Certificates ({expired.length})</h3>
-                                {expired.length > 0 ? (
-                                    <Table>
-                                        <TableHeader><TableRow><TableHead>Vehicle Reg. No</TableHead><TableHead>Type</TableHead><TableHead>Certificate</TableHead><TableHead>Expired On</TableHead></TableRow></TableHeader>
-                                        <TableBody>
-                                            {expired.map((item, index) => (
-                                                <TableRow key={index} className="bg-destructive/10">
-                                                    <TableCell className="font-medium">{item.vehicleRegNo}</TableCell>
-                                                    <TableCell>{item.vehicleType}</TableCell>
-                                                    <TableCell>{item.certificateType}</TableCell>
-                                                    <TableCell>{formatDateSafe(item.expiryDate)}</TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                ) : <p className="text-sm text-muted-foreground text-center py-4">No expired certificates.</p>}
-                            </section>
-                            <section>
-                                <h3 className="text-lg font-semibold text-orange-600 mb-2 flex items-center gap-2"><CalendarClock className="h-5 w-5"/>Expiring Within 30 Days ({expiringSoon.length})</h3>
-                                 {expiringSoon.length > 0 ? (
-                                    <Table>
-                                        <TableHeader><TableRow><TableHead>Vehicle Reg. No</TableHead><TableHead>Type</TableHead><TableHead>Certificate</TableHead><TableHead>Expires On</TableHead></TableRow></TableHeader>
-                                        <TableBody>
-                                            {expiringSoon.map((item, index) => (
-                                                <TableRow key={index} className="bg-orange-500/10">
-                                                    <TableCell className="font-medium">{item.vehicleRegNo}</TableCell>
-                                                    <TableCell>{item.vehicleType}</TableCell>
-                                                    <TableCell>{item.certificateType}</TableCell>
-                                                    <TableCell>{formatDateSafe(item.expiryDate)}</TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                 ) : <p className="text-sm text-muted-foreground text-center py-4">No certificates expiring soon.</p>}
-                            </section>
-                        </div>
+                       <div className="space-y-4">
+                           {vehiclesWithAlerts.length > 0 ? (
+                               vehiclesWithAlerts.map((vehicle) => (
+                                   <Card key={vehicle.vehicleRegNo} className="bg-secondary/30">
+                                       <CardHeader className="p-3">
+                                           <CardTitle className="text-base">{vehicle.vehicleRegNo} <span className="text-sm font-medium text-muted-foreground">({vehicle.vehicleType})</span></CardTitle>
+                                       </CardHeader>
+                                       <CardContent className="p-3 pt-0">
+                                           <Table>
+                                               <TableHeader>
+                                                   <TableRow>
+                                                       <TableHead className="w-[40%]">Certificate</TableHead>
+                                                       <TableHead>Expiry Date</TableHead>
+                                                       <TableHead>Status</TableHead>
+                                                   </TableRow>
+                                               </TableHeader>
+                                               <TableBody>
+                                                   {vehicle.certificates.map((cert, index) => (
+                                                       <TableRow key={index} className={cert.status === 'Expired' ? 'bg-destructive/10' : 'bg-orange-500/10'}>
+                                                           <TableCell className="font-medium">{cert.type}</TableCell>
+                                                           <TableCell>{formatDateSafe(cert.expiryDate)}</TableCell>
+                                                           <TableCell>
+                                                               <span className={`font-semibold ${cert.status === 'Expired' ? 'text-destructive' : 'text-orange-600'}`}>{cert.status}</span>
+                                                           </TableCell>
+                                                       </TableRow>
+                                                   ))}
+                                               </TableBody>
+                                           </Table>
+                                       </CardContent>
+                                   </Card>
+                               ))
+                           ) : (
+                               <div className="text-center py-10">
+                                   <p className="text-muted-foreground">No expired or expiring certificates found.</p>
+                               </div>
+                           )}
+                       </div>
                     </ScrollArea>
                 </div>
                 <DialogFooter className="p-6 pt-4 border-t">
@@ -138,13 +139,12 @@ export default function VehiclesPage() {
         setHeader("Vehicle & Rig Management", "Manage department, hired, and rig/compressor vehicles and units.");
     }, [setHeader]);
     
-    const { expired, expiringSoon } = useMemo(() => {
+    const vehiclesWithAlerts = useMemo(() => {
         const today = new Date();
         const thirtyDaysFromNow = addDays(today, 30);
-        const expiredList: ExpiryInfo[] = [];
-        const expiringSoonList: ExpiryInfo[] = [];
-    
-        const checkDates = (vehicle: DepartmentVehicle | HiredVehicle, type: 'Department' | 'Hired') => {
+        const alertsMap = new Map<string, ExpiryInfo>();
+
+        const processVehicle = (vehicle: DepartmentVehicle | HiredVehicle, type: 'Department' | 'Hired') => {
             const dateFields: Array<{ key: keyof (DepartmentVehicle | HiredVehicle), label: string }> = [
                 { key: 'fitnessExpiry', label: 'Fitness' },
                 { key: 'taxExpiry', label: 'Tax' },
@@ -158,30 +158,32 @@ export default function VehiclesPage() {
             for (const { key, label } of dateFields) {
                 const expiryDate = safeParseDate((vehicle as any)[key]);
                 if (expiryDate && isValid(expiryDate)) {
+                    let status: 'Expired' | 'Expiring Soon' | null = null;
                     if (isBefore(expiryDate, today)) {
-                        expiredList.push({ vehicleRegNo: vehicle.registrationNumber, vehicleType: type, certificateType: label, expiryDate });
+                        status = 'Expired';
                     } else if (isAfter(expiryDate, today) && isBefore(expiryDate, thirtyDaysFromNow)) {
-                        expiringSoonList.push({ vehicleRegNo: vehicle.registrationNumber, vehicleType: type, certificateType: label, expiryDate });
+                        status = 'Expiring Soon';
+                    }
+
+                    if (status) {
+                        if (!alertsMap.has(vehicle.registrationNumber)) {
+                            alertsMap.set(vehicle.registrationNumber, {
+                                vehicleRegNo: vehicle.registrationNumber,
+                                vehicleType: type,
+                                certificates: []
+                            });
+                        }
+                        alertsMap.get(vehicle.registrationNumber)!.certificates.push({ type: label, expiryDate, status });
                     }
                 }
             }
         };
 
-        allDepartmentVehicles.forEach(v => checkDates(v, 'Department'));
-        allHiredVehicles.forEach(v => checkDates(v, 'Hired'));
+        allDepartmentVehicles.forEach(v => processVehicle(v, 'Department'));
+        allHiredVehicles.forEach(v => processVehicle(v, 'Hired'));
         
-        expiredList.sort((a,b) => a.expiryDate.getTime() - b.expiryDate.getTime());
-        expiringSoonList.sort((a,b) => a.expiryDate.getTime() - b.expiryDate.getTime());
-
-        return { expired: expiredList, expiringSoon: expiringSoonList };
+        return Array.from(alertsMap.values());
     }, [allDepartmentVehicles, allHiredVehicles]);
-
-    useEffect(() => {
-        // Open the dialog automatically if there are any alerts
-        if (!isLoading && (expired.length > 0 || expiringSoon.length > 0)) {
-            setIsExpiryAlertOpen(true);
-        }
-    }, [isLoading, expired, expiringSoon]);
 
 
     const handleAddOrEdit = (type: 'department' | 'hired' | 'rig', data: any) => {
@@ -313,7 +315,7 @@ export default function VehiclesPage() {
 
     return (
         <div className="space-y-6">
-            <ExpiryAlertDialog isOpen={isExpiryAlertOpen} onClose={() => setIsExpiryAlertOpen(false)} expired={expired} expiringSoon={expiringSoon} />
+            <ExpiryAlertDialog isOpen={isExpiryAlertOpen} onClose={() => setIsExpiryAlertOpen(false)} vehiclesWithAlerts={vehiclesWithAlerts} />
 
             {isLoading ? (
                  <div className="flex justify-center items-center h-64">
@@ -330,8 +332,9 @@ export default function VehiclesPage() {
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle>Department Vehicles ({presentDepartmentVehicles.length})</CardTitle>
                                  <div className="flex items-center gap-2">
-                                    {canEdit && <Button onClick={() => handleAddOrEdit('department', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
-                                    <Button variant="outline" onClick={() => handleExportExcel('department')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
+                                    <Button variant="outline" size="sm" onClick={() => setIsExpiryAlertOpen(true)}><AlertTriangle className="h-4 w-4 mr-2"/>Expiry Alerts</Button>
+                                    {canEdit && <Button size="sm" onClick={() => handleAddOrEdit('department', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
+                                    <Button variant="outline" size="sm" onClick={() => handleExportExcel('department')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
                                 </div>
                             </CardHeader>
                             <CardContent>
@@ -348,8 +351,9 @@ export default function VehiclesPage() {
                              <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle>Hired Vehicles ({presentHiredVehicles.length})</CardTitle>
                                  <div className="flex items-center gap-2">
-                                    {canEdit && <Button onClick={() => handleAddOrEdit('hired', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
-                                    <Button variant="outline" onClick={() => handleExportExcel('hired')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
+                                    <Button variant="outline" size="sm" onClick={() => setIsExpiryAlertOpen(true)}><AlertTriangle className="h-4 w-4 mr-2"/>Expiry Alerts</Button>
+                                    {canEdit && <Button size="sm" onClick={() => handleAddOrEdit('hired', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
+                                    <Button variant="outline" size="sm" onClick={() => handleExportExcel('hired')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
                                 </div>
                             </CardHeader>
                             <CardContent>
@@ -366,8 +370,8 @@ export default function VehiclesPage() {
                             <CardHeader className="flex flex-row items-center justify-between">
                                 <CardTitle>Rig & Compressor Units ({presentRigCompressors.length})</CardTitle>
                                  <div className="flex items-center gap-2">
-                                    {canEdit && <Button onClick={() => handleAddOrEdit('rig', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
-                                    <Button variant="outline" onClick={() => handleExportExcel('rig')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
+                                    {canEdit && <Button size="sm" onClick={() => handleAddOrEdit('rig', null)}><PlusCircle className="h-4 w-4 mr-2"/> Add</Button>}
+                                    <Button variant="outline" size="sm" onClick={() => handleExportExcel('rig')}><FileDown className="h-4 w-4 mr-2" /> Export</Button>
                                 </div>
                             </CardHeader>
                             <CardContent>
