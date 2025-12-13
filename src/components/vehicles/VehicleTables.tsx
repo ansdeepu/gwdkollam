@@ -44,9 +44,9 @@ const safeParseDate = (dateValue: any): Date | null => {
 };
 
 const formatDateSafe = (d: any): string => {
-    if (!d) return 'N/A';
+    if (!d) return '-';
     const date = safeParseDate(d);
-    return date ? format(date, 'dd/MM/yyyy') : 'N/A';
+    return date ? format(date, 'dd/MM/yyyy') : '-';
 };
 
 export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: DepartmentVehicleTableProps) {
@@ -95,7 +95,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.insuranceExpiry)}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.pollutionExpiry)}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.fuelTestExpiry)}</TableCell>
-                            <TableCell className="p-2 text-sm">{v.fuelConsumptionRate}</TableCell>
+                            <TableCell className="p-2 text-sm">{v.fuelConsumptionRate || '-'}</TableCell>
                             {canEdit && (
                                 <TableCell className="text-right p-1">
                                     <Tooltip>
@@ -163,7 +163,7 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehi
                                 </div>
                             </TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.agreementValidity)}</TableCell>
-                            <TableCell className="p-2 text-sm">{v.hireCharges?.toLocaleString('en-IN')}</TableCell>
+                            <TableCell className="p-2 text-sm">{v.hireCharges?.toLocaleString('en-IN') || '-'}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.fitnessExpiry)}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.taxExpiry)}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.insuranceExpiry)}</TableCell>
@@ -224,11 +224,11 @@ export function RigCompressorTable({ data, onEdit, onDelete, canEdit }: RigCompr
                     {(data || []).map((u, index) => (
                         <TableRow key={u.id}>
                             <TableCell className="p-2 text-sm">{index + 1}</TableCell>
-                            <TableCell className="p-2 text-sm">{u.typeOfRigUnit}</TableCell>
-                            <TableCell className="p-2 text-sm">{u.rigVehicleRegNo}</TableCell>
-                            <TableCell className="p-2 text-sm">{u.compressorVehicleRegNo}</TableCell>
-                            <TableCell className="p-2 text-sm">{u.supportingVehicleRegNo}</TableCell>
-                            <TableCell className="p-2 text-sm">{u.compressorDetails}</TableCell>
+                            <TableCell className="p-2 text-sm">{u.typeOfRigUnit || '-'}</TableCell>
+                            <TableCell className="p-2 text-sm">{u.rigVehicleRegNo || '-'}</TableCell>
+                            <TableCell className="p-2 text-sm">{u.compressorVehicleRegNo || '-'}</TableCell>
+                            <TableCell className="p-2 text-sm">{u.supportingVehicleRegNo || '-'}</TableCell>
+                            <TableCell className="p-2 text-sm">{u.compressorDetails || '-'}</TableCell>
                             {canEdit && (
                                 <TableCell className="text-right p-1">
                                     <Tooltip>
