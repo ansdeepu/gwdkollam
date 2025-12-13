@@ -11,9 +11,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useState, useMemo } from "react";
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../ui/dialog";
+import { Dialog, DialogContent } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
-import { Card, CardContent, CardHeader } from "../ui/card";
+import { Card, CardContent } from "../ui/card";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
 import Image from "next/image";
@@ -97,7 +97,7 @@ const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     const { status, colorClass } = getExpiryStatus(expiryDate);
 
     return (
-        <div className="flex justify-between items-center text-sm py-4 border-b border-black/10 last:border-b-0">
+        <div className="flex justify-between items-center text-sm py-2">
             <span className="font-medium text-gray-700">{label}</span>
             <div className="text-right">
                 <span className={cn("font-mono font-semibold", colorClass)}>
@@ -111,63 +111,51 @@ const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
 export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVehicle | HiredVehicle | RigCompressor | null, onClose: () => void }) {
     if (!vehicle) return null;
 
-    let title = "Vehicle Details";
     let details: React.ReactNode;
     let isRigCompressor = !('registrationNumber' in vehicle);
     let dialogWidthClass = isRigCompressor ? "max-w-md" : "max-w-4xl";
 
     if ('registrationNumber' in vehicle) { // Department or Hired Vehicle
         const v = vehicle as DepartmentVehicle | HiredVehicle;
-        title = `Details for ${v.registrationNumber}`;
         const isHired = 'hireCharges' in v;
         const isDepartment = 'fuelConsumptionRate' in v;
 
         details = (
-            <>
-                <DialogHeader className="sr-only">
-                    <DialogTitle>{title}</DialogTitle>
-                    <DialogDescription>Details for {title}.</DialogDescription>
-                </DialogHeader>
-                 <div className="font-serif text-black p-4 border-2 border-black max-w-4xl mx-auto">
+             <>
+                 <div className="font-serif text-black p-4 border-2 border-black">
                     <div className="text-center mb-2">
                         <h1 className="font-bold text-lg">VEHICLE REGISTRATION</h1>
                         <p className="text-xs font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
                     </div>
 
-                    <div className="grid grid-cols-12 gap-4">
-                        <div className="col-span-12">
-                             <div className="text-center py-2">
-                                <span className="block font-bold text-2xl text-black tracking-wider whitespace-nowrap">{v.registrationNumber.toUpperCase()}</span>
-                                <span className="block font-semibold text-lg text-gray-800">{v.typeOfVehicle}</span>
-                            </div>
-                        </div>
-
-                        {/* Details Grid */}
-                        <div className="col-span-12 grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3 text-xs border-t-2 border-b-2 border-black py-2">
-                            <DetailRow label="regd. date" value={formatDateSafe(v.registrationDate)} />
-                            <DetailRow label="owner" value={isDepartment ? "Ground Water Department" : "Hired"}/>
-                            <DetailRow label="address" value="Kollam, Kerala"/>
-                             <DetailRow label="class" value={v.vehicleClass} />
-                            <DetailRow label="mfg" value={v.model} />
-                            <DetailRow label="rc status" value={v.rcStatus} />
-                             {isDepartment && <DetailRow label="fuel consumption" value={(v as DepartmentVehicle).fuelConsumptionRate} />}
-                             {isHired && <DetailRow label="hire charges" value={`₹ ${v.hireCharges?.toLocaleString('en-IN') ?? '-'}`} />}
-                             {isHired && <DetailRow label="agreement" value={formatDateSafe(v.agreementValidity)} />}
-                        </div>
+                    <div className="text-center py-2">
+                        <span className="block font-bold text-2xl text-black tracking-wider whitespace-nowrap">{v.registrationNumber.toUpperCase()}</span>
+                        <span className="block font-semibold text-lg text-gray-800">{v.typeOfVehicle}</span>
                     </div>
-                     {/* Certificate Details */}
+
+                    <div className="grid grid-cols-12 gap-4 border-t-2 border-b-2 border-black py-2 my-2">
+                        <div className="col-span-3"><DetailRow label="Regd. date" value={formatDateSafe(v.registrationDate)} /></div>
+                        <div className="col-span-3"><DetailRow label="Owner" value={isDepartment ? "Ground Water Department" : "Hired"}/></div>
+                        <div className="col-span-3"><DetailRow label="Address" value="Kollam, Kerala"/></div>
+                        <div className="col-span-3"><DetailRow label="Class" value={v.vehicleClass} /></div>
+                        <div className="col-span-3"><DetailRow label="Mfg" value={v.model} /></div>
+                        <div className="col-span-3"><DetailRow label="Rc status" value={v.rcStatus} /></div>
+                        {isDepartment && <div className="col-span-3"><DetailRow label="Fuel consumption" value={(v as DepartmentVehicle).fuelConsumptionRate} /></div>}
+                        {isHired && <div className="col-span-3"><DetailRow label="Hire charges" value={v.hireCharges ? `₹ ${v.hireCharges?.toLocaleString('en-IN')}` : '-'} /></div>}
+                        {isHired && <div className="col-span-3"><DetailRow label="Agreement" value={formatDateSafe(v.agreementValidity)} /></div>}
+                    </div>
+                    
                     <div className="mt-2 pt-2 border-b-2 border-black pb-2">
                         <h3 className="text-center font-bold text-sm mb-1">Certificate Validity</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-0">
-                             <CertificateRow label="Fitness" date={v.fitnessExpiry} />
-                             <CertificateRow label="Tax" date={v.taxExpiry} />
-                             <CertificateRow label="Insurance" date={v.insuranceExpiry} />
-                             <CertificateRow label="Pollution" date={v.pollutionExpiry} />
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2">
+                            <CertificateRow label="Fitness" date={v.fitnessExpiry} />
+                            <CertificateRow label="Tax" date={v.taxExpiry} />
+                            <CertificateRow label="Insurance" date={v.insuranceExpiry} />
+                            <CertificateRow label="Pollution" date={v.pollutionExpiry} />
                             {isDepartment && <CertificateRow label="Fuel Test" date={(v as DepartmentVehicle).fuelTestExpiry} />}
                             {isHired && <CertificateRow label="Permit" date={v.permitExpiry} />}
                         </div>
                     </div>
-                    {/* Footer */}
                      <div className="mt-2 flex justify-end">
                         <div className="text-center">
                             <div className="w-24 h-10"></div> {/* Spacer for signature */}
@@ -178,12 +166,11 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
             </>
         );
     } else { // RigCompressor
-        title = (vehicle as RigCompressor).typeOfRigUnit;
         const u = vehicle as RigCompressor;
         details = (
              <Card className="shadow-none border-0">
                 <CardHeader>
-                    <DialogTitle>{u.typeOfRigUnit}</DialogTitle>
+                    <h3 className="text-xl font-bold">{u.typeOfRigUnit}</h3>
                 </CardHeader>
                 <CardContent className="space-y-4">
                      <DetailRow label="Status" value={u.status} />
@@ -201,11 +188,11 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     }
 
     return (
-        <DialogContent className={cn(dialogWidthClass, "p-0", isRigCompressor && "bg-white")}>
+        <DialogContent className={cn("p-0 border-0 bg-transparent shadow-none", dialogWidthClass)}>
              {details}
-            <DialogFooter className="p-4 pt-0 sm:justify-center">
-                <Button onClick={onClose} variant="secondary" className="w-full sm:w-auto">Close</Button>
-            </DialogFooter>
+            <div className="flex justify-center mt-4">
+                <Button onClick={onClose} variant="secondary">Close</Button>
+            </div>
         </DialogContent>
     );
 }
