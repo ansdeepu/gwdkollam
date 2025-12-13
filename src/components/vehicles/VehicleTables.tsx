@@ -80,7 +80,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
                     {(data || []).map((v, index) => (
                         <TableRow key={v.id}>
                             <TableCell className="p-2 text-xs">{index + 1}</TableCell>
-                            <TableCell className="p-2 text-xs font-medium">
+                            <TableCell className="p-2 text-xs font-medium whitespace-normal break-words">
                                 <div className="flex flex-col">
                                     <span>{v.registrationNumber}</span>
                                     <span className="text-muted-foreground text-xs">{v.model}, {v.typeOfVehicle}, {v.vehicleClass}</span>
