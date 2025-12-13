@@ -7,7 +7,7 @@ import { Edit, Trash2, Eye, Building, Truck, AlertTriangle } from "lucide-react"
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from "@/lib/schemas";
 import { format, isValid, isBefore, addDays } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../ui/dialog";
@@ -125,7 +125,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     <DialogTitle>{title}</DialogTitle>
                     <DialogDescription>Details for {title}.</DialogDescription>
                 </DialogHeader>
-                <div className="bg-orange-50 font-serif text-black p-4 border-2 border-black max-w-2xl mx-auto my-8">
+                <div className="bg-orange-50 font-serif text-black p-4 border-2 border-black max-w-4xl mx-auto my-8">
                     <div className="text-center mb-2">
                         <h1 className="font-bold text-lg">CERTIFICATE OF REGISTRATION</h1>
                         <p className="text-xs font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
@@ -217,7 +217,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     }
 
     return (
-        <DialogContent className="max-w-3xl p-0 bg-transparent border-0 shadow-none">
+        <DialogContent className="max-w-4xl p-0 bg-transparent border-0 shadow-none">
              {details}
             <DialogFooter className="p-4 pt-0 sm:justify-center">
                 <Button onClick={onClose} variant="secondary" className="w-full sm:w-auto">Close</Button>
