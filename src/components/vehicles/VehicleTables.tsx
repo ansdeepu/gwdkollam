@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useState } from "react";
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogDescription, DialogFooter } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogDescription, DialogFooter, DialogTitle } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
 import { Card, CardContent, CardHeader } from "../ui/card";
 import { cn } from "@/lib/utils";
@@ -78,7 +78,7 @@ const DetailRow = ({ label, value }: { label: string, value?: string | number | 
     return (
         <div className="text-sm">
             <span className="block text-xs font-medium text-gray-500 uppercase tracking-wider">{label}</span>
-            <span className="block font-semibold text-gray-800">{displayValue}</span>
+            <span className="block font-semibold text-gray-800 break-words">{displayValue}</span>
         </div>
     );
 };
@@ -110,21 +110,22 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         title = `Details for ${v.registrationNumber}`;
         details = (
             <div className="relative font-sans text-sm bg-white rounded-lg shadow-lg p-6 border border-gray-300 w-full max-w-xl mx-auto my-8">
-                <DialogHeader>
-                    <DialogTitle className="sr-only">{title}</DialogTitle>
-                    <DialogDescription className="sr-only">Details for {title}.</DialogDescription>
+                <DialogHeader className="sr-only">
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogDescription>Details for {title}.</DialogDescription>
                 </DialogHeader>
                 {/* Header */}
                  <div className="text-center mb-4 pb-2">
-                    <Truck className="h-16 w-16 text-gray-400 mx-auto" />
-                    <p className="font-bold text-lg text-black tracking-wider leading-tight text-center break-words">{v.registrationNumber}</p>
+                    <div className="flex flex-col items-center justify-center">
+                        <Truck className="h-12 w-12 text-gray-400" />
+                        <p className="font-bold text-lg text-black tracking-wider leading-tight text-center break-words">{v.registrationNumber}</p>
+                    </div>
                 </div>
                 
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-12 gap-x-6">
                     {/* Left Section */}
                      <div className="col-span-12 space-y-1 flex flex-col items-center justify-center">
-                        <p className="text-sm font-bold text-gray-800">GOVERNMENT OF KERALA</p>
                         <h2 className="text-sm font-bold tracking-widest text-black">VEHICLE REGISTRATION</h2>
                         <p className="text-xs text-gray-600">GROUND WATER DEPARTMENT, KOLLAM</p>
                     </div>
