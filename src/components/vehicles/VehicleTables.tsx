@@ -113,6 +113,8 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
 
     let title = "Vehicle Details";
     let details: React.ReactNode;
+    let isRigCompressor = !('registrationNumber' in vehicle);
+    let dialogWidthClass = isRigCompressor ? "max-w-md" : "max-w-4xl";
 
     if ('registrationNumber' in vehicle) { // Department or Hired Vehicle
         const v = vehicle as DepartmentVehicle | HiredVehicle;
@@ -136,7 +138,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                         <div className="col-span-12">
                              <div className="text-center py-2">
                                 <span className="block font-bold text-2xl text-black tracking-wider whitespace-nowrap">{v.registrationNumber}</span>
-                                <span className="block font-semibold text-sm text-gray-800">{v.typeOfVehicle}</span>
+                                <span className="block font-semibold text-base text-gray-800">{v.typeOfVehicle}</span>
                             </div>
                         </div>
 
@@ -156,7 +158,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                      {/* Certificate Details */}
                     <div className="mt-2 pt-2 border-b-2 border-black pb-2">
                         <h3 className="text-center font-bold text-sm mb-1">Certificate Validity</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2">
                              <CertificateRow label="Fitness" date={v.fitnessExpiry} />
                              <CertificateRow label="Tax" date={v.taxExpiry} />
                              <CertificateRow label="Insurance" date={v.insuranceExpiry} />
@@ -199,7 +201,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     }
 
     return (
-        <DialogContent className="max-w-4xl p-0 bg-transparent border-0 shadow-none">
+        <DialogContent className={cn(dialogWidthClass, "p-0", isRigCompressor && "bg-white")}>
              {details}
             <DialogFooter className="p-4 pt-0 sm:justify-center">
                 <Button onClick={onClose} variant="secondary" className="w-full sm:w-auto">Close</Button>
