@@ -11,14 +11,6 @@ const nextConfig = {
     ignoreDuringBuilds: false,
   },
   images: {
-    domains: [
-        'placehold.co',
-        'firebasestorage.googleapis.com',
-        'drive.google.com',
-        'lh3.googleusercontent.com',
-        'i.imgur.com',
-        'i.postimg.cc',
-    ],
     remotePatterns: [
       {
         protocol: 'https',
