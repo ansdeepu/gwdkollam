@@ -141,33 +141,34 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
 
                         {/* Details Grid */}
                         <div className="col-span-12 grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3 text-xs border-t-2 border-b-2 border-black py-2">
-                            <DetailRow label="Regd. Date" value={formatDateSafe(v.registrationDate)} />
-                            <DetailRow label="Owner" value={isDepartment ? "Ground Water Department" : "Hired"}/>
-                            <DetailRow label="Address" value="Kollam, Kerala"/>
-                             <DetailRow label="Class" value={v.vehicleClass} />
-                            <DetailRow label="Mfg" value={v.model} />
-                            <DetailRow label="RC Status" value={v.rcStatus} />
-                             {isDepartment && <DetailRow label="Fuel Consumption" value={(v as DepartmentVehicle).fuelConsumptionRate} />}
-                             {isHired && <DetailRow label="Hire Charges" value={`₹ ${v.hireCharges?.toLocaleString('en-IN') ?? '-'}`} />}
-                             {isHired && <DetailRow label="Agreement" value={formatDateSafe(v.agreementValidity)} />}
+                            <DetailRow label="regd. date" value={formatDateSafe(v.registrationDate)} />
+                            <DetailRow label="owner" value={isDepartment ? "Ground Water Department" : "Hired"}/>
+                            <DetailRow label="address" value="Kollam, Kerala"/>
+                             <DetailRow label="class" value={v.vehicleClass} />
+                            <DetailRow label="mfg" value={v.model} />
+                            <DetailRow label="rc status" value={v.rcStatus} />
+                             {isDepartment && <DetailRow label="fuel consumption" value={(v as DepartmentVehicle).fuelConsumptionRate} />}
+                             {isHired && <DetailRow label="hire charges" value={`₹ ${v.hireCharges?.toLocaleString('en-IN') ?? '-'}`} />}
+                             {isHired && <DetailRow label="agreement" value={formatDateSafe(v.agreementValidity)} />}
                         </div>
                     </div>
                      {/* Certificate Details */}
                     <div className="mt-2 pt-2 border-b-2 border-black pb-2">
                         <h3 className="text-center font-bold text-sm mb-1">Certificate Validity</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-xs">
-                             <div className="flex justify-between font-semibold"><span>Fitness:</span><span>{formatDateSafe(v.fitnessExpiry)}</span></div>
-                             <div className="flex justify-between font-semibold"><span>Insurance:</span><span>{formatDateSafe(v.insuranceExpiry)}</span></div>
-                             <div className="flex justify-between font-semibold"><span>Pollution:</span><span>{formatDateSafe(v.pollutionExpiry)}</span></div>
-                            {isDepartment && <div className="flex justify-between font-semibold"><span>Fuel Test:</span><span>{formatDateSafe((v as DepartmentVehicle).fuelTestExpiry)}</span></div>}
-                            {isHired && <div className="flex justify-between font-semibold"><span>Permit:</span><span>{formatDateSafe(v.permitExpiry)}</span></div>}
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3 text-xs">
+                             <CertificateRow label="Fitness" date={v.fitnessExpiry} />
+                             <CertificateRow label="Tax" date={v.taxExpiry} />
+                             <CertificateRow label="Insurance" date={v.insuranceExpiry} />
+                             <CertificateRow label="Pollution" date={v.pollutionExpiry} />
+                            {isDepartment && <CertificateRow label="Fuel Test" date={(v as DepartmentVehicle).fuelTestExpiry} />}
+                            {isHired && <CertificateRow label="Permit" date={v.permitExpiry} />}
                         </div>
                     </div>
                     {/* Footer */}
                      <div className="mt-2 flex justify-end">
                         <div className="text-center">
                             <div className="w-24 h-10"></div> {/* Spacer for signature */}
-                            <p className="text-xs font-bold border-t border-black">Signing Authority</p>
+                            <p className="text-xs font-bold border-t border-black">signing authority</p>
                         </div>
                     </div>
                 </div>
