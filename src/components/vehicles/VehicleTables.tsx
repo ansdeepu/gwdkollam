@@ -150,7 +150,10 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                          {isHired && (
                             <>
                                 <DetailRow label="Agreement Validity" value={formatDateSafe((v as HiredVehicle).agreementValidity)} />
-                                <DetailRow label="Hire Charges" value={(v as HiredVehicle).hireCharges ? `Rs. ${(v as HiredVehicle).hireCharges?.toLocaleString('en-IN')}` : '-'} />
+                                <div className='flex items-baseline justify-between'>
+                                  <p className="text-xs text-gray-500">Hire Charges</p>
+                                  <DetailRow label="" value={(v as HiredVehicle).hireCharges ? `Rs. ${(v as HiredVehicle).hireCharges?.toLocaleString('en-IN')}` : '-'} />
+                                </div>
                             </>
                         )}
                     </div>
@@ -248,9 +251,9 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
-                                        <span className="text-muted-foreground text-xs">{v.model || 'N/A'}</span>
-                                        <span className="text-muted-foreground text-xs">{v.typeOfVehicle || 'N/A'}</span>
-                                        <span className="text-muted-foreground text-xs">{v.vehicleClass || 'N/A'}</span>
+                                        {v.model && <span className="text-muted-foreground text-xs">{v.model}</span>}
+                                        {v.typeOfVehicle && <span className="text-muted-foreground text-xs">{v.typeOfVehicle}</span>}
+                                        {v.vehicleClass && <span className="text-muted-foreground text-xs">{v.vehicleClass}</span>}
                                         <span className="text-muted-foreground text-xs">Reg: {formatDateSafe(v.registrationDate)}</span>
                                     </div>
                                 </button>
@@ -323,8 +326,8 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit, onView }: H
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
-                                        <span className="text-muted-foreground text-xs">{v.model || 'N/A'}</span>
-                                        <span className="text-muted-foreground text-xs">{v.vehicleClass || 'N/A'}</span>
+                                        {v.model && <span className="text-muted-foreground text-xs">{v.model}</span>}
+                                        {v.vehicleClass && <span className="text-muted-foreground text-xs">{v.vehicleClass}</span>}
                                         <span className="text-muted-foreground text-xs">Reg: {formatDateSafe(v.registrationDate)}</span>
                                     </div>
                                 </button>
