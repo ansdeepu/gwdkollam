@@ -213,7 +213,6 @@ export function RigCompressorTable({ data, onEdit, onDelete, canEdit }: RigCompr
                     <TableRow>
                         <TableHead className="p-2 text-sm whitespace-normal">Sl. No</TableHead>
                         <TableHead className="p-2 text-sm whitespace-normal">Type of Rig Unit</TableHead>
-                        <TableHead className="p-2 text-sm whitespace-normal">Status</TableHead>
                         <TableHead className="p-2 text-sm whitespace-normal">Rig Vehicle Reg. No</TableHead>
                         <TableHead className="p-2 text-sm whitespace-normal">Compressor Vehicle Reg. No</TableHead>
                         <TableHead className="p-2 text-sm whitespace-normal">Supporting Vehicle Reg. No</TableHead>
@@ -226,7 +225,6 @@ export function RigCompressorTable({ data, onEdit, onDelete, canEdit }: RigCompr
                         <TableRow key={u.id}>
                             <TableCell className="p-2 text-sm">{index + 1}</TableCell>
                             <TableCell className="p-2 text-sm">{u.typeOfRigUnit}</TableCell>
-                            <TableCell className="p-2 text-sm">{u.status}</TableCell>
                             <TableCell className="p-2 text-sm">{u.rigVehicleRegNo}</TableCell>
                             <TableCell className="p-2 text-sm">{u.compressorVehicleRegNo}</TableCell>
                             <TableCell className="p-2 text-sm">{u.supportingVehicleRegNo}</TableCell>
