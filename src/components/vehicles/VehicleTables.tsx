@@ -4,7 +4,7 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Eye, Building } from "lucide-react";
+import { Edit, Trash2, Eye, Building, Truck } from "lucide-react";
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from "@/lib/schemas";
 import { format, isValid, isBefore, addDays } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -110,9 +110,13 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         title = `Details for ${v.registrationNumber}`;
         details = (
             <div className="relative font-sans text-xs bg-white rounded-lg shadow-lg p-6 border border-gray-300 w-full max-w-2xl mx-auto my-8">
+                 <DialogHeader className="sr-only">
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogDescription>Details for {title}.</DialogDescription>
+                </DialogHeader>
                 {/* Header */}
                 <div className="text-center mb-4 border-b-2 border-black pb-2">
-                    <h2 className="text-sm font-bold tracking-widest text-black">CERTIFICATE OF REGISTRATION</h2>
+                    <h2 className="text-sm font-bold tracking-widest text-black">VEHICLE REGISTRATION</h2>
                     <p className="text-xs text-gray-600">GROUND WATER DEPARTMENT, KOLLAM</p>
                 </div>
                 
@@ -121,14 +125,10 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     {/* Left Section */}
                     <div className="col-span-4 space-y-3">
                         <div className="flex items-center gap-3">
-                           <Building className="h-12 w-12 text-gray-500" />
+                           <Truck className="h-12 w-12 text-gray-500" />
                             <div>
-                                <p className="text-[10px] text-gray-500">FORM 23A</p>
                                 <p className="font-bold text-lg text-black tracking-wider leading-tight">{v.registrationNumber}</p>
                             </div>
-                        </div>
-                        <div className="w-24 h-24 bg-gray-200 border-2 border-gray-400 flex items-center justify-center">
-                            <p className="text-gray-500 text-[8px] transform -rotate-45">CHIP AREA</p>
                         </div>
                     </div>
 
@@ -218,7 +218,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                 <TableHeader>
                     <TableRow>
                         <TableHead className="p-2 text-sm">Sl. No</TableHead>
-                        <TableHead className="p-2 text-sm min-w-[200px]">Reg. No</TableHead>
+                        <TableHead className="p-2 text-sm min-w-[250px]">Vehicle Details</TableHead>
                         <TableHead className="p-2 text-sm">Fuel Consumption</TableHead>
                         <TableHead className="p-2 text-sm">Fitness</TableHead>
                         <TableHead className="p-2 text-sm">Tax</TableHead>
@@ -236,7 +236,10 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
-                                        <span className="text-muted-foreground">{v.model}</span>
+                                        <span className="text-muted-foreground text-xs">{v.model}</span>
+                                        <span className="text-muted-foreground text-xs">{v.typeOfVehicle}</span>
+                                        <span className="text-muted-foreground text-xs">{v.vehicleClass}</span>
+                                        <span className="text-muted-foreground text-xs">Reg: {formatDateSafe(v.registrationDate)}</span>
                                     </div>
                                 </button>
                             </TableCell>
