@@ -87,7 +87,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit }: Depa
                                     <span className="text-muted-foreground">{v.model}</span>
                                     <span className="text-muted-foreground">{v.typeOfVehicle}</span>
                                     <span className="text-muted-foreground">{v.vehicleClass}</span>
-                                    <span className="text-muted-foreground">{formatDateSafe(v.registrationDate)}</span>
+                                    <span className="text-muted-foreground">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
                                 </div>
                             </TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.fitnessExpiry)}</TableCell>
@@ -159,7 +159,7 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit }: HiredVehi
                                     <span>{v.registrationNumber}</span>
                                     <span className="text-muted-foreground">{v.model}</span>
                                     <span className="text-muted-foreground">{v.vehicleClass}</span>
-                                    <span className="text-muted-foreground">{formatDateSafe(v.registrationDate)}</span>
+                                    <span className="text-muted-foreground">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
                                 </div>
                             </TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.agreementValidity)}</TableCell>
