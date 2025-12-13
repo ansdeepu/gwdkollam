@@ -1,3 +1,4 @@
+
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
@@ -89,7 +90,7 @@ const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     const hasAlert = status === 'Expired' || status === 'Expiring Soon';
 
     return (
-        <div className="grid grid-cols-2 items-center text-sm py-2 border-b last:border-b-0">
+        <div className="grid grid-cols-2 items-center text-sm py-1">
             <span className="font-medium flex items-center gap-2">
                 {hasAlert && <AlertTriangle className={cn("h-4 w-4", colorClass)} />}
                 {label}
@@ -119,8 +120,8 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         title = vehicle.registrationNumber;
         const v = vehicle as DepartmentVehicle | HiredVehicle;
         details = (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-4">
-                <div className="space-y-4">
+            <div className="space-y-4">
+                 <div className="space-y-2">
                     <h4 className="font-semibold text-primary border-b pb-1">Vehicle Particulars</h4>
                     <DetailRow label="Registration Number" value={v.registrationNumber} />
                     <DetailRow label="Model" value={v.model} />
@@ -129,13 +130,13 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     <DetailRow label="RC Status" value={v.rcStatus} />
                     {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
                 </div>
-                 <div className="space-y-4">
+                 <div className="space-y-2">
                     <h4 className="font-semibold text-primary border-b pb-1">Registration Details</h4>
                     <DetailRow label="Date of Registration" value={formatDateSafe(v.registrationDate)} />
                     {'hireCharges' in v && <DetailRow label="Hire Charges" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}`: '-'} />}
                     {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
                 </div>
-                <div className="lg:col-span-2 pt-4">
+                <div className="pt-2">
                      <h4 className="font-semibold text-primary border-b pb-1 mb-2">Certificate Validity</h4>
                      <div className="space-y-1">
                         <CertificateRow label="Fitness" date={v.fitnessExpiry} />
@@ -152,41 +153,41 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         title = (vehicle as RigCompressor).typeOfRigUnit;
         const u = vehicle as RigCompressor;
         details = (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-4">
+            <div className="space-y-4">
                 <DetailRow label="Type of Rig Unit" value={u.typeOfRigUnit} />
                 <DetailRow label="Status" value={u.status} />
                 <DetailRow label="Fuel Consumption" value={u.fuelConsumption} />
-                <Separator className="lg:col-span-2"/>
+                <Separator />
                 <DetailRow label="Rig Vehicle Reg. No" value={u.rigVehicleRegNo} />
                 <DetailRow label="Compressor Vehicle Reg. No" value={u.compressorVehicleRegNo} />
                 <DetailRow label="Supporting Vehicle Reg. No" value={u.supportingVehicleRegNo} />
-                <Separator className="lg:col-span-2"/>
-                <div className="lg:col-span-2"><DetailRow label="Compressor Details" value={u.compressorDetails} /></div>
-                <div className="lg:col-span-2"><DetailRow label="Remarks" value={u.remarks} /></div>
+                <Separator/>
+                <DetailRow label="Compressor Details" value={u.compressorDetails} />
+                <DetailRow label="Remarks" value={u.remarks} />
             </div>
         );
     }
 
     return (
-        <DialogContent className="max-w-4xl">
-            <DialogHeader>
-              <DialogTitle className="text-xl tracking-wider text-blue-800">{title}</DialogTitle>
-              <DialogDescription>
-                Detailed information for the selected vehicle/unit.
-              </DialogDescription>
+        <DialogContent className="max-w-md">
+            <DialogHeader className="p-0">
+              <div className="p-4 bg-blue-600 text-white rounded-t-lg">
+                <h2 className="text-lg font-bold tracking-wider">GROUND WATER DEPARTMENT</h2>
+                <p className="text-xs text-blue-100">Government of Kerala</p>
+              </div>
             </DialogHeader>
-            <div className="p-8 border-2 border-blue-200 bg-blue-50/50 rounded-lg">
-                <div className="text-center mb-6 border-b-2 border-blue-200 pb-4">
-                    <BadgeCheck className="h-10 w-10 mx-auto text-blue-600 mb-2" />
-                    <h2 className="text-xl font-bold tracking-wider text-blue-800">CERTIFICATE OF REGISTRATION</h2>
-                    <p className="text-sm text-blue-700">Ground Water Department, Kollam</p>
+            <div className="p-6 pt-2">
+                <div className="text-center -mt-12">
+                    <BadgeCheck className="h-16 w-16 mx-auto text-blue-600 bg-white rounded-full border-4 border-white p-1" />
+                    <h3 className="text-xl font-bold mt-2">{title}</h3>
+                    <p className="text-sm text-muted-foreground">Official Record</p>
                 </div>
-                <div className="px-4">
+                <div className="mt-6">
                     {details}
                 </div>
             </div>
             <DialogFooter className="p-6 pt-0">
-                <Button onClick={onClose} variant="outline">Close</Button>
+                <Button onClick={onClose} variant="outline" className="w-full">Close</Button>
             </DialogFooter>
         </DialogContent>
     );
@@ -229,9 +230,6 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
                                         <span className="text-muted-foreground">{v.model}</span>
-                                        <span className="text-muted-foreground">{v.typeOfVehicle}</span>
-                                        <span className="text-muted-foreground">{v.vehicleClass}</span>
-                                        <span className="text-muted-foreground text-xs">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
                                     </div>
                                 </button>
                             </TableCell>
