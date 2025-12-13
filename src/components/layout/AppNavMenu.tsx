@@ -8,7 +8,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, FileText, FolderOpen, Users, Briefcase, Settings, BarChart3, DollarSign, Hourglass, Waves, ClipboardList, UserPlus, HelpCircle, Landmark, Calendar, Building, MapPin, Hammer, ArrowUpRight, Truck } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import type { UserRole } from '@/lib/schemas';
 import { usePendingUpdates } from '@/hooks/usePendingUpdates'; 
@@ -16,6 +15,8 @@ import { Badge } from '@/components/ui/badge';
 import { usePageNavigation } from '@/hooks/usePageNavigation';
 import { useEffect, useState } from 'react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { ArrowUpRight, BarChart3, Briefcase, Building, Calendar, ClipboardList, DollarSign, FileText, FolderOpen, Hammer, HelpCircle, Hourglass, Landmark, LayoutDashboard, MapPin, Settings, Truck, Users, Waves } from 'lucide-react';
+
 
 export interface NavItem {
   href: string;
