@@ -1,4 +1,3 @@
-
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
@@ -59,7 +58,7 @@ const formatDateSafe = (d: any): string => {
 
 const getExpiryStatus = (expiryDate: Date | null): { status: 'Expired' | 'Expiring Soon' | 'Valid'; colorClass: string; } => {
     if (!expiryDate || !isValid(expiryDate)) {
-        return { status: 'Valid', colorClass: 'text-gray-500' };
+        return { status: 'Valid', colorClass: 'text-black' };
     }
     const today = new Date();
     const thirtyDaysFromNow = addDays(today, 30);
@@ -70,14 +69,14 @@ const getExpiryStatus = (expiryDate: Date | null): { status: 'Expired' | 'Expiri
     if (isBefore(expiryDate, thirtyDaysFromNow)) {
         return { status: 'Expiring Soon', colorClass: 'text-orange-500 font-semibold' };
     }
-    return { status: 'Valid', colorClass: 'text-gray-700' };
+    return { status: 'Valid', colorClass: 'text-black' };
 };
 
 const DetailRow = ({ label, value }: { label: string, value?: string | number | null }) => {
     const displayValue = (value === null || value === undefined || value === '') ? '-' : String(value);
     
     return (
-        <div className="text-center">
+        <div className="text-left">
             <p className="text-xs text-gray-500 capitalize">{label}</p>
             <p className="font-semibold text-black">{displayValue}</p>
         </div>
@@ -86,14 +85,15 @@ const DetailRow = ({ label, value }: { label: string, value?: string | number | 
 
 const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     const displayDate = formatDateSafe(date);
+    const dateObject = safeParseDate(date);
+    const { colorClass } = getExpiryStatus(dateObject);
+
     return (
-        <div className="flex justify-between items-center text-sm py-1.5 space-y-2">
-            <span className="font-medium text-gray-700">{label}</span>
-            <div className="text-right">
-                <span className="font-mono font-semibold text-black">
-                    {displayDate}
-                </span>
-            </div>
+        <div className="flex flex-col text-left">
+            <span className="text-xs text-gray-500">{label}</span>
+            <span className={cn("font-semibold", colorClass)}>
+                {displayDate}
+            </span>
         </div>
     );
 };
@@ -103,9 +103,9 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     if (!vehicle) return null;
 
     let details: React.ReactNode;
-    let isRigCompressor = !('registrationNumber' in vehicle);
-    let dialogWidthClass = isRigCompressor ? "max-w-md" : "max-w-xl";
-    let title = isRigCompressor ? (vehicle as RigCompressor).typeOfRigUnit : (vehicle as DepartmentVehicle).registrationNumber;
+    const isRigCompressor = !('registrationNumber' in vehicle);
+    const dialogWidthClass = isRigCompressor ? "max-w-md" : "max-w-xl";
+    const title = isRigCompressor ? (vehicle as RigCompressor).typeOfRigUnit : (vehicle as DepartmentVehicle).registrationNumber;
 
     if ('registrationNumber' in vehicle) {
         const v = vehicle as DepartmentVehicle | HiredVehicle;
@@ -113,28 +113,30 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         const isDepartment = 'fuelConsumptionRate' in v;
 
         details = (
-            <div className="font-serif text-black p-4 border-2 border-black bg-white print:border-0 print:shadow-none">
-                <div className="text-center mb-2">
-                    <h1 className="font-bold text-lg">VEHICLE REGISTRATION</h1>
+            <div className="font-serif text-black p-4 border-2 border-black bg-white print:border-0 print:shadow-none w-[210mm] min-h-[297mm] flex flex-col">
+                 <div className="text-center mb-2 flex-shrink-0">
+                    <h1 className="font-bold text-lg tracking-wider">VEHICLE REGISTRATION</h1>
                     <p className="text-xs font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
                 </div>
-                 <div className="text-center py-2">
+                 <div className="text-center py-2 my-2 flex-shrink-0">
                     <span className="block font-bold text-2xl text-black tracking-wider whitespace-nowrap">{v.registrationNumber.toUpperCase()}</span>
                     <span className="block font-semibold text-lg text-gray-800 capitalize">{v.typeOfVehicle}</span>
                 </div>
-                <div className="grid grid-cols-2 gap-x-4 border-t-2 border-b-2 border-black py-2 my-2">
-                    <DetailRow label="Regd. date" value={formatDateSafe(v.registrationDate)} />
-                    <DetailRow label="Owner" value={isDepartment ? "Ground Water Department" : "Hired"}/>
-                    <DetailRow label="Address" value="Kollam, Kerala"/>
-                    <DetailRow label="Class" value={v.vehicleClass} />
-                    <DetailRow label="Mfg" value={v.model} />
-                    <DetailRow label="RC Status" value={v.rcStatus} />
-                    {isDepartment && <DetailRow label="Fuel Consumption" value={(v as DepartmentVehicle).fuelConsumptionRate} />}
-                    {isHired && <DetailRow label="Hire Charges" value={v.hireCharges ? `₹ ${v.hireCharges?.toLocaleString('en-IN')}` : '-'} />}
+                <div className="border-t-2 border-b-2 border-black py-4 my-2 flex-shrink-0">
+                    <div className="grid grid-cols-4 gap-x-4 gap-y-6">
+                        <DetailRow label="Regd. date" value={formatDateSafe(v.registrationDate)} />
+                        <DetailRow label="Owner" value={isDepartment ? "Ground Water Department" : "Hired"}/>
+                        <DetailRow label="Address" value="Kollam, Kerala"/>
+                        <DetailRow label="Class" value={v.vehicleClass} />
+                        <DetailRow label="Mfg" value={v.model} />
+                        <DetailRow label="RC Status" value={v.rcStatus} />
+                        <DetailRow label="Fuel Consumption" value={(v as DepartmentVehicle).fuelConsumptionRate || '-'} />
+                        <DetailRow label="" value={null} />
+                    </div>
                 </div>
-                <div className="mt-2 pt-2 border-b-2 border-black pb-2">
-                    <h3 className="text-center font-bold text-sm mb-1">Certificate Validity</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
+                <div className="flex-grow pt-4">
+                    <h3 className="text-center font-bold text-base mb-4">Certificate Validity</h3>
+                    <div className="grid grid-cols-3 gap-x-6 gap-y-6 px-4">
                         <CertificateRow label="Fitness" date={v.fitnessExpiry} />
                         <CertificateRow label="Tax" date={v.taxExpiry} />
                         <CertificateRow label="Insurance" date={v.insuranceExpiry} />
@@ -143,10 +145,9 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                         {isHired && <CertificateRow label="Permit" date={v.permitExpiry} />}
                     </div>
                 </div>
-                <div className="mt-2 flex justify-end">
+                 <div className="border-t-2 border-black mt-auto flex-shrink-0 pt-12 flex justify-end">
                     <div className="text-center">
-                        <div className="w-24 h-10"></div>
-                        <p className="text-xs font-bold border-t border-black">signing authority</p>
+                        <p className="text-xs font-bold">signing authority</p>
                     </div>
                 </div>
             </div>
@@ -154,8 +155,8 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     } else {
         const u = vehicle as RigCompressor;
         details = (
-             <Card className="shadow-lg border">
-                <CardHeader>
+             <Card className="shadow-lg border-2 border-black">
+                <CardHeader className="text-center">
                     <CardTitle className="text-xl font-bold">{u.typeOfRigUnit}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 text-center">
