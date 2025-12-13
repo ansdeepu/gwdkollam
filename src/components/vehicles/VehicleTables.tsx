@@ -1,9 +1,10 @@
+
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Eye, AlertTriangle, BadgeCheck } from "lucide-react";
+import { Edit, Trash2, Eye, AlertTriangle, BadgeCheck, Building } from "lucide-react";
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from "@/lib/schemas";
 import { format, isValid, isBefore, addDays, differenceInDays } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -93,7 +94,7 @@ const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
                 <span className={cn("font-mono font-semibold", colorClass)}>
                     {formatDateSafe(date)}
                 </span>
-                 <span className={cn("ml-2 text-xs", colorClass)}>({status})</span>
+                 <span className={cn("ml-2 text-xs font-bold", colorClass)}>({status})</span>
             </div>
         </div>
     );
@@ -106,24 +107,48 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     let details: React.ReactNode;
 
     if ('registrationNumber' in vehicle) { // Department or Hired Vehicle
-        title = vehicle.registrationNumber;
         const v = vehicle as DepartmentVehicle | HiredVehicle;
         details = (
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-                <div className="space-y-4">
-                    <h4 className="font-semibold text-primary text-base border-b pb-2">Vehicle Particulars</h4>
-                    <DetailRow label="Model" value={v.model} />
-                    <DetailRow label="Vehicle Class" value={v.vehicleClass} />
-                    {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
-                    <DetailRow label="RC Status" value={v.rcStatus} />
-                    {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
-                    {'hireCharges' in v && <DetailRow label="Hire Charges" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}`: '-'} />}
-                    <DetailRow label="Date of Registration" value={formatDateSafe(v.registrationDate)} />
-                    {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
+            <div className="relative font-sans text-xs bg-white rounded-lg shadow-lg p-4 border border-gray-300 w-full max-w-2xl mx-auto">
+                {/* Header */}
+                <div className="text-center mb-2 border-b-2 border-black pb-1">
+                    <h2 className="text-sm font-bold tracking-widest text-black">CERTIFICATE OF REGISTRATION</h2>
+                    <p className="text-xs text-gray-600">GROUND WATER DEPARTMENT, KOLLAM</p>
                 </div>
-                 <div className="space-y-2">
-                     <h4 className="font-semibold text-primary text-base border-b pb-2">Certificate Validity</h4>
-                     <div className="space-y-2">
+                
+                {/* Main Content Grid */}
+                <div className="grid grid-cols-12 gap-x-4">
+                    {/* Left Section */}
+                    <div className="col-span-4 space-y-2">
+                        <div className="flex items-center gap-2">
+                           <Building className="h-10 w-10 text-gray-500" />
+                            <div>
+                                <p className="text-[10px] text-gray-500">FORM 23A</p>
+                                <p className="font-bold text-base text-black tracking-wider">{v.registrationNumber}</p>
+                            </div>
+                        </div>
+                        <div className="w-20 h-20 bg-gray-200 border-2 border-gray-400 flex items-center justify-center">
+                            <p className="text-gray-500 text-[8px] transform -rotate-45">CHIP AREA</p>
+                        </div>
+                    </div>
+
+                    {/* Right Section */}
+                    <div className="col-span-8 grid grid-cols-2 gap-x-4 gap-y-1">
+                        <DetailRow label="Regd. Date" value={formatDateSafe(v.registrationDate)} />
+                        <DetailRow label="Class" value={v.vehicleClass} />
+                        {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
+                        <DetailRow label="Model" value={v.model} />
+                        <DetailRow label="RC Status" value={v.rcStatus} />
+                         {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
+                        {'hireCharges' in v && <DetailRow label="Hire Charges" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}`: '-'} />}
+                        {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
+                    </div>
+                </div>
+
+                {/* Certificate Section */}
+                <div className="mt-4 pt-2 border-t-2 border-dashed border-gray-400">
+                    <h4 className="text-center font-bold text-xs uppercase text-gray-600 mb-2">Certificate Validity</h4>
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-0 text-xs">
                         <CertificateRow label="Fitness" date={v.fitnessExpiry} />
                         <CertificateRow label="Tax" date={v.taxExpiry} />
                         <CertificateRow label="Insurance" date={v.insuranceExpiry} />
@@ -131,6 +156,10 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                         {'fuelTestExpiry' in v && <CertificateRow label="Fuel Test" date={v.fuelTestExpiry} />}
                         {'permitExpiry' in v && <CertificateRow label="Permit" date={v.permitExpiry} />}
                     </div>
+                </div>
+
+                <div className="text-right mt-4">
+                    <p className="text-[10px] font-bold">AUTHORISED SIGNATORY</p>
                 </div>
             </div>
         );
@@ -154,15 +183,10 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     }
 
     return (
-        <DialogContent className="max-w-4xl p-0">
-             <div className="bg-primary text-primary-foreground p-4 rounded-t-lg">
-                <DialogTitle className="text-2xl font-bold tracking-wider">{title}</DialogTitle>
-             </div>
-            <div className="pt-6 pb-4 px-6">
-                {details}
-            </div>
-            <DialogFooter className="p-6 pt-2">
-                <Button onClick={onClose} variant="outline" className="w-full">Close</Button>
+        <DialogContent className="max-w-4xl p-0 bg-transparent border-0 shadow-none">
+            {details}
+            <DialogFooter className="p-6 pt-2 items-center justify-center">
+                <Button onClick={onClose} variant="secondary" className="w-full sm:w-auto">Close</Button>
             </DialogFooter>
         </DialogContent>
     );
@@ -187,7 +211,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                     <TableRow>
                         <TableHead className="p-2 text-sm">Sl. No</TableHead>
                         <TableHead className="p-2 text-sm min-w-[200px]">Reg. No</TableHead>
-                        <TableHead className="p-2 text-sm">Fuel Consumption Rate</TableHead>
+                        <TableHead className="p-2 text-sm">Fuel Consumption</TableHead>
                         <TableHead className="p-2 text-sm">Fitness</TableHead>
                         <TableHead className="p-2 text-sm">Tax</TableHead>
                         <TableHead className="p-2 text-sm">Insurance</TableHead>
