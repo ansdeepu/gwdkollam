@@ -1,4 +1,3 @@
-
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
@@ -11,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useState, useMemo } from "react";
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Dialog, DialogContent } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogDescription } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
 import { Card, CardContent } from "../ui/card";
 import { cn } from "@/lib/utils";
@@ -114,6 +113,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     let details: React.ReactNode;
     let isRigCompressor = !('registrationNumber' in vehicle);
     let dialogWidthClass = isRigCompressor ? "max-w-md" : "max-w-4xl";
+    let title = isRigCompressor ? (vehicle as RigCompressor).typeOfRigUnit : (vehicle as DepartmentVehicle).registrationNumber;
 
     if ('registrationNumber' in vehicle) { // Department or Hired Vehicle
         const v = vehicle as DepartmentVehicle | HiredVehicle;
@@ -130,7 +130,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
 
                     <div className="text-center py-2">
                         <span className="block font-bold text-2xl text-black tracking-wider whitespace-nowrap">{v.registrationNumber.toUpperCase()}</span>
-                        <span className="block font-semibold text-lg text-gray-800">{v.typeOfVehicle}</span>
+                        <span className="block font-semibold text-lg text-gray-800 capitalize">{v.typeOfVehicle}</span>
                     </div>
 
                     <div className="grid grid-cols-12 gap-4 border-t-2 border-b-2 border-black py-2 my-2">
@@ -140,16 +140,16 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                         <div className="col-span-3"><DetailRow label="Class" value={v.vehicleClass} /></div>
                         <div className="col-span-3"><DetailRow label="Mfg" value={v.model} /></div>
                         <div className="col-span-3"><DetailRow label="Rc status" value={v.rcStatus} /></div>
-                        {isDepartment && <div className="col-span-3"><DetailRow label="Fuel consumption" value={(v as DepartmentVehicle).fuelConsumptionRate} /></div>}
+                        {isDepartment && <div className="col-span-3"><DetailRow label="Fuel Consumption" value={(v as DepartmentVehicle).fuelConsumptionRate} /></div>}
                         {isHired && <div className="col-span-3"><DetailRow label="Hire charges" value={v.hireCharges ? `₹ ${v.hireCharges?.toLocaleString('en-IN')}` : '-'} /></div>}
                         {isHired && <div className="col-span-3"><DetailRow label="Agreement" value={formatDateSafe(v.agreementValidity)} /></div>}
                     </div>
                     
                     <div className="mt-2 pt-2 border-b-2 border-black pb-2">
                         <h3 className="text-center font-bold text-sm mb-1">Certificate Validity</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4">
                             <CertificateRow label="Fitness" date={v.fitnessExpiry} />
-                            <CertificateRow label="Tax" date={v.taxExpiry} />
+                             <CertificateRow label="Tax" date={v.taxExpiry} />
                             <CertificateRow label="Insurance" date={v.insuranceExpiry} />
                             <CertificateRow label="Pollution" date={v.pollutionExpiry} />
                             {isDepartment && <CertificateRow label="Fuel Test" date={(v as DepartmentVehicle).fuelTestExpiry} />}
@@ -189,6 +189,10 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
 
     return (
         <DialogContent className={cn("p-0 border-0 bg-transparent shadow-none", dialogWidthClass)}>
+            <DialogHeader className="sr-only">
+                <DialogTitle>Details for {title}</DialogTitle>
+                <DialogDescription>Viewing details for vehicle or unit {title}.</DialogDescription>
+            </DialogHeader>
              {details}
             <div className="flex justify-center mt-4">
                 <Button onClick={onClose} variant="secondary">Close</Button>
