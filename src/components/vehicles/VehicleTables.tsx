@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useState } from "react";
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { cn } from "@/lib/utils";
@@ -120,29 +120,24 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         title = vehicle.registrationNumber;
         const v = vehicle as DepartmentVehicle | HiredVehicle;
         details = (
-            <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                 <div className="col-span-2 space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                <div className="md:col-span-1 space-y-2">
                     <h4 className="font-semibold text-primary border-b pb-1">Vehicle Particulars</h4>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-3">
                         <DetailRow label="Registration Number" value={v.registrationNumber} />
                         <DetailRow label="Model" value={v.model} />
                         {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
                         <DetailRow label="Vehicle Class" value={v.vehicleClass} />
                         <DetailRow label="RC Status" value={v.rcStatus} />
                         {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
-                    </div>
-                </div>
-                 <div className="col-span-1 space-y-2">
-                    <h4 className="font-semibold text-primary border-b pb-1">Registration Details</h4>
-                     <div className="space-y-2">
                         <DetailRow label="Date of Registration" value={formatDateSafe(v.registrationDate)} />
                         {'hireCharges' in v && <DetailRow label="Hire Charges" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}`: '-'} />}
                         {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
                     </div>
                 </div>
-                <div className="col-span-1 pt-2">
-                     <h4 className="font-semibold text-primary border-b pb-1 mb-2">Certificate Validity</h4>
-                     <div className="space-y-0.5">
+                <div className="md:col-span-1 space-y-2">
+                     <h4 className="font-semibold text-primary border-b pb-1">Certificate Validity</h4>
+                     <div className="space-y-1.5">
                         <CertificateRow label="Fitness" date={v.fitnessExpiry} />
                         <CertificateRow label="Tax" date={v.taxExpiry} />
                         <CertificateRow label="Insurance" date={v.insuranceExpiry} />
@@ -173,18 +168,17 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     }
 
     return (
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-xl">
             <DialogHeader className="p-0 mb-4">
               <div className="p-4 bg-blue-600 text-white rounded-t-lg">
-                <DialogTitle className="text-lg font-bold tracking-wider text-white">GROUND WATER DEPARTMENT</DialogTitle>
-                <DialogDescription className="text-xs text-blue-100">Government of Kerala</DialogDescription>
+                <DialogTitle className="text-base font-bold tracking-wider text-white">GROUND WATER DEPARTMENT</DialogTitle>
+                <DialogDescription className="text-xs text-blue-100">Official Record</DialogDescription>
               </div>
             </DialogHeader>
             <div className="p-6 pt-2">
-                <div className="text-center -mt-12">
-                    <BadgeCheck className="h-16 w-16 mx-auto text-blue-600 bg-white rounded-full border-4 border-white p-1" />
+                <div className="text-center -mt-10">
+                    <BadgeCheck className="h-12 w-12 mx-auto text-blue-600 bg-white rounded-full border-4 border-white p-1" />
                     <h3 className="text-xl font-bold mt-2">{title}</h3>
-                    <p className="text-sm text-muted-foreground">Official Record</p>
                 </div>
                 <div className="mt-6">
                     {details}
@@ -229,12 +223,14 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                     {(data || []).map((v, index) => (
                         <TableRow key={v.id}>
                             <TableCell className="p-2 text-sm">{index + 1}</TableCell>
-                            <TableCell className="p-2 text-sm font-medium whitespace-normal break-words">
+                             <TableCell className="p-2 text-sm font-medium">
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
-                                        <span className="text-muted-foreground text-xs">{v.model} - {v.typeOfVehicle} ({v.vehicleClass})</span>
-                                        <span className="text-muted-foreground text-xs">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
+                                        <span className="text-muted-foreground text-xs">{v.model}</span>
+                                        <span className="text-muted-foreground text-xs">{v.typeOfVehicle}</span>
+                                        <span className="text-muted-foreground text-xs">{v.vehicleClass}</span>
+                                        <span className="text-muted-foreground text-xs">Reg: {formatDateSafe(v.registrationDate)}</span>
                                     </div>
                                 </button>
                             </TableCell>
