@@ -4,7 +4,7 @@
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2, Eye, AlertTriangle } from "lucide-react";
+import { Edit, Trash2, Eye, AlertTriangle, BadgeCheck } from "lucide-react";
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from "@/lib/schemas";
 import { format, isValid, isBefore, addDays, differenceInDays } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -15,6 +15,7 @@ import { DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFoot
 import { ScrollArea } from "../ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { cn } from "@/lib/utils";
+import { Separator } from "../ui/separator";
 
 interface CommonTableProps {
     canEdit: boolean;
@@ -76,9 +77,9 @@ const getExpiryStatus = (expiryDate: Date | null): { status: 'Expired' | 'Expiri
 const DetailRow = ({ label, value }: { label: string, value?: string | number | null }) => {
     const displayValue = (value === null || value === undefined || value === '') ? '-' : value;
     return (
-        <div className="grid grid-cols-2 text-sm">
-            <span className="text-muted-foreground">{label}:</span>
-            <span className="font-semibold">{displayValue}</span>
+        <div className="text-sm">
+            <span className="block text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
+            <span className="block font-semibold text-foreground">{displayValue}</span>
         </div>
     );
 };
@@ -89,19 +90,21 @@ const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     const hasAlert = status === 'Expired' || status === 'Expiring Soon';
 
     return (
-        <div className="grid grid-cols-3 items-center text-sm py-2 border-b last:border-b-0">
-            <span className="text-muted-foreground font-medium flex items-center gap-2">
+        <div className="grid grid-cols-2 items-center text-sm py-2 border-b last:border-b-0">
+            <span className="font-medium flex items-center gap-2">
                 {hasAlert && <AlertTriangle className={cn("h-4 w-4", colorClass)} />}
                 {label}
             </span>
-             <span className={cn("font-mono font-semibold", colorClass)}>
-                {formatDateSafe(date)}
-            </span>
-            {hasAlert && (
-                 <span className={cn("text-xs font-semibold text-right", colorClass)}>
-                    {status === 'Expired' ? `Expired ${Math.abs(daysRemaining || 0)} days ago` : `${daysRemaining} days left`}
+            <div className="text-right">
+                <span className={cn("font-mono font-semibold", colorClass)}>
+                    {formatDateSafe(date)}
                 </span>
-            )}
+                {hasAlert && (
+                     <span className={cn("block text-xs", colorClass)}>
+                        {status === 'Expired' ? `Expired ${Math.abs(daysRemaining || 0)}d ago` : `${daysRemaining}d left`}
+                    </span>
+                )}
+            </div>
         </div>
     );
 };
@@ -113,90 +116,71 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     let title = "Vehicle Details";
     let details: React.ReactNode;
     
-    let allCertificateDates: (Date | null)[] = [];
-     if ('registrationNumber' in vehicle) {
-        allCertificateDates = [
-            safeParseDate(vehicle.fitnessExpiry),
-            safeParseDate(vehicle.taxExpiry),
-            safeParseDate(vehicle.insuranceExpiry),
-            safeParseDate(vehicle.pollutionExpiry),
-            'fuelTestExpiry' in vehicle ? safeParseDate(vehicle.fuelTestExpiry) : null,
-            'permitExpiry' in vehicle ? safeParseDate(vehicle.permitExpiry) : null,
-        ].filter(d => d !== null);
-    }
-    const hasAnyAlerts = allCertificateDates.some(d => getExpiryStatus(d).status !== 'Valid');
-
-
     if ('registrationNumber' in vehicle) { // Department or Hired Vehicle
         title = vehicle.registrationNumber;
         const v = vehicle as DepartmentVehicle | HiredVehicle;
         details = (
-             <div className="space-y-4">
-                <Card>
-                    <CardHeader><CardTitle className="text-base">Vehicle Information</CardTitle></CardHeader>
-                    <CardContent className="space-y-2">
-                        <DetailRow label="Model" value={v.model} />
-                        {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
-                        <DetailRow label="Vehicle Class" value={v.vehicleClass} />
-                        <DetailRow label="Registration Date" value={formatDateSafe(v.registrationDate)} />
-                        <DetailRow label="RC Status" value={v.rcStatus} />
-                        {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
-                        {'hireCharges' in v && <DetailRow label="Hire Charges" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}`: '-'} />}
-                        {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
-                    </CardContent>
-                </Card>
-                <Card className={cn(hasAnyAlerts && "border-amber-500/50 bg-amber-500/5")}>
-                     <CardHeader>
-                        <CardTitle className={cn("text-base flex items-center gap-2", hasAnyAlerts && "text-amber-700")}>
-                           {hasAnyAlerts && <AlertTriangle className="h-5 w-5" />}
-                            Certificate Status
-                        </CardTitle>
-                    </CardHeader>
-                     <CardContent>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-4">
+                <div className="space-y-4">
+                    <h4 className="font-semibold text-primary border-b pb-1">Vehicle Particulars</h4>
+                    <DetailRow label="Registration Number" value={v.registrationNumber} />
+                    <DetailRow label="Model" value={v.model} />
+                    {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
+                    <DetailRow label="Vehicle Class" value={v.vehicleClass} />
+                    <DetailRow label="RC Status" value={v.rcStatus} />
+                    {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
+                </div>
+                 <div className="space-y-4">
+                    <h4 className="font-semibold text-primary border-b pb-1">Registration Details</h4>
+                    <DetailRow label="Date of Registration" value={formatDateSafe(v.registrationDate)} />
+                    {'hireCharges' in v && <DetailRow label="Hire Charges" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}`: '-'} />}
+                    {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
+                </div>
+                <div className="lg:col-span-2 pt-4">
+                     <h4 className="font-semibold text-primary border-b pb-1 mb-2">Certificate Validity</h4>
+                     <div className="space-y-1">
                         <CertificateRow label="Fitness" date={v.fitnessExpiry} />
                         <CertificateRow label="Tax" date={v.taxExpiry} />
                         <CertificateRow label="Insurance" date={v.insuranceExpiry} />
                         <CertificateRow label="Pollution" date={v.pollutionExpiry} />
                         {'fuelTestExpiry' in v && <CertificateRow label="Fuel Test" date={v.fuelTestExpiry} />}
                         {'permitExpiry' in v && <CertificateRow label="Permit" date={v.permitExpiry} />}
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
             </div>
         );
     } else { // RigCompressor
         title = (vehicle as RigCompressor).typeOfRigUnit;
         const u = vehicle as RigCompressor;
         details = (
-            <Card>
-                 <CardHeader><CardTitle className="text-base">Unit Information</CardTitle></CardHeader>
-                 <CardContent className="space-y-2">
-                    <DetailRow label="Type of Rig Unit" value={u.typeOfRigUnit} />
-                    <DetailRow label="Status" value={u.status} />
-                    <DetailRow label="Fuel Consumption" value={u.fuelConsumption} />
-                    <DetailRow label="Rig Vehicle Reg. No" value={u.rigVehicleRegNo} />
-                    <DetailRow label="Compressor Vehicle Reg. No" value={u.compressorVehicleRegNo} />
-                    <DetailRow label="Supporting Vehicle Reg. No" value={u.supportingVehicleRegNo} />
-                    <DetailRow label="Compressor Details" value={u.compressorDetails} />
-                    <DetailRow label="Remarks" value={u.remarks} />
-                </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-4">
+                <DetailRow label="Type of Rig Unit" value={u.typeOfRigUnit} />
+                <DetailRow label="Status" value={u.status} />
+                <DetailRow label="Fuel Consumption" value={u.fuelConsumption} />
+                <Separator className="lg:col-span-2"/>
+                <DetailRow label="Rig Vehicle Reg. No" value={u.rigVehicleRegNo} />
+                <DetailRow label="Compressor Vehicle Reg. No" value={u.compressorVehicleRegNo} />
+                <DetailRow label="Supporting Vehicle Reg. No" value={u.supportingVehicleRegNo} />
+                <Separator className="lg:col-span-2"/>
+                <div className="lg:col-span-2"><DetailRow label="Compressor Details" value={u.compressorDetails} /></div>
+                <div className="lg:col-span-2"><DetailRow label="Remarks" value={u.remarks} /></div>
+            </div>
         );
     }
 
     return (
-        <DialogContent className="max-w-2xl">
-            <DialogHeader>
-                <DialogTitle>{title}</DialogTitle>
-                <DialogDescription>
-                    A detailed overview of the selected vehicle or unit.
-                </DialogDescription>
-            </DialogHeader>
-            <ScrollArea className="max-h-[65vh] p-1 -m-1">
-                <div className="p-6 pt-0">
+        <DialogContent className="max-w-4xl">
+            <div className="p-8 border-2 border-blue-200 bg-blue-50/50 rounded-lg">
+                <div className="text-center mb-6 border-b-2 border-blue-200 pb-4">
+                    <BadgeCheck className="h-10 w-10 mx-auto text-blue-600 mb-2" />
+                    <h2 className="text-xl font-bold tracking-wider text-blue-800">CERTIFICATE OF REGISTRATION</h2>
+                    <p className="text-sm text-blue-700">Ground Water Department, Kollam</p>
+                </div>
+                <div className="px-4">
                     {details}
                 </div>
-            </ScrollArea>
-            <DialogFooter>
+            </div>
+            <DialogFooter className="p-6 pt-0">
                 <Button onClick={onClose} variant="outline">Close</Button>
             </DialogFooter>
         </DialogContent>
@@ -240,8 +224,6 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
                                         <span className="text-muted-foreground">{v.model}</span>
-                                        <span className="text-muted-foreground">{v.typeOfVehicle}</span>
-                                        <span className="text-muted-foreground">{v.vehicleClass}</span>
                                         <span className="text-muted-foreground">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
                                     </div>
                                 </button>
@@ -315,7 +297,6 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit, onView }: H
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
                                         <span className="text-muted-foreground">{v.model}</span>
-                                        <span className="text-muted-foreground">{v.vehicleClass}</span>
                                         <span className="text-muted-foreground">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
                                     </div>
                                 </button>
