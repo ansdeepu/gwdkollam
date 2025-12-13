@@ -1,13 +1,13 @@
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
+import React, { useState, useMemo } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Eye, Building, Truck, AlertTriangle } from "lucide-react";
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from "@/lib/schemas";
 import { format, isValid, isBefore, addDays } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { useState, useMemo } from "react";
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
@@ -76,9 +76,9 @@ const DetailRow = ({ label, value }: { label: string, value?: string | number | 
     const displayValue = (value === null || value === undefined || value === '') ? '-' : String(value);
     
     return (
-        <div className="text-center">
+        <div>
             <p className="text-sm text-gray-500">{label}</p>
-            <p className="font-bold text-lg text-black">{displayValue}</p>
+            <p className="font-bold text-black">{displayValue}</p>
         </div>
     );
 };
@@ -89,9 +89,9 @@ const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     const { colorClass } = getExpiryStatus(dateObject);
 
     return (
-        <div className="flex flex-col text-center">
+        <div className="flex items-baseline justify-between w-full">
             <span className="text-sm text-gray-500">{label}</span>
-            <span className={cn("font-bold text-lg", colorClass)}>
+            <span className={cn("font-bold", colorClass)}>
                 {displayDate}
             </span>
         </div>
@@ -113,23 +113,57 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         const isDepartment = 'fuelConsumptionRate' in v;
 
         details = (
-          <div className="w-full max-w-3xl mx-auto border-2 border-black bg-white p-6 font-sans">
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                  <DetailRow label="Mfg" value={v.model} />
-                  <DetailRow label="RC Status" value={v.rcStatus} />
-                  <DetailRow label="Fuel Consumption" value={(v as DepartmentVehicle).fuelConsumptionRate || '-'} />
+          <div className="w-full max-w-3xl mx-auto border-2 border-black bg-white p-6 font-serif text-black">
+              {/* Header */}
+              <div className="text-center space-y-1 mb-4">
+                  <h2 className="font-bold text-lg tracking-wider">VEHICLE REGISTRATION</h2>
+                  <p className="text-sm font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
+                  <p className="text-2xl font-bold tracking-widest pt-2">{v.registrationNumber}</p>
+                  <p className="text-md font-semibold">{v.typeOfVehicle || 'N/A'}</p>
               </div>
-              <Separator className="bg-black my-4 h-[2px]" />
-              <div className="text-center my-4">
-                  <h3 className="font-bold text-lg tracking-wide">Certificate Validity</h3>
+
+              {/* Top Details Grid */}
+              <div className="border-t-2 border-black pt-2 mb-2">
+                  <div className="grid grid-cols-4 gap-x-4 gap-y-2">
+                      <DetailRow label="Regd. date" value={formatDateSafe(v.registrationDate)} />
+                      <DetailRow label="Owner" value="Ground Water Department" />
+                      <DetailRow label="Address" value="Kollam, Kerala" />
+                      <DetailRow label="Class" value={v.vehicleClass} />
+
+                      <DetailRow label="Mfg" value={(v as any).model || '-'} />
+                      <DetailRow label="Rc status" value={v.rcStatus} />
+                      <DetailRow label="Fuel consumption" value={(v as DepartmentVehicle).fuelConsumptionRate || '-'} />
+                  </div>
               </div>
-              <div className="grid grid-cols-3 gap-y-6">
-                  <CertificateRow label="Fitness" date={v.fitnessExpiry} />
-                  <CertificateRow label="Tax" date={v.taxExpiry} />
-                  <CertificateRow label="Insurance" date={v.insuranceExpiry} />
-                  <CertificateRow label="Pollution" date={v.pollutionExpiry} />
-                  {isDepartment && <CertificateRow label="Fuel Test" date={(v as DepartmentVehicle).fuelTestExpiry} />}
-                  {isHired && <CertificateRow label="Permit" date={v.permitExpiry} />}
+
+              {/* Certificate Section */}
+              <div className="border-t-2 border-black pt-4 mt-4">
+                  <h3 className="text-center font-bold mb-4">Certificate Validity</h3>
+                  <div className="grid grid-cols-3 gap-x-8 gap-y-4">
+                      <div className="space-y-2">
+                          <CertificateRow label="Fitness" date={v.fitnessExpiry} />
+                      </div>
+                      <div className="space-y-2">
+                          <CertificateRow label="Tax" date={v.taxExpiry} />
+                      </div>
+                      <div className="space-y-2">
+                         <CertificateRow label="Insurance" date={v.insuranceExpiry} />
+                      </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-x-8 gap-y-4 mt-4">
+                     <div className="space-y-2">
+                          <CertificateRow label="Pollution" date={v.pollutionExpiry} />
+                      </div>
+                       <div className="space-y-2">
+                          {isDepartment && <CertificateRow label="Fuel Test" date={(v as DepartmentVehicle).fuelTestExpiry} />}
+                          {isHired && <CertificateRow label="Permit" date={v.permitExpiry} />}
+                      </div>
+                  </div>
+              </div>
+
+              {/* Footer */}
+              <div className="border-t-2 border-black mt-8 pt-10">
+                  <p className="text-right text-sm">signing authority</p>
               </div>
           </div>
         );
@@ -163,7 +197,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
             </DialogHeader>
              {details}
             <div className="flex justify-center mt-4 print:hidden">
-                <Button onClick={onClose}>Close</Button>
+                <Button onClick={onClose} variant="ghost" className="bg-white hover:bg-gray-100 text-black">Close</Button>
             </div>
         </DialogContent>
     );
