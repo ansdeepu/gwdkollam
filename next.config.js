@@ -52,5 +52,5 @@ const nextConfig = {
   },
 };
 
-// Trigger cache invalidation
+// Force cache invalidation by updating this comment.
 module.exports = nextConfig;
