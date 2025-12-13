@@ -110,26 +110,27 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         title = `Details for ${v.registrationNumber}`;
         details = (
             <div className="relative font-sans text-sm bg-white rounded-lg shadow-lg p-6 border border-gray-300 w-full max-w-xl mx-auto my-8">
-                <DialogHeader className="sr-only">
-                    <DialogTitle>{title}</DialogTitle>
-                    <DialogDescription>Details for {title}.</DialogDescription>
+                <DialogHeader>
+                    <DialogTitle className="sr-only">{title}</DialogTitle>
+                    <DialogDescription className="sr-only">Details for {title}.</DialogDescription>
                 </DialogHeader>
                 {/* Header */}
-                <div className="text-center mb-4 border-b-2 border-black pb-2">
-                    <h2 className="text-sm font-bold tracking-widest text-black">VEHICLE REGISTRATION</h2>
-                    <p className="text-xs text-gray-600">GROUND WATER DEPARTMENT, KOLLAM</p>
+                 <div className="text-center mb-4 pb-2">
+                    <Truck className="h-16 w-16 text-gray-400 mx-auto" />
+                    <p className="font-bold text-lg text-black tracking-wider leading-tight text-center break-words">{v.registrationNumber}</p>
                 </div>
                 
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-12 gap-x-6">
                     {/* Left Section */}
-                     <div className="col-span-3 space-y-1 flex flex-col items-center justify-center">
-                        <Truck className="h-16 w-16 text-gray-400" />
-                        <p className="font-bold text-lg text-black tracking-wider leading-tight text-center break-words">{v.registrationNumber}</p>
+                     <div className="col-span-12 space-y-1 flex flex-col items-center justify-center">
+                        <p className="text-sm font-bold text-gray-800">GOVERNMENT OF KERALA</p>
+                        <h2 className="text-sm font-bold tracking-widest text-black">VEHICLE REGISTRATION</h2>
+                        <p className="text-xs text-gray-600">GROUND WATER DEPARTMENT, KOLLAM</p>
                     </div>
 
                     {/* Right Section */}
-                    <div className="col-span-9 grid grid-cols-2 gap-x-6 gap-y-2">
+                    <div className="col-span-12 grid grid-cols-2 gap-x-6 gap-y-2 mt-4">
                         <DetailRow label="Regd. Date" value={formatDateSafe(v.registrationDate)} />
                         <DetailRow label="Class" value={v.vehicleClass} />
                         {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
@@ -305,7 +306,7 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit, onView }: H
                             <TableCell className="p-2 text-sm">{index + 1}</TableCell>
                             <TableCell className="p-2 text-sm font-medium whitespace-normal break-words">
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
-                                    <div className="flex flex-col">
+                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
                                         <span className="text-muted-foreground text-xs">{v.model}</span>
                                         <span className="text-muted-foreground text-xs">{v.vehicleClass}</span>
@@ -413,7 +414,7 @@ const ConfirmDeleteDialog = ({ isOpen, onOpenChange, onConfirm, itemName, isDele
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
         <AlertDialogContent>
             <AlertDialogHeader>
-                <DialogTitle>Are you sure?</DialogTitle>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                 <AlertDialogDescription>
                     This action will permanently delete <strong>{itemName || 'this item'}</strong>. This cannot be undone.
                 </AlertDialogDescription>
