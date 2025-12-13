@@ -239,6 +239,7 @@ export const SiteDetailSchema = z.object({
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
   remittedAmount: optionalNumber("Remitted Amount must be a valid number."),
   siteConditions: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteConditionsOptions).optional()),
+  accessibleRig: z.enum(['Yes', 'No']).optional().nullable(),
   tsAmount: optionalNumber("TS Amount must be a valid number."),
   additionalAS: z.enum(['Yes', 'No']).optional().nullable().default('No'),
   tenderNo: z.string().optional(),
