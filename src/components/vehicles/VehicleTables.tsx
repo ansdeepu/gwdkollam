@@ -1,3 +1,4 @@
+
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
@@ -76,9 +77,9 @@ const DetailRow = ({ label, value }: { label: string, value?: string | number | 
     const displayValue = (value === null || value === undefined || value === '') ? '-' : String(value);
     
     return (
-        <div>
-            <p className="text-sm text-gray-500">{label}</p>
-            <p className="font-bold text-black">{displayValue}</p>
+        <div className="text-center">
+            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{label}</p>
+            <p className="font-bold text-lg text-black">{displayValue}</p>
         </div>
     );
 };
@@ -116,29 +117,33 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
           <div className="w-full max-w-3xl mx-auto border-2 border-black bg-white p-6 font-serif text-black">
               {/* Header */}
               <div className="text-center space-y-1 mb-4">
-                  <h2 className="font-bold text-lg tracking-wider">VEHICLE REGISTRATION</h2>
-                  <p className="text-sm font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
-                  <p className="text-2xl font-bold tracking-widest pt-2">{v.registrationNumber}</p>
-                  <p className="text-md font-semibold">{v.typeOfVehicle || 'N/A'}</p>
+                  <h2 className="font-bold text-xl tracking-wider">VEHICLE REGISTRATION</h2>
+                  <p className="text-base font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
+                  <p className="text-4xl font-bold tracking-widest pt-2">{v.registrationNumber}</p>
+                  <p className="text-lg font-semibold">{v.typeOfVehicle || 'N/A'}</p>
               </div>
 
               {/* Top Details Grid */}
-              <div className="border-t-2 border-black pt-2 mb-2">
+                <div className="border-t-2 border-b-2 border-black py-2 mb-4">
+                    <div className="grid grid-cols-4 gap-x-4 gap-y-2">
+                        <DetailRow label="Regd. date" value={formatDateSafe(v.registrationDate)} />
+                        <DetailRow label="Owner" value="Ground Water Department" />
+                        <DetailRow label="Address" value="Kollam, Kerala" />
+                        <DetailRow label="Class" value={v.vehicleClass} />
+                    </div>
+                </div>
+              <div className="border-b-2 border-black pb-2 mb-4">
                   <div className="grid grid-cols-4 gap-x-4 gap-y-2">
-                      <DetailRow label="Regd. date" value={formatDateSafe(v.registrationDate)} />
-                      <DetailRow label="Owner" value="Ground Water Department" />
-                      <DetailRow label="Address" value="Kollam, Kerala" />
-                      <DetailRow label="Class" value={v.vehicleClass} />
-
-                      <DetailRow label="Mfg" value={(v as any).model || '-'} />
-                      <DetailRow label="Rc status" value={v.rcStatus} />
-                      <DetailRow label="Fuel consumption" value={(v as DepartmentVehicle).fuelConsumptionRate || '-'} />
+                      <DetailRow label="Mfg" value={v.model || '-'} />
+                      <DetailRow label="RC status" value={v.rcStatus} />
+                      <DetailRow label="Fuel Consumption" value={(v as DepartmentVehicle).fuelConsumptionRate || '-'} />
                   </div>
               </div>
 
+
               {/* Certificate Section */}
-              <div className="border-t-2 border-black pt-4 mt-4">
-                  <h3 className="text-center font-bold mb-4">Certificate Validity</h3>
+              <div className="pt-4">
+                  <h3 className="text-center font-bold text-lg mb-4">Certificate Validity</h3>
                   <div className="grid grid-cols-3 gap-x-8 gap-y-4">
                       <div className="space-y-2">
                           <CertificateRow label="Fitness" date={v.fitnessExpiry} />
@@ -162,8 +167,8 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
               </div>
 
               {/* Footer */}
-              <div className="border-t-2 border-black mt-8 pt-10">
-                  <p className="text-right text-sm">signing authority</p>
+              <div className="mt-16 pt-10">
+                  <p className="text-right text-base font-semibold">signing authority</p>
               </div>
           </div>
         );
@@ -314,7 +319,7 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit, onView }: H
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
-                                        <span className="text-muted-foreground text-xs">{v.model}</span>
+                                        <span className="text-muted-foreground text-xs">{v.model || 'N/A'}</span>
                                         <span className="text-muted-foreground text-xs">{v.vehicleClass}</span>
                                         <span className="text-muted-foreground text-xs">Reg: {formatDateSafe(v.registrationDate)}</span>
                                     </div>
