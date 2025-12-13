@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useState } from "react";
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogDescription, DialogTitle, DialogFooter } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogDescription, DialogFooter } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
 import { Card, CardContent } from "../ui/card";
 import { cn } from "@/lib/utils";
@@ -77,17 +77,17 @@ const getExpiryStatus = (expiryDate: Date | null): { status: 'Expired' | 'Expiri
 const DetailRow = ({ label, value }: { label: string, value?: string | number | null }) => {
     if (value === null || value === undefined || value === '') {
         return (
-            <div>
-                <span className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
-                <span className="block font-bold text-xs text-gray-800">-</span>
+             <div className="text-xs">
+                <span className="font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
+                <p className="font-bold text-black">-</p>
             </div>
         );
     }
     const displayValue = String(value);
     return (
-        <div>
-            <span className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
-            <span className="block font-bold text-xs text-gray-800 whitespace-nowrap">{displayValue}</span>
+        <div className="text-xs">
+            <span className="font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
+            <p className="font-bold text-black whitespace-nowrap">{displayValue}</p>
         </div>
     );
 };
@@ -121,54 +121,74 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         const isDepartment = 'fuelConsumptionRate' in v;
 
         details = (
-             <>
+            <>
                 <DialogHeader className="sr-only">
                     <DialogTitle>{title}</DialogTitle>
                     <DialogDescription>Details for {title}.</DialogDescription>
                 </DialogHeader>
-                <div className="relative font-sans text-sm bg-white rounded-lg shadow-lg p-6 border border-gray-300 w-full max-w-2xl mx-auto my-8">
-                    {/* Header */}
-                    <div className="text-center mb-4">
-                        <h1 className="font-bold text-lg tracking-wider">VEHICLE REGISTRATION</h1>
-                        <p className="text-xs font-semibold text-gray-500">GROUND WATER DEPARTMENT, KOLLAM</p>
+                <div className="bg-orange-50 font-serif text-black p-4 border-2 border-black max-w-2xl mx-auto my-8">
+                    <div className="text-center mb-2">
+                        <h1 className="font-bold text-lg">CERTIFICATE OF REGISTRATION</h1>
+                        <p className="text-xs font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
                     </div>
 
-                    {/* Main Content */}
-                    <div className="grid grid-cols-12 gap-4">
-                        {/* Left Side */}
-                        <div className="col-span-3 flex flex-col items-center space-y-4 pt-4">
-                            <Image src="https://i.postimg.cc/PqYp5d6B/kerala-logo-png-3.png" alt="Emblem" width={64} height={64} className="w-16 h-16" data-ai-hint="emblem logo" />
-                            <div className="w-20 h-24 bg-gray-200 border border-gray-400 rounded-sm flex items-center justify-center">
-                               <Truck className="h-10 w-10 text-gray-500"/>
+                    <div className="grid grid-cols-12 gap-2">
+                        {/* Left Side: Emblem and Chip */}
+                        <div className="col-span-3 flex flex-col items-center space-y-2">
+                             <Image src="https://i.postimg.cc/PqYp5d6B/kerala-logo-png-3.png" alt="Emblem" width={48} height={48} className="w-12 h-12" data-ai-hint="emblem logo" />
+                            <p className="text-xs font-bold writing-vertical-rl rotate-180">Form 23A</p>
+                            <div className="w-20 h-20 bg-gray-300 border-2 border-gray-500 grid grid-cols-4 grid-rows-4 gap-px p-1">
+                                {Array(16).fill(0).map((_, i) => <div key={i} className="bg-gray-400 border border-gray-500"></div>)}
                             </div>
                         </div>
-                        {/* Right Side */}
-                        <div className="col-span-9 grid grid-cols-2 gap-x-4 gap-y-2 text-gray-800">
-                            <div className="col-span-2">
-                                <span className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">REGD. NO.</span>
-                                <span className="block font-bold text-xl text-black whitespace-nowrap">{v.registrationNumber}</span>
+
+                        {/* Right Side: Details */}
+                        <div className="col-span-9 grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                             <div className="col-span-2">
+                                <span className="block font-bold text-lg text-black">{v.registrationNumber}</span>
+                            </div>
+                             {/* Left Column of Details */}
+                            <div className="space-y-1">
+                                <DetailRow label="REGD. DATE" value={formatDateSafe(v.registrationDate)} />
+                                <DetailRow label="OWNER" value={isDepartment ? "Ground Water Department" : "Hired"}/>
+                                <DetailRow label="ADDRESS" value="Kollam, Kerala"/>
+                                <DetailRow label="CHASSIS NO" value={isDepartment ? (v as DepartmentVehicle).chassisNo : 'N/A'} />
                             </div>
 
-                            <DetailRow label="REGD. DATE" value={formatDateSafe(v.registrationDate)} />
-                            <DetailRow label="RC STATUS" value={v.rcStatus} />
-                            <DetailRow label="CLASS OF VEHICLE" value={v.vehicleClass} />
-                            {isDepartment && <DetailRow label="TYPE OF VEHICLE" value={(v as DepartmentVehicle).typeOfVehicle} />}
-                            <DetailRow label="MODEL" value={v.model} />
-                            {isDepartment && <DetailRow label="CHASSIS NO" value={(v as DepartmentVehicle).chassisNo} />}
-                            {isDepartment && <DetailRow label="FUEL CONSUMPTION" value={(v as DepartmentVehicle).fuelConsumptionRate} />}
-                            {isHired && <DetailRow label="HIRE CHARGES" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}` : '-'} />}
-                            {isHired && <DetailRow label="AGREEMENT VALIDITY" value={formatDateSafe(v.agreementValidity)} />}
-                             <div className="col-span-2 mt-2 pt-2 border-t">
-                                <h3 className="text-xs font-semibold text-gray-500 uppercase mb-1">CERTIFICATE VALIDITY</h3>
-                                <div className="space-y-1">
-                                    <CertificateRow label="Fitness" date={v.fitnessExpiry} />
-                                    <CertificateRow label="Tax" date={v.taxExpiry} />
-                                    <CertificateRow label="Insurance" date={v.insuranceExpiry} />
-                                    <CertificateRow label="Pollution" date={v.pollutionExpiry} />
-                                    {isDepartment && <CertificateRow label="Fuel Test" date={(v as DepartmentVehicle).fuelTestExpiry} />}
-                                    {isHired && <CertificateRow label="Permit" date={v.permitExpiry} />}
-                                </div>
+                             {/* Right Column of Details */}
+                            <div className="space-y-1">
+                                <DetailRow label="CLASS" value={v.vehicleClass} />
+                                <DetailRow label="MFG" value={v.model} />
+                                <DetailRow label="FUEL USED" value={"DIESEL"} />
+                                <DetailRow label="TAX" value={"LIFETIME"} />
+                                {isDepartment && <DetailRow label="FUEL RATE" value={(v as DepartmentVehicle).fuelConsumptionRate} />}
+                                {isHired && <DetailRow label="HIRE CHARGES" value={`₹ ${v.hireCharges?.toLocaleString('en-IN') ?? '-'}`} />}
+                                {isHired && <DetailRow label="AGREEMENT" value={formatDateSafe(v.agreementValidity)} />}
                             </div>
+                        </div>
+                    </div>
+                     {/* Certificate Details */}
+                    <div className="mt-2 pt-2 border-t-2 border-black">
+                        <h3 className="text-center font-bold text-sm mb-1">CERTIFICATE VALIDITY</h3>
+                        <div className="grid grid-cols-2 gap-x-4 text-xs">
+                             <div>
+                                <div className="flex justify-between"><span className="font-semibold">FITNESS:</span><span>{formatDateSafe(v.fitnessExpiry)}</span></div>
+                                <div className="flex justify-between"><span className="font-semibold">TAX:</span><span>{formatDateSafe(v.taxExpiry)}</span></div>
+                                 {isDepartment && <div className="flex justify-between"><span className="font-semibold">FUEL TEST:</span><span>{formatDateSafe((v as DepartmentVehicle).fuelTestExpiry)}</span></div>}
+                            </div>
+                             <div>
+                                <div className="flex justify-between"><span className="font-semibold">INSURANCE:</span><span>{formatDateSafe(v.insuranceExpiry)}</span></div>
+                                <div className="flex justify-between"><span className="font-semibold">POLLUTION:</span><span>{formatDateSafe(v.pollutionExpiry)}</span></div>
+                                {isHired && <div className="flex justify-between"><span className="font-semibold">PERMIT:</span><span>{formatDateSafe(v.permitExpiry)}</span></div>}
+                            </div>
+                        </div>
+                    </div>
+                    {/* Footer */}
+                     <div className="mt-2 flex justify-end">
+                        <div className="text-center">
+                            <div className="w-24 h-10 border-b border-dashed border-black"></div>
+                            <p className="text-xs font-bold">Signing Authority</p>
+                            <p className="text-[10px]">BHOPAL RTO</p>
                         </div>
                     </div>
                 </div>
@@ -198,7 +218,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     }
 
     return (
-        <DialogContent className="max-w-xl p-0 bg-transparent border-0 shadow-none">
+        <DialogContent className="max-w-3xl p-0 bg-transparent border-0 shadow-none">
              {details}
             <DialogFooter className="p-4 pt-0 sm:justify-center">
                 <Button onClick={onClose} variant="secondary" className="w-full sm:w-auto">Close</Button>
