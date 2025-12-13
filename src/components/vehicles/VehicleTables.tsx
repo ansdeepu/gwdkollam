@@ -77,7 +77,7 @@ const DetailRow = ({ label, value }: { label: string, value?: string | number | 
     if (value === null || value === undefined || value === '') {
         return (
              <div className="text-xs">
-                <span className="font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
+                <span className="font-semibold text-gray-500 tracking-wider">{label}</span>
                 <p className="font-bold text-black">-</p>
             </div>
         );
@@ -85,7 +85,7 @@ const DetailRow = ({ label, value }: { label: string, value?: string | number | 
     const displayValue = String(value);
     return (
         <div className="text-xs">
-            <span className="font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
+            <span className="font-semibold text-gray-500 tracking-wider">{label}</span>
             <p className="font-bold text-black whitespace-pre-wrap break-words">{displayValue}</p>
         </div>
     );
@@ -134,36 +134,36 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     <div className="grid grid-cols-12 gap-4">
                         <div className="col-span-12">
                              <div className="text-center py-2">
-                                <span className="block font-bold text-2xl text-black tracking-wider">{v.registrationNumber}</span>
+                                <span className="block font-bold text-2xl text-black tracking-wider whitespace-nowrap">{v.registrationNumber}</span>
                             </div>
                         </div>
 
                         {/* Details Grid */}
                         <div className="col-span-12 grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3 text-xs border-t-2 border-b-2 border-black py-2">
-                            <DetailRow label="REGD. DATE" value={formatDateSafe(v.registrationDate)} />
-                            <DetailRow label="OWNER" value={isDepartment ? "Ground Water Department" : "Hired"}/>
-                            <DetailRow label="ADDRESS" value="Kollam, Kerala"/>
-                             <DetailRow label="CLASS" value={v.vehicleClass} />
-                            <DetailRow label="MFG" value={v.model} />
-                            <DetailRow label="FUEL USED" value={"DIESEL"} />
-                             <DetailRow label="CHASSIS NO" value={isDepartment ? (v as DepartmentVehicle).chassisNo : 'N/A'} />
+                            <DetailRow label="Regd. Date" value={formatDateSafe(v.registrationDate)} />
+                            <DetailRow label="Owner" value={isDepartment ? "Ground Water Department" : "Hired"}/>
+                            <DetailRow label="Address" value="Kollam, Kerala"/>
+                             <DetailRow label="Class" value={v.vehicleClass} />
+                            <DetailRow label="Mfg" value={v.model} />
+                            <DetailRow label="Fuel Used" value={"DIESEL"} />
+                             <DetailRow label="Chassis No" value={isDepartment ? (v as DepartmentVehicle).chassisNo : 'N/A'} />
                             <DetailRow label="RC Status" value={v.rcStatus} />
-                             {isDepartment && <DetailRow label="FUEL RATE" value={(v as DepartmentVehicle).fuelConsumptionRate} />}
-                             {isHired && <DetailRow label="HIRE CHARGES" value={`₹ ${v.hireCharges?.toLocaleString('en-IN') ?? '-'}`} />}
-                             {isHired && <DetailRow label="AGREEMENT" value={formatDateSafe(v.agreementValidity)} />}
-                             <DetailRow label="TAX" value={"LIFETIME"} />
+                             {isDepartment && <DetailRow label="Fuel Rate" value={(v as DepartmentVehicle).fuelConsumptionRate} />}
+                             {isHired && <DetailRow label="Hire Charges" value={`₹ ${v.hireCharges?.toLocaleString('en-IN') ?? '-'}`} />}
+                             {isHired && <DetailRow label="Agreement" value={formatDateSafe(v.agreementValidity)} />}
+                             <DetailRow label="Tax" value={"LIFETIME"} />
                         </div>
                     </div>
                      {/* Certificate Details */}
                     <div className="mt-2 pt-2 border-b-2 border-black pb-2">
-                        <h3 className="text-center font-bold text-sm mb-1">CERTIFICATE VALIDITY</h3>
+                        <h3 className="text-center font-bold text-sm mb-1">Certificate Validity</h3>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 text-xs">
-                             <div className="flex justify-between font-semibold"><span>FITNESS:</span><span>{formatDateSafe(v.fitnessExpiry)}</span></div>
-                             <div className="flex justify-between font-semibold"><span>TAX:</span><span>{formatDateSafe(v.taxExpiry)}</span></div>
-                             <div className="flex justify-between font-semibold"><span>INSURANCE:</span><span>{formatDateSafe(v.insuranceExpiry)}</span></div>
-                             <div className="flex justify-between font-semibold"><span>POLLUTION:</span><span>{formatDateSafe(v.pollutionExpiry)}</span></div>
-                            {isDepartment && <div className="flex justify-between font-semibold"><span>FUEL TEST:</span><span>{formatDateSafe((v as DepartmentVehicle).fuelTestExpiry)}</span></div>}
-                            {isHired && <div className="flex justify-between font-semibold"><span>PERMIT:</span><span>{formatDateSafe(v.permitExpiry)}</span></div>}
+                             <div className="flex justify-between font-semibold"><span>Fitness:</span><span>{formatDateSafe(v.fitnessExpiry)}</span></div>
+                             <div className="flex justify-between font-semibold"><span>Tax:</span><span>{formatDateSafe(v.taxExpiry)}</span></div>
+                             <div className="flex justify-between font-semibold"><span>Insurance:</span><span>{formatDateSafe(v.insuranceExpiry)}</span></div>
+                             <div className="flex justify-between font-semibold"><span>Pollution:</span><span>{formatDateSafe(v.pollutionExpiry)}</span></div>
+                            {isDepartment && <div className="flex justify-between font-semibold"><span>Fuel Test:</span><span>{formatDateSafe((v as DepartmentVehicle).fuelTestExpiry)}</span></div>}
+                            {isHired && <div className="flex justify-between font-semibold"><span>Permit:</span><span>{formatDateSafe(v.permitExpiry)}</span></div>}
                         </div>
                     </div>
                     {/* Footer */}
@@ -441,5 +441,3 @@ const ConfirmDeleteDialog = ({ isOpen, onOpenChange, onConfirm, itemName, isDele
         </AlertDialogContent>
     </AlertDialog>
 );
-
-    
