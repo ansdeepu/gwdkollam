@@ -1,4 +1,3 @@
-
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
@@ -11,7 +10,7 @@ import { format, isValid, isBefore, addDays } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { cn } from "@/lib/utils";
@@ -73,13 +72,13 @@ const getExpiryStatus = (expiryDate: Date | null): { status: 'Expired' | 'Expiri
     return { status: 'Valid', colorClass: 'text-black' };
 };
 
-const DetailRow = ({ label, value }: { label: string, value?: string | number | null }) => {
+const DetailRow = ({ label, value, isUppercase = false }: { label: string, value?: string | number | null, isUppercase?: boolean }) => {
     const displayValue = (value === null || value === undefined || value === '') ? '-' : String(value);
     
     return (
-        <div className="text-center">
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">{label}</p>
-            <p className="font-bold text-lg text-black">{displayValue}</p>
+        <div className="text-center px-1">
+            <p className={cn("text-xs uppercase tracking-wider text-gray-500", isUppercase && 'font-semibold')}>{label}</p>
+            <p className="font-bold text-base text-black">{displayValue}</p>
         </div>
     );
 };
@@ -105,7 +104,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
 
     let details: React.ReactNode;
     const isRigCompressor = !('registrationNumber' in vehicle);
-    const dialogWidthClass = isRigCompressor ? "max-w-md" : "max-w-4xl";
+    const dialogWidthClass = isRigCompressor ? "max-w-md" : "max-w-2xl";
     const title = isRigCompressor ? (vehicle as RigCompressor).typeOfRigUnit : (vehicle as DepartmentVehicle).registrationNumber;
 
     if ('registrationNumber' in vehicle) {
@@ -114,63 +113,50 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         const isDepartment = 'fuelConsumptionRate' in v;
 
         details = (
-          <div className="w-full max-w-3xl mx-auto border-2 border-black bg-white p-6 font-serif text-black">
-              {/* Header */}
-              <div className="text-center space-y-1 mb-4">
-                  <h2 className="font-bold text-xl tracking-wider">VEHICLE REGISTRATION</h2>
-                  <p className="text-base font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
-                  <p className="text-4xl font-bold tracking-widest pt-2">{v.registrationNumber}</p>
-                  <p className="text-lg font-semibold">{v.typeOfVehicle || 'N/A'}</p>
-              </div>
+            <div className="w-full max-w-2xl mx-auto border-2 border-black bg-white p-6 font-serif text-black">
+                {/* Header */}
+                <div className="text-center space-y-1 mb-4">
+                    <h2 className="font-bold text-lg tracking-wider">VEHICLE REGISTRATION</h2>
+                    <p className="text-sm font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
+                    <p className="text-3xl font-bold tracking-widest pt-2">{v.registrationNumber}</p>
+                    <p className="text-base font-semibold">{v.typeOfVehicle || 'N/A'}</p>
+                </div>
 
-              {/* Top Details Grid */}
+                {/* Top Details Grid */}
                 <div className="border-t-2 border-b-2 border-black py-2 mb-4">
-                    <div className="grid grid-cols-4 gap-x-4 gap-y-2">
-                        <DetailRow label="Regd. date" value={formatDateSafe(v.registrationDate)} />
-                        <DetailRow label="Owner" value="Ground Water Department" />
-                        <DetailRow label="Address" value="Kollam, Kerala" />
-                        <DetailRow label="Class" value={v.vehicleClass} />
+                    <div className="grid grid-cols-4 gap-x-2">
+                        <DetailRow label="REGD. DATE" value={formatDateSafe(v.registrationDate)} isUppercase />
+                        <DetailRow label="OWNER" value="Ground Water Department" isUppercase />
+                        <DetailRow label="ADDRESS" value="Kollam, Kerala" isUppercase />
+                        <DetailRow label="CLASS" value={v.vehicleClass} isUppercase />
                     </div>
                 </div>
-              <div className="border-b-2 border-black pb-2 mb-4">
-                  <div className="grid grid-cols-4 gap-x-4 gap-y-2">
-                      <DetailRow label="Mfg" value={v.model || '-'} />
-                      <DetailRow label="RC status" value={v.rcStatus} />
-                      <DetailRow label="Fuel Consumption" value={(v as DepartmentVehicle).fuelConsumptionRate || '-'} />
-                  </div>
-              </div>
+                <div className="border-b-2 border-black pb-2 mb-6">
+                     <div className="grid grid-cols-3 gap-x-2">
+                         <DetailRow label="MFG" value={v.model || '-'} isUppercase />
+                         <DetailRow label="RC STATUS" value={v.rcStatus} isUppercase />
+                         <DetailRow label="FUEL CONSUMPTION" value={isDepartment ? (v as DepartmentVehicle).fuelConsumptionRate || '-' : '-'} isUppercase />
+                    </div>
+                </div>
 
-
-              {/* Certificate Section */}
-              <div className="pt-4">
-                  <h3 className="text-center font-bold text-lg mb-4">Certificate Validity</h3>
-                  <div className="grid grid-cols-3 gap-x-8 gap-y-4">
-                      <div className="space-y-2">
-                          <CertificateRow label="Fitness" date={v.fitnessExpiry} />
-                      </div>
-                      <div className="space-y-2">
-                          <CertificateRow label="Tax" date={v.taxExpiry} />
-                      </div>
-                      <div className="space-y-2">
-                         <CertificateRow label="Insurance" date={v.insuranceExpiry} />
-                      </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-x-8 gap-y-4 mt-4">
-                     <div className="space-y-2">
-                          <CertificateRow label="Pollution" date={v.pollutionExpiry} />
-                      </div>
-                       <div className="space-y-2">
-                          {isDepartment && <CertificateRow label="Fuel Test" date={(v as DepartmentVehicle).fuelTestExpiry} />}
-                          {isHired && <CertificateRow label="Permit" date={v.permitExpiry} />}
-                      </div>
-                  </div>
-              </div>
-
-              {/* Footer */}
-              <div className="mt-16 pt-10">
-                  <p className="text-right text-base font-semibold">signing authority</p>
-              </div>
-          </div>
+                {/* Certificate Section */}
+                <div className="pt-2">
+                    <h3 className="text-center font-bold text-base mb-4">Certificate Validity</h3>
+                    <div className="grid grid-cols-3 gap-x-12 gap-y-4 text-sm">
+                        <CertificateRow label="Fitness" date={v.fitnessExpiry} />
+                        <CertificateRow label="Tax" date={v.taxExpiry} />
+                        <CertificateRow label="Insurance" date={v.insuranceExpiry} />
+                        <CertificateRow label="Pollution" date={v.pollutionExpiry} />
+                        {isDepartment && <CertificateRow label="Fuel Test" date={(v as DepartmentVehicle).fuelTestExpiry} />}
+                        {isHired && <CertificateRow label="Permit" date={v.permitExpiry} />}
+                    </div>
+                </div>
+                
+                {/* Footer */}
+                <div className="mt-16 pt-10">
+                    <p className="text-right text-sm font-semibold">signing authority</p>
+                </div>
+            </div>
         );
     } else {
         const u = vehicle as RigCompressor;
@@ -201,9 +187,6 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                 <DialogDescription>Viewing details for vehicle or unit {title}.</DialogDescription>
             </DialogHeader>
              {details}
-            <div className="flex justify-center mt-4 print:hidden">
-                <Button onClick={onClose} variant="ghost" className="bg-white hover:bg-gray-100 text-black">Close</Button>
-            </div>
         </DialogContent>
     );
 }
@@ -245,9 +228,6 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
                                         <span className="text-muted-foreground text-xs">{v.model}</span>
-                                        <span className="text-muted-foreground text-xs">{v.typeOfVehicle}</span>
-                                        <span className="text-muted-foreground text-xs">{v.vehicleClass}</span>
-                                        <span className="text-muted-foreground text-xs">Reg: {formatDateSafe(v.registrationDate)}</span>
                                     </div>
                                 </button>
                             </TableCell>
@@ -320,8 +300,6 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit, onView }: H
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
                                         <span className="text-muted-foreground text-xs">{v.model || 'N/A'}</span>
-                                        <span className="text-muted-foreground text-xs">{v.vehicleClass}</span>
-                                        <span className="text-muted-foreground text-xs">Reg: {formatDateSafe(v.registrationDate)}</span>
                                     </div>
                                 </button>
                             </TableCell>
