@@ -172,8 +172,8 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         <DialogContent className="max-w-md">
             <DialogHeader className="p-0">
               <div className="p-4 bg-blue-600 text-white rounded-t-lg">
-                <h2 className="text-lg font-bold tracking-wider">GROUND WATER DEPARTMENT</h2>
-                <p className="text-xs text-blue-100">Government of Kerala</p>
+                <DialogTitle className="text-lg font-bold tracking-wider text-white">GROUND WATER DEPARTMENT</DialogTitle>
+                <DialogDescription className="text-xs text-blue-100">Government of Kerala</DialogDescription>
               </div>
             </DialogHeader>
             <div className="p-6 pt-2">
@@ -229,7 +229,8 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
-                                        <span className="text-muted-foreground">{v.model}</span>
+                                        <span className="text-muted-foreground text-xs">{v.model} - {v.typeOfVehicle} ({v.vehicleClass})</span>
+                                        <span className="text-muted-foreground text-xs">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
                                     </div>
                                 </button>
                             </TableCell>
