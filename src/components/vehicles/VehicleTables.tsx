@@ -128,7 +128,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     <DialogTitle>{title}</DialogTitle>
                     <DialogDescription>Details for {title}.</DialogDescription>
                 </DialogHeader>
-                 <div className="bg-orange-50 font-serif text-black p-4 border-2 border-black max-w-4xl mx-auto my-8">
+                 <div className="font-serif text-black p-4 max-w-4xl mx-auto">
                     <div className="text-center mb-2">
                         <h1 className="font-bold text-lg">VEHICLE REGISTRATION</h1>
                         <p className="text-xs font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
@@ -150,7 +150,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                              <DetailRow label="class" value={v.vehicleClass} />
                             <DetailRow label="mfg" value={v.model} />
                             <DetailRow label="rc status" value={v.rcStatus} />
-                             {isDepartment && <DetailRow label="fuel consumption" value={(v as DepartmentVehicle).fuelConsumptionRate} />}
+                             {isDepartment && <DetailRow label="Fuel Consumption" value={(v as DepartmentVehicle).fuelConsumptionRate} />}
                              {isHired && <DetailRow label="hire charges" value={`₹ ${v.hireCharges?.toLocaleString('en-IN') ?? '-'}`} />}
                              {isHired && <DetailRow label="agreement" value={formatDateSafe(v.agreementValidity)} />}
                         </div>
@@ -158,7 +158,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                      {/* Certificate Details */}
                     <div className="mt-2 pt-2 border-b-2 border-black pb-2">
                         <h3 className="text-center font-bold text-sm mb-1">Certificate Validity</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-4">
                              <CertificateRow label="Fitness" date={v.fitnessExpiry} />
                              <CertificateRow label="Tax" date={v.taxExpiry} />
                              <CertificateRow label="Insurance" date={v.insuranceExpiry} />
