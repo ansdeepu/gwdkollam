@@ -83,19 +83,10 @@ const DetailRow = ({ label, value, isUppercase = false, valueClass, labelClass }
     );
 };
 
-const CertificateRow = ({ label, date, combined = false }: { label: string, date?: any, combined?: boolean }) => {
+const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     const displayDate = formatDateSafe(date);
     const dateObject = safeParseDate(date);
     const { colorClass } = getExpiryStatus(dateObject);
-
-    if (combined) {
-        return (
-            <div className="flex items-baseline justify-center">
-                <span className="text-sm text-gray-500 mr-1">{label}</span>
-                <span className={cn("font-bold text-sm", colorClass)}>{displayDate}</span>
-            </div>
-        );
-    }
 
     return (
         <div className="flex items-baseline justify-between w-full">
@@ -103,6 +94,19 @@ const CertificateRow = ({ label, date, combined = false }: { label: string, date
             <span className={cn("font-bold text-sm", colorClass)}>
                 {displayDate}
             </span>
+        </div>
+    );
+};
+
+const CertificateRowCombined = ({ label, date }: { label: string, date?: any }) => {
+    const displayDate = formatDateSafe(date);
+    const dateObject = safeParseDate(date);
+    const { colorClass } = getExpiryStatus(dateObject);
+
+    return (
+        <div className="flex items-center justify-center">
+            <span className="text-sm text-gray-500 mr-2">{label}</span>
+            <span className={cn("font-bold text-sm", colorClass)}>{displayDate}</span>
         </div>
     );
 };
@@ -132,7 +136,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     <h2 className="font-bold text-sm tracking-wider">VEHICLE REGISTRATION</h2>
                     <p className="text-xs font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
                     <p className="text-3xl font-bold tracking-widest pt-2">{v.registrationNumber}</p>
-                    <p className="text-base font-semibold">{v.typeOfVehicle || v.model || 'N/A'}</p>
+                    <p className="text-base font-semibold">{v.typeOfVehicle || 'N/A'}</p>
                 </div>
                 
                 <div className="space-y-4">
@@ -140,19 +144,21 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     <div className="grid grid-cols-2 gap-x-6 gap-y-2 py-3">
                         <DetailRow label="Regd. date" value={formatDateSafe(v.registrationDate)} />
                         <DetailRow label="Owner" value="Ground Water Department" />
-                        <DetailRow label="Mfg" value={(v as any).model || '-'} />
+                        <DetailRow label="Mfg" value={v.model || '-'} />
                         <DetailRow label="Class" value={v.vehicleClass} isUppercase={true} />
                         <DetailRow label="Address" value="Kollam, Kerala" />
                         <DetailRow label="RC status" value={v.rcStatus || '-'} />
                     </div>
-                     <div className="grid grid-cols-2 gap-x-6 gap-y-2 py-3 border-t-2 border-black">
-                        {isDepartment && <DetailRow label="Fuel consumption" value={(v as DepartmentVehicle).fuelConsumptionRate || '-'} />}
+                     <div className="grid grid-cols-3 gap-x-6 gap-y-2 py-3 border-t-2 border-black">
+                        {isDepartment && (
+                            <DetailRow label="Fuel consumption" value={(v as DepartmentVehicle).fuelConsumptionRate || '-'} labelClass="text-center" valueClass="text-center"/>
+                        )}
                          {isHired && (
                             <>
-                                <DetailRow label="Agreement Validity" value={formatDateSafe((v as HiredVehicle).agreementValidity)} />
-                                <div className='flex items-baseline justify-between'>
-                                  <p className="text-xs text-gray-500">Hire Charges</p>
-                                  <DetailRow label="" value={(v as HiredVehicle).hireCharges ? `Rs. ${(v as HiredVehicle).hireCharges?.toLocaleString('en-IN')}` : '-'} />
+                                <DetailRow label="Agreement Validity" value={formatDateSafe((v as HiredVehicle).agreementValidity)} labelClass="text-center" valueClass="text-center" />
+                                <div className="text-center">
+                                    <p className="text-xs text-gray-500">Hire Charges</p>
+                                    <DetailRow label="" value={(v as HiredVehicle).hireCharges ? `Rs. ${(v as HiredVehicle).hireCharges?.toLocaleString('en-IN')}` : '-'} />
                                 </div>
                             </>
                         )}
@@ -164,15 +170,17 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     <h3 className="text-center font-bold text-sm mb-4">Certificate Validity</h3>
                     <div className="grid grid-cols-3 gap-x-4 mb-2">
                         <CertificateRow label="Fitness" date={v.fitnessExpiry} />
-                         <div className="text-center">
-                            <CertificateRow label="Tax" date={v.taxExpiry} combined={true} />
-                         </div>
+                        <CertificateRowCombined label="Tax" date={v.taxExpiry} />
                         <CertificateRow label="Insurance" date={v.insuranceExpiry} />
                     </div>
                     <div className="grid grid-cols-3 gap-x-4">
                        <CertificateRow label="Pollution" date={v.pollutionExpiry} />
-                       {isDepartment && <div/>}
-                       {isHired && <div className="text-center"><CertificateRow label="Permit" date={v.permitExpiry} combined={true}/></div>}
+                       {isHired ? (
+                            <CertificateRowCombined label="Permit" date={(v as HiredVehicle).permitExpiry}/>
+                        ) : (
+                            <div/>
+                        )}
+                       {isDepartment && <CertificateRow label="Fuel Test" date={(v as DepartmentVehicle).fuelTestExpiry}/>}
                     </div>
                 </div>
                 
@@ -206,10 +214,6 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     
     return (
         <DialogContent className={cn("p-0 border-0 bg-transparent shadow-none w-auto", dialogWidthClass)}>
-            <DialogHeader className="sr-only">
-                <DialogTitle>Details for {title}</DialogTitle>
-                <DialogDescription>Viewing details for vehicle or unit {title}.</DialogDescription>
-            </DialogHeader>
              {details}
         </DialogContent>
     );
