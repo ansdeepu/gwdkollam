@@ -344,6 +344,8 @@ export const DataEntrySchema = z.object({
 
   fileStatus: z.enum(fileStatusOptions).optional(),
   remarks: z.string().optional(),
+  createdAt: z.any().optional(),
+  updatedAt: z.any().optional(),
 }).superRefine((data, ctx) => {
     if (!data.fileStatus) {
         ctx.addIssue({
