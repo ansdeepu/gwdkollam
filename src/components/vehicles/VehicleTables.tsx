@@ -1,4 +1,3 @@
-
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
@@ -16,6 +15,7 @@ import { ScrollArea } from "../ui/scroll-area";
 import { Card, CardContent } from "../ui/card";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
+import Image from "next/image";
 
 interface CommonTableProps {
     canEdit: boolean;
@@ -74,11 +74,19 @@ const getExpiryStatus = (expiryDate: Date | null): { status: 'Expired' | 'Expiri
 
 
 const DetailRow = ({ label, value }: { label: string, value?: string | number | null }) => {
-    const displayValue = (value === null || value === undefined || value === '') ? '-' : value;
+    if (value === null || value === undefined || value === '') {
+        return (
+            <div>
+                <span className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
+                <span className="block font-bold text-xs text-gray-800">-</span>
+            </div>
+        );
+    }
+    const displayValue = String(value);
     return (
-        <div className="text-sm">
-            <span className="block text-xs font-medium text-gray-500 uppercase tracking-wider">{label}</span>
-            <span className="block font-semibold text-gray-800">{displayValue}</span>
+        <div>
+            <span className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
+            <span className="block font-bold text-xs text-gray-800">{displayValue}</span>
         </div>
     );
 };
@@ -109,37 +117,46 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         const v = vehicle as DepartmentVehicle | HiredVehicle;
         title = `Details for ${v.registrationNumber}`;
         details = (
-            <>
+             <>
                 <DialogHeader className="sr-only">
                     <DialogTitle>{title}</DialogTitle>
                     <DialogDescription>Details for {title}.</DialogDescription>
                 </DialogHeader>
-                 <div className="bg-blue-600 text-white rounded-t-lg p-4 text-center relative">
-                    <Truck className="h-8 w-8 mx-auto mb-2" />
-                    <p className="font-bold text-lg tracking-wider leading-tight text-center whitespace-nowrap">{v.registrationNumber}</p>
-                </div>
-
-                <div className="p-6 space-y-4">
-                     <div className="grid grid-cols-2 gap-4">
-                        <DetailRow label="Model" value={v.model} />
-                        <DetailRow label="Class" value={v.vehicleClass} />
-                         {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
-                        <DetailRow label="Regd. Date" value={formatDateSafe(v.registrationDate)} />
-                        {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
-                        {'hireCharges' in v && <DetailRow label="Hire Charges" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}`: '-'} />}
-                        {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
-                         <DetailRow label="RC Status" value={v.rcStatus} />
+                <div className="relative font-sans text-sm bg-white rounded-lg shadow-lg p-4 border border-gray-300 w-full max-w-2xl mx-auto my-8">
+                    {/* Header */}
+                    <div className="text-center mb-2">
+                        <h1 className="font-bold text-base tracking-wider">CERTIFICATE OF REGISTRATION</h1>
+                        <p className="text-xs font-semibold text-gray-500">GROUND WATER DEPARTMENT, KOLLAM</p>
                     </div>
 
-                    <div className="mt-4 pt-4 border-t">
-                        <h4 className="text-center font-semibold text-sm uppercase text-gray-500 mb-2">Certificate Validity</h4>
-                        <div className="space-y-1">
-                             <CertificateRow label="Fitness" date={v.fitnessExpiry} />
-                             <CertificateRow label="Tax" date={v.taxExpiry} />
-                             <CertificateRow label="Insurance" date={v.insuranceExpiry} />
-                             <CertificateRow label="Pollution" date={v.pollutionExpiry} />
-                             {'fuelTestExpiry' in v && <CertificateRow label="Fuel Test" date={v.fuelTestExpiry} />}
-                             {'permitExpiry' in v && <CertificateRow label="Permit" date={v.permitExpiry} />}
+                    {/* Main Content */}
+                    <div className="grid grid-cols-12 gap-2">
+                        {/* Left Side */}
+                        <div className="col-span-3 flex flex-col items-center space-y-2">
+                            <Image src="https://i.postimg.cc/PqYp5d6B/kerala-logo-png-3.png" alt="Emblem" width={48} height={48} className="w-12 h-12" data-ai-hint="emblem logo" />
+                            <div className="w-16 h-16 bg-gray-200 border border-gray-400 rounded-sm flex items-center justify-center">
+                                <div className="w-8 h-10 border-2 border-gray-500 rounded-sm"></div>
+                            </div>
+                            <p className="text-[8px] font-bold transform -rotate-90 origin-center whitespace-nowrap" style={{ transformBox: 'fill-box', transformOrigin: 'center' }}>FORM 23A</p>
+                        </div>
+                        {/* Right Side */}
+                        <div className="col-span-9 grid grid-cols-2 gap-x-2 gap-y-1 text-gray-800">
+                             <div className="col-span-2">
+                                <span className="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider">REGD. NO.</span>
+                                <span className="block font-bold text-lg text-black">{v.registrationNumber}</span>
+                            </div>
+
+                            <DetailRow label="REGD. DATE" value={formatDateSafe(v.registrationDate)} />
+                            <DetailRow label="CLASS" value={v.vehicleClass} />
+
+                            <div className="col-span-2">
+                               <DetailRow label="TYPE OF VEHICLE" value={'typeOfVehicle' in v ? v.typeOfVehicle : v.model} />
+                            </div>
+
+                             {'chassisNo' in v && <DetailRow label="CH. NO" value={v.chassisNo} />}
+                             {'fuelConsumptionRate' in v && <DetailRow label="FUEL CONSUMPTION" value={v.fuelConsumptionRate} />}
+                             {'hireCharges' in v && <DetailRow label="HIRE CHARGES" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}` : '-'} />}
+                             {'agreementValidity' in v && <DetailRow label="AGREEMENT VALIDITY" value={formatDateSafe(v.agreementValidity)} />}
                         </div>
                     </div>
                 </div>
@@ -169,7 +186,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     }
 
     return (
-        <DialogContent className="max-w-md p-0">
+        <DialogContent className="max-w-2xl p-0 bg-transparent border-0 shadow-none">
              {details}
             <DialogFooter className="p-4 pt-0 sm:justify-center">
                 <Button onClick={onClose} variant="secondary" className="w-full sm:w-auto">Close</Button>
@@ -285,9 +302,9 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit, onView }: H
                     {(data || []).map((v, index) => (
                         <TableRow key={v.id}>
                             <TableCell className="p-2 text-sm">{index + 1}</TableCell>
-                             <TableCell className="p-2 text-sm font-medium">
+                            <TableCell className="p-2 text-sm font-medium">
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
-                                     <div className="flex flex-col">
+                                    <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
                                         <span className="text-muted-foreground text-xs">{v.model}</span>
                                         <span className="text-muted-foreground text-xs">{v.vehicleClass}</span>
@@ -410,7 +427,3 @@ const ConfirmDeleteDialog = ({ isOpen, onOpenChange, onConfirm, itemName, isDele
         </AlertDialogContent>
     </AlertDialog>
 );
-
-    
-
-    

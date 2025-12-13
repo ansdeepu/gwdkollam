@@ -1,4 +1,3 @@
-
 // src/lib/schemas.ts
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
@@ -541,6 +540,7 @@ export const DepartmentVehicleSchema = z.object({
     id: z.string().optional(),
     registrationNumber: z.string().min(1, "Registration Number is required."),
     model: z.string().optional(),
+    chassisNo: z.string().optional(),
     typeOfVehicle: z.string().optional(),
     vehicleClass: z.string().optional(),
     registrationDate: optionalDateSchema,
@@ -589,3 +589,4 @@ export type RigCompressor = z.infer<typeof RigCompressorSchema>;
     
 
     
+

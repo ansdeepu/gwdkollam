@@ -50,6 +50,7 @@ export function DepartmentVehicleForm({ initialData, onFormSubmit, onClose }: Fo
         defaultValues: {
             registrationNumber: initialData?.registrationNumber || '',
             model: initialData?.model || '',
+            chassisNo: initialData?.chassisNo || '',
             typeOfVehicle: initialData?.typeOfVehicle || '',
             vehicleClass: initialData?.vehicleClass || '',
             rcStatus: initialData?.rcStatus || undefined,
@@ -79,6 +80,7 @@ export function DepartmentVehicleForm({ initialData, onFormSubmit, onClose }: Fo
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <FormField name="registrationNumber" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Registration Number</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                         <FormField name="model" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                        <FormField name="chassisNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Chassis No</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                         <FormField name="typeOfVehicle" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Type of Vehicle</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                         <FormField name="vehicleClass" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Vehicle Class</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                         <FormField name="registrationDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Registration Date</FormLabel><FormControl><Input type="date" {...field} value={field.value ?? ''}/></FormControl><FormMessage/></FormItem> )}/>
