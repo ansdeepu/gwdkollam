@@ -97,7 +97,7 @@ const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     const { status, colorClass } = getExpiryStatus(expiryDate);
 
     return (
-        <div className="flex justify-between items-center text-sm py-1">
+        <div className="flex justify-between items-center text-sm py-2">
             <span className="font-medium text-gray-700">{label}</span>
             <div className="text-right">
                 <span className={cn("font-mono font-semibold", colorClass)}>
@@ -146,13 +146,10 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                             <DetailRow label="Address" value="Kollam, Kerala"/>
                              <DetailRow label="Class" value={v.vehicleClass} />
                             <DetailRow label="Mfg" value={v.model} />
-                            <DetailRow label="Fuel Used" value={"DIESEL"} />
-                             <DetailRow label="Chassis No" value={isDepartment ? (v as DepartmentVehicle).chassisNo : 'N/A'} />
                             <DetailRow label="RC Status" value={v.rcStatus} />
-                             {isDepartment && <DetailRow label="Fuel Rate" value={(v as DepartmentVehicle).fuelConsumptionRate} />}
+                             {isDepartment && <DetailRow label="Fuel Consumption" value={(v as DepartmentVehicle).fuelConsumptionRate} />}
                              {isHired && <DetailRow label="Hire Charges" value={`₹ ${v.hireCharges?.toLocaleString('en-IN') ?? '-'}`} />}
                              {isHired && <DetailRow label="Agreement" value={formatDateSafe(v.agreementValidity)} />}
-                             <DetailRow label="Tax" value={"LIFETIME"} />
                         </div>
                     </div>
                      {/* Certificate Details */}
@@ -160,7 +157,6 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                         <h3 className="text-center font-bold text-sm mb-1">Certificate Validity</h3>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-xs">
                              <div className="flex justify-between font-semibold"><span>Fitness:</span><span>{formatDateSafe(v.fitnessExpiry)}</span></div>
-                             <div className="flex justify-between font-semibold"><span>Tax:</span><span>{formatDateSafe(v.taxExpiry)}</span></div>
                              <div className="flex justify-between font-semibold"><span>Insurance:</span><span>{formatDateSafe(v.insuranceExpiry)}</span></div>
                              <div className="flex justify-between font-semibold"><span>Pollution:</span><span>{formatDateSafe(v.pollutionExpiry)}</span></div>
                             {isDepartment && <div className="flex justify-between font-semibold"><span>Fuel Test:</span><span>{formatDateSafe((v as DepartmentVehicle).fuelTestExpiry)}</span></div>}
