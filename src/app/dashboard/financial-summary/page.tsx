@@ -77,7 +77,7 @@ export default function FinancialSummaryPage() {
               const amount = Number(rd.amountRemitted) || 0;
               if (rd.remittedAccount === 'SBI') sbiCredit += amount;
               else if (rd.remittedAccount === 'STSB') stsbCredit += amount;
-              else if (rd.remittedAccount === 'RevenueHead') revenueHeadCreditDirect += amount;
+              else if (rd.remittedAccount === 'Revenue Head') revenueHeadCreditDirect += amount;
             }
           });
 

@@ -157,7 +157,7 @@ export default function DashboardPage() {
             purpose: entry.arsTypeOfScheme || 'ARS',
             fileNo: entry.fileNo,
             applicantName: 'ARS Scheme',
-            workStatus: entry.workStatus,
+            workStatus: entry.arsStatus,
             dateOfCompletion: entry.dateOfCompletion,
             totalExpenditure: entry.totalExpenditure || 0,
         }));

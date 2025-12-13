@@ -1,5 +1,4 @@
-
-      // src/components/dashboard/FinanceOverview.tsx
+// src/components/dashboard/FinanceOverview.tsx
 "use client";
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -76,7 +75,7 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
               if (rd.remittedAccount === 'SBI') sbiCredit += amount;
               else if (rd.remittedAccount === 'STSB') stsbCredit += amount;
               else if (rd.remittedAccount === 'Plan Fund') planFundCredit += amount;
-              else if (rd.remittedAccount === 'RevenueHead') revenueHeadCreditDirect += amount;
+              else if (rd.remittedAccount === 'Revenue Head') revenueHeadCreditDirect += amount;
             }
           });
 
@@ -172,7 +171,7 @@ export default function FinanceOverview({ allFileEntries, onOpenDialog, dates, o
               { key: 'date', label: 'Credited Date' },
             ];
             entry.remittanceDetails?.forEach(rd => {
-              if (rd.remittedAccount === 'RevenueHead' && checkDateInRange(rd.dateOfRemittance)) {
+              if (rd.remittedAccount === 'Revenue Head' && checkDateInRange(rd.dateOfRemittance)) {
                 dataForDialog.push({
                   fileNo: entry.fileNo || 'N/A', applicantName: entry.applicantName || 'N/A', siteNames, sitePurposes,
                   source: 'Direct Remittance', amount: Number(rd.amountRemitted || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
