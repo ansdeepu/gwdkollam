@@ -10,9 +10,8 @@ import { format, isValid, isBefore, addDays } from "date-fns";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Card, CardHeader, CardContent } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
 import Image from "next/image";
@@ -64,7 +63,7 @@ const getExpiryStatus = (expiryDate: Date | null): { status: 'Expired' | 'Expiri
     const thirtyDaysFromNow = addDays(today, 30);
 
     if (isBefore(expiryDate, today)) {
-        return { status: 'Expired', colorClass: 'text-destructive font-bold' };
+        return { status: 'Expired', colorClass: 'text-red-600 font-bold' };
     }
     if (isBefore(expiryDate, thirtyDaysFromNow)) {
         return { status: 'Expiring Soon', colorClass: 'text-orange-500 font-semibold' };
@@ -72,16 +71,17 @@ const getExpiryStatus = (expiryDate: Date | null): { status: 'Expired' | 'Expiri
     return { status: 'Valid', colorClass: 'text-black' };
 };
 
-const DetailRow = ({ label, value, isUppercase = false }: { label: string, value?: string | number | null, isUppercase?: boolean }) => {
+const DetailRow = ({ label, value, isUppercase = false, valueClass, labelClass }: { label: string, value?: string | number | null, isUppercase?: boolean, valueClass?: string, labelClass?: string }) => {
     const displayValue = (value === null || value === undefined || value === '') ? '-' : String(value);
     
     return (
-        <div className="text-center px-1">
-            <p className={cn("text-xs uppercase tracking-wider text-gray-500", isUppercase && 'font-semibold')}>{label}</p>
-            <p className="font-bold text-base text-black">{displayValue}</p>
+        <div className="text-left">
+            <p className={cn("text-xs text-gray-500", labelClass)}>{label}</p>
+            <p className={cn("font-bold text-sm text-black", valueClass, isUppercase && 'uppercase')}>{displayValue}</p>
         </div>
     );
 };
+
 
 const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     const displayDate = formatDateSafe(date);
@@ -104,7 +104,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
 
     let details: React.ReactNode;
     const isRigCompressor = !('registrationNumber' in vehicle);
-    const dialogWidthClass = isRigCompressor ? "max-w-md" : "max-w-2xl";
+    const dialogWidthClass = isRigCompressor ? "max-w-md" : "max-w-xl";
     const title = isRigCompressor ? (vehicle as RigCompressor).typeOfRigUnit : (vehicle as DepartmentVehicle).registrationNumber;
 
     if ('registrationNumber' in vehicle) {
@@ -113,39 +113,39 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         const isDepartment = 'fuelConsumptionRate' in v;
 
         details = (
-            <div className="w-full max-w-2xl mx-auto border-2 border-black bg-white p-6 font-serif text-black">
+            <div className="w-full mx-auto border-2 border-black bg-white p-6 font-serif text-black">
                 {/* Header */}
                 <div className="text-center space-y-1 mb-4">
-                    <h2 className="font-bold text-lg tracking-wider">VEHICLE REGISTRATION</h2>
-                    <p className="text-sm font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
+                    <h2 className="font-bold text-sm tracking-wider">VEHICLE REGISTRATION</h2>
+                    <p className="text-xs font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
                     <p className="text-3xl font-bold tracking-widest pt-2">{v.registrationNumber}</p>
                     <p className="text-base font-semibold">{v.typeOfVehicle || 'N/A'}</p>
                 </div>
 
                 {/* Top Details Grid */}
-                <div className="border-t-2 border-b-2 border-black py-2 mb-4">
-                    <div className="grid grid-cols-4 gap-x-2">
-                        <DetailRow label="REGD. DATE" value={formatDateSafe(v.registrationDate)} isUppercase />
-                        <DetailRow label="OWNER" value="Ground Water Department" isUppercase />
-                        <DetailRow label="ADDRESS" value="Kollam, Kerala" isUppercase />
-                        <DetailRow label="CLASS" value={v.vehicleClass} isUppercase />
+                <div className="space-y-3 border-t-2 border-black pt-3 mb-4">
+                   <div className="grid grid-cols-4 gap-x-4">
+                        <DetailRow label="Regd. date" value={formatDateSafe(v.registrationDate)} />
+                        <DetailRow label="Owner" value="Ground Water Department" />
+                        <DetailRow label="Address" value="Kollam, Kerala" />
+                        <DetailRow label="Class" value={v.vehicleClass} valueClass="uppercase" />
                     </div>
-                </div>
-                <div className="border-b-2 border-black pb-2 mb-6">
-                     <div className="grid grid-cols-3 gap-x-2">
-                         <DetailRow label="MFG" value={v.model || '-'} isUppercase />
-                         <DetailRow label="RC STATUS" value={v.rcStatus} isUppercase />
-                         <DetailRow label="FUEL CONSUMPTION" value={isDepartment ? (v as DepartmentVehicle).fuelConsumptionRate || '-' : '-'} isUppercase />
+                    <div className="grid grid-cols-4 gap-x-4">
+                        <DetailRow label="Mfg" value={v.model} />
+                        <DetailRow label="Rc status" value={v.rcStatus} />
+                         <DetailRow label="Fuel consumption" value={isDepartment ? (v as DepartmentVehicle).fuelConsumptionRate : '-'} />
                     </div>
                 </div>
 
                 {/* Certificate Section */}
-                <div className="pt-2">
-                    <h3 className="text-center font-bold text-base mb-4">Certificate Validity</h3>
-                    <div className="grid grid-cols-3 gap-x-12 gap-y-4 text-sm">
+                <div className="border-t-2 border-black pt-4 mb-4">
+                    <h3 className="text-center font-bold text-sm mb-4">Certificate Validity</h3>
+                    <div className="grid grid-cols-[1fr,auto,1fr] gap-x-6 items-baseline mb-4 text-sm">
                         <CertificateRow label="Fitness" date={v.fitnessExpiry} />
                         <CertificateRow label="Tax" date={v.taxExpiry} />
                         <CertificateRow label="Insurance" date={v.insuranceExpiry} />
+                    </div>
+                     <div className="grid grid-cols-[1fr,auto,1fr] gap-x-6 items-baseline text-sm">
                         <CertificateRow label="Pollution" date={v.pollutionExpiry} />
                         {isDepartment && <CertificateRow label="Fuel Test" date={(v as DepartmentVehicle).fuelTestExpiry} />}
                         {isHired && <CertificateRow label="Permit" date={v.permitExpiry} />}
@@ -153,8 +153,8 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                 </div>
                 
                 {/* Footer */}
-                <div className="mt-16 pt-10">
-                    <p className="text-right text-sm font-semibold">signing authority</p>
+                <div className="mt-8 pt-8 border-t-2 border-black">
+                    <p className="text-right text-sm">signing authority</p>
                 </div>
             </div>
         );
@@ -166,7 +166,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     <CardTitle className="text-xl font-bold">{u.typeOfRigUnit}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 text-center">
-                     <DetailRow label="Status" value={u.status} />
+                     <DetailRow label="Status" value={u.status} valueClass="uppercase" />
                     <DetailRow label="Fuel Consumption" value={u.fuelConsumption} />
                     <Separator />
                     <DetailRow label="Rig Vehicle Reg. No" value={u.rigVehicleRegNo} />
