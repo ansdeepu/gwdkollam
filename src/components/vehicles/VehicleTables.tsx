@@ -205,7 +205,9 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                 <TableHeader>
                     <TableRow>
                         <TableHead className="p-2 text-sm">Sl. No</TableHead>
-                        <TableHead className="p-2 text-sm min-w-[200px]">Reg. No</TableHead>
+                        <TableHead className="p-2 text-sm min-w-[150px]">Reg. No</TableHead>
+                        <TableHead className="p-2 text-sm">Model</TableHead>
+                        <TableHead className="p-2 text-sm">Type of Vehicle</TableHead>
                         <TableHead className="p-2 text-sm whitespace-normal">Fuel Consumption Rate</TableHead>
                         <TableHead className="p-2 text-sm">Fitness</TableHead>
                         <TableHead className="p-2 text-sm">Tax</TableHead>
@@ -223,11 +225,12 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
-                                        <span className="text-muted-foreground">{v.model}</span>
-                                        <span className="text-muted-foreground">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
+                                        <span className="text-muted-foreground text-xs">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
                                     </div>
                                 </button>
                             </TableCell>
+                            <TableCell className="p-2 text-sm">{v.model || '-'}</TableCell>
+                            <TableCell className="p-2 text-sm">{v.typeOfVehicle || '-'}</TableCell>
                             <TableCell className="p-2 text-sm">{v.fuelConsumptionRate || '-'}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.fitnessExpiry)}</TableCell>
                             <TableCell className="p-2 text-sm">{formatDateSafe(v.taxExpiry)}</TableCell>
@@ -297,7 +300,7 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit, onView }: H
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
                                         <span className="text-muted-foreground">{v.model}</span>
-                                        <span className="text-muted-foreground">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
+                                        <span className="text-muted-foreground text-xs">Reg. Date: {formatDateSafe(v.registrationDate)}</span>
                                     </div>
                                 </button>
                             </TableCell>
@@ -416,3 +419,5 @@ const ConfirmDeleteDialog = ({ isOpen, onOpenChange, onConfirm, itemName, isDele
         </AlertDialogContent>
     </AlertDialog>
 );
+
+    
