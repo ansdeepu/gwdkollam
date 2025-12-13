@@ -13,7 +13,7 @@ import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
-import { Card, CardContent } from "../ui/card";
+import { Card, CardContent, CardHeader } from "../ui/card";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
 import Image from "next/image";
@@ -78,7 +78,7 @@ const DetailRow = ({ label, value }: { label: string, value?: string | number | 
     if (value === null || value === undefined || value === '') {
         return (
              <div className="text-xs">
-                <span className="font-semibold text-gray-500 tracking-wider">{label}</span>
+                <span className="font-semibold text-gray-500">{label}</span>
                 <p className="font-bold text-black">-</p>
             </div>
         );
@@ -86,7 +86,7 @@ const DetailRow = ({ label, value }: { label: string, value?: string | number | 
     const displayValue = String(value);
     return (
         <div className="text-xs">
-            <span className="font-semibold text-gray-500 tracking-wider">{label}</span>
+            <span className="font-semibold text-gray-500">{label}</span>
             <p className="font-bold text-black whitespace-pre-wrap break-words">{displayValue}</p>
         </div>
     );
@@ -97,7 +97,7 @@ const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     const { status, colorClass } = getExpiryStatus(expiryDate);
 
     return (
-        <div className="flex justify-between items-center text-sm py-2">
+        <div className="flex justify-between items-center text-sm py-2.5">
             <span className="font-medium text-gray-700">{label}</span>
             <div className="text-right">
                 <span className={cn("font-mono font-semibold", colorClass)}>
