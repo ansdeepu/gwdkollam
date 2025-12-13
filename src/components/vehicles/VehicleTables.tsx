@@ -1,3 +1,4 @@
+
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
@@ -10,9 +11,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useState, useMemo } from "react";
 import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Dialog, DialogContent, DialogDescription } from "../ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "../ui/dialog";
 import { ScrollArea } from "../ui/scroll-area";
-import { Card, CardContent, CardHeader } from "../ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { cn } from "@/lib/utils";
 import { Separator } from "../ui/separator";
 import Image from "next/image";
@@ -72,23 +73,21 @@ const getExpiryStatus = (expiryDate: Date | null): { status: 'Expired' | 'Expiri
     return { status: 'Valid', colorClass: 'text-gray-700' };
 };
 
-
 const DetailRow = ({ label, value }: { label: string, value?: string | number | null }) => {
     const displayValue = (value === null || value === undefined || value === '') ? '-' : String(value);
     
     return (
         <div className="text-center">
-            <span className="text-xs font-semibold text-gray-500 capitalize">{label}</span>
-            <p className="font-bold text-black">{displayValue}</p>
+            <p className="text-xs text-gray-500 capitalize">{label}</p>
+            <p className="font-semibold text-black">{displayValue}</p>
         </div>
     );
 };
 
-
 const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     const displayDate = formatDateSafe(date);
     return (
-        <div className="flex justify-between items-center text-sm py-1.5">
+        <div className="flex justify-between items-center text-sm py-1.5 space-y-2">
             <span className="font-medium text-gray-700">{label}</span>
             <div className="text-right">
                 <span className="font-mono font-semibold text-black">
@@ -99,12 +98,13 @@ const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     );
 };
 
+
 export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVehicle | HiredVehicle | RigCompressor | null, onClose: () => void }) {
     if (!vehicle) return null;
 
     let details: React.ReactNode;
     let isRigCompressor = !('registrationNumber' in vehicle);
-    let dialogWidthClass = isRigCompressor ? "max-w-md" : "max-w-4xl";
+    let dialogWidthClass = isRigCompressor ? "max-w-md" : "max-w-xl";
     let title = isRigCompressor ? (vehicle as RigCompressor).typeOfRigUnit : (vehicle as DepartmentVehicle).registrationNumber;
 
     if ('registrationNumber' in vehicle) {
@@ -113,7 +113,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         const isDepartment = 'fuelConsumptionRate' in v;
 
         details = (
-            <div className="font-serif text-black p-4 border-2 border-black bg-white">
+            <div className="font-serif text-black p-4 border-2 border-black bg-white print:border-0 print:shadow-none">
                 <div className="text-center mb-2">
                     <h1 className="font-bold text-lg">VEHICLE REGISTRATION</h1>
                     <p className="text-xs font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
@@ -122,7 +122,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     <span className="block font-bold text-2xl text-black tracking-wider whitespace-nowrap">{v.registrationNumber.toUpperCase()}</span>
                     <span className="block font-semibold text-lg text-gray-800 capitalize">{v.typeOfVehicle}</span>
                 </div>
-                <div className="grid grid-cols-4 gap-4 border-t-2 border-b-2 border-black py-2 my-2">
+                <div className="grid grid-cols-2 gap-x-4 border-t-2 border-b-2 border-black py-2 my-2">
                     <DetailRow label="Regd. date" value={formatDateSafe(v.registrationDate)} />
                     <DetailRow label="Owner" value={isDepartment ? "Ground Water Department" : "Hired"}/>
                     <DetailRow label="Address" value="Kollam, Kerala"/>
@@ -134,7 +134,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                 </div>
                 <div className="mt-2 pt-2 border-b-2 border-black pb-2">
                     <h3 className="text-center font-bold text-sm mb-1">Certificate Validity</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6">
                         <CertificateRow label="Fitness" date={v.fitnessExpiry} />
                         <CertificateRow label="Tax" date={v.taxExpiry} />
                         <CertificateRow label="Insurance" date={v.insuranceExpiry} />
@@ -158,7 +158,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                 <CardHeader>
                     <CardTitle className="text-xl font-bold">{u.typeOfRigUnit}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 text-center">
                      <DetailRow label="Status" value={u.status} />
                     <DetailRow label="Fuel Consumption" value={u.fuelConsumption} />
                     <Separator />
@@ -180,7 +180,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                 <DialogDescription>Viewing details for vehicle or unit {title}.</DialogDescription>
             </DialogHeader>
              {details}
-            <div className="flex justify-center mt-4">
+            <div className="flex justify-center mt-4 print:hidden">
                 <Button onClick={onClose}>Close</Button>
             </div>
         </DialogContent>
