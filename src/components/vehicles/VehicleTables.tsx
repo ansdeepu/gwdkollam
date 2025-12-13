@@ -72,13 +72,13 @@ const getExpiryStatus = (expiryDate: Date | null): { status: 'Expired' | 'Expiri
     return { status: 'Valid', colorClass: 'text-black' };
 };
 
-const DetailRow = ({ label, value, isUppercase = false, valueClass, labelClass }: { label: string, value?: string | number | null, isUppercase?: boolean, valueClass?: string, labelClass?: string }) => {
+const DetailRow = ({ label, value, isUppercase = false }: { label: string, value?: string | number | null, isUppercase?: boolean }) => {
     const displayValue = (value === null || value === undefined || value === '') ? '-' : String(value);
     
     return (
-        <div className="flex justify-between items-baseline">
-            <p className={cn("text-xs text-gray-500", labelClass)}>{label}</p>
-            <p className={cn("font-bold text-sm text-black", valueClass, isUppercase && 'uppercase')}>{displayValue}</p>
+        <div>
+            <p className="text-xs text-gray-500">{label}</p>
+            <p className={cn("font-bold text-sm text-black", isUppercase && 'uppercase')}>{displayValue}</p>
         </div>
     );
 };
@@ -104,13 +104,12 @@ const CertificateRowCombined = ({ label, date }: { label: string, date?: any }) 
     const { colorClass } = getExpiryStatus(dateObject);
 
     return (
-        <div className="flex items-center justify-center">
-            <span className="text-sm text-gray-500 mr-2">{label}</span>
+        <div className="flex items-center justify-start gap-4">
+            <span className="text-sm text-gray-500">{label}</span>
             <span className={cn("font-bold text-sm", colorClass)}>{displayDate}</span>
         </div>
     );
 };
-
 
 export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVehicle | HiredVehicle | RigCompressor | null, onClose: () => void }) {
     if (!vehicle) return null;
@@ -139,48 +138,46 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     <p className="text-base font-semibold">{v.typeOfVehicle || 'N/A'}</p>
                 </div>
                 
-                <div className="space-y-4">
+                <div className="space-y-2">
                     {/* Top Details Grid */}
-                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 py-3">
+                    <div className="grid grid-cols-4 gap-x-6 gap-y-3 py-2">
                         <DetailRow label="Regd. date" value={formatDateSafe(v.registrationDate)} />
                         <DetailRow label="Owner" value="Ground Water Department" />
-                        <DetailRow label="Mfg" value={v.model || '-'} />
-                        <DetailRow label="Class" value={v.vehicleClass} isUppercase={true} />
                         <DetailRow label="Address" value="Kollam, Kerala" />
-                        <DetailRow label="RC status" value={v.rcStatus || '-'} />
-                    </div>
-                     <div className="grid grid-cols-3 gap-x-6 gap-y-2 py-3 border-t-2 border-black">
+                        <DetailRow label="Class" value={v.vehicleClass} isUppercase={true} />
+                        
+                        <DetailRow label="Mfg" value={v.model || '-'} />
+                        <DetailRow label="Rc status" value={v.rcStatus || '-'} />
+                        
                         {isDepartment && (
-                            <DetailRow label="Fuel consumption" value={(v as DepartmentVehicle).fuelConsumptionRate || '-'} labelClass="text-center" valueClass="text-center"/>
+                            <DetailRow label="Fuel consumption" value={(v as DepartmentVehicle).fuelConsumptionRate || '-'} />
                         )}
                          {isHired && (
-                            <>
-                                <DetailRow label="Agreement Validity" value={formatDateSafe((v as HiredVehicle).agreementValidity)} labelClass="text-center" valueClass="text-center" />
-                                <div className="text-center">
-                                    <p className="text-xs text-gray-500">Hire Charges</p>
-                                    <DetailRow label="" value={(v as HiredVehicle).hireCharges ? `Rs. ${(v as HiredVehicle).hireCharges?.toLocaleString('en-IN')}` : '-'} />
-                                </div>
-                            </>
+                             <>
+                                <DetailRow label="Agreement Validity" value={formatDateSafe((v as HiredVehicle).agreementValidity)} />
+                                 <DetailRow label="Hire Charges" value={(v as HiredVehicle).hireCharges ? `Rs. ${(v as HiredVehicle).hireCharges?.toLocaleString('en-IN')}` : '-'} />
+                             </>
                         )}
                     </div>
                 </div>
 
                 {/* Certificate Section */}
-                <div className="pt-4 mb-4 border-t-2 border-black">
+                <div className="pt-4 mt-4 mb-4 border-t-2 border-black">
                     <h3 className="text-center font-bold text-sm mb-4">Certificate Validity</h3>
-                    <div className="grid grid-cols-3 gap-x-4 mb-2">
+                    <div className="grid grid-cols-[1fr_auto_1fr] gap-x-6 gap-y-4 items-center">
+                        {/* Row 1 */}
                         <CertificateRow label="Fitness" date={v.fitnessExpiry} />
                         <CertificateRowCombined label="Tax" date={v.taxExpiry} />
                         <CertificateRow label="Insurance" date={v.insuranceExpiry} />
-                    </div>
-                    <div className="grid grid-cols-3 gap-x-4">
-                       <CertificateRow label="Pollution" date={v.pollutionExpiry} />
-                       {isHired ? (
-                            <CertificateRowCombined label="Permit" date={(v as HiredVehicle).permitExpiry}/>
-                        ) : (
-                            <div/>
-                        )}
-                       {isDepartment && <CertificateRow label="Fuel Test" date={(v as DepartmentVehicle).fuelTestExpiry}/>}
+
+                        {/* Row 2 */}
+                        <CertificateRow label="Pollution" date={v.pollutionExpiry} />
+                        {isDepartment ? (
+                            <CertificateRowCombined label="Fuel Test" date={(v as DepartmentVehicle).fuelTestExpiry} />
+                        ) : isHired ? (
+                             <CertificateRowCombined label="Permit" date={(v as HiredVehicle).permitExpiry}/>
+                        ) : <div />}
+                        <div />
                     </div>
                 </div>
                 
@@ -198,7 +195,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     <CardTitle className="text-xl font-bold">{u.typeOfRigUnit}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4 text-center">
-                     <DetailRow label="Status" value={u.status} valueClass="uppercase" />
+                     <DetailRow label="Status" value={u.status} isUppercase />
                     <DetailRow label="Fuel Consumption" value={u.fuelConsumption} />
                     <Separator />
                     <DetailRow label="Rig Vehicle Reg. No" value={u.rigVehicleRegNo} />
@@ -258,7 +255,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                                         {v.model && <span className="text-muted-foreground text-xs">{v.model}</span>}
                                         {v.typeOfVehicle && <span className="text-muted-foreground text-xs">{v.typeOfVehicle}</span>}
                                         {v.vehicleClass && <span className="text-muted-foreground text-xs">{v.vehicleClass}</span>}
-                                        <span className="text-muted-foreground text-xs">Reg: {formatDateSafe(v.registrationDate)}</span>
+                                        {v.registrationDate && <span className="text-muted-foreground text-xs">Reg: {formatDateSafe(v.registrationDate)}</span>}
                                     </div>
                                 </button>
                             </TableCell>
@@ -328,11 +325,11 @@ export function HiredVehicleTable({ data, onEdit, onDelete, canEdit, onView }: H
                             <TableCell className="p-2 text-sm">{index + 1}</TableCell>
                             <TableCell className="p-2 text-sm font-medium">
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
-                                    <div className="flex flex-col">
+                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
                                         {v.model && <span className="text-muted-foreground text-xs">{v.model}</span>}
                                         {v.vehicleClass && <span className="text-muted-foreground text-xs">{v.vehicleClass}</span>}
-                                        <span className="text-muted-foreground text-xs">Reg: {formatDateSafe(v.registrationDate)}</span>
+                                        {v.registrationDate && <span className="text-muted-foreground text-xs">Reg: {formatDateSafe(v.registrationDate)}</span>}
                                     </div>
                                 </button>
                             </TableCell>
