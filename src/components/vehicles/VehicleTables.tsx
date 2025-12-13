@@ -1,3 +1,4 @@
+
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
@@ -157,7 +158,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                      {/* Certificate Details */}
                     <div className="mt-2 pt-2 border-b-2 border-black pb-2">
                         <h3 className="text-center font-bold text-sm mb-1">Certificate Validity</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 text-xs">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-xs">
                              <div className="flex justify-between font-semibold"><span>Fitness:</span><span>{formatDateSafe(v.fitnessExpiry)}</span></div>
                              <div className="flex justify-between font-semibold"><span>Tax:</span><span>{formatDateSafe(v.taxExpiry)}</span></div>
                              <div className="flex justify-between font-semibold"><span>Insurance:</span><span>{formatDateSafe(v.insuranceExpiry)}</span></div>
