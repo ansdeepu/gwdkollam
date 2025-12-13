@@ -109,10 +109,10 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         const v = vehicle as DepartmentVehicle | HiredVehicle;
         title = `Details for ${v.registrationNumber}`;
         details = (
-             <div className="relative font-sans text-xs bg-white rounded-lg shadow-lg p-6 border border-gray-300 w-full max-w-4xl mx-auto my-8">
-                <DialogHeader>
-                    <DialogTitle className="sr-only">{title}</DialogTitle>
-                    <DialogDescription className="sr-only">Details for {title}.</DialogDescription>
+             <div className="relative font-sans text-sm bg-white rounded-lg shadow-lg p-6 border border-gray-300 w-full max-w-xl mx-auto my-8">
+                <DialogHeader className="sr-only">
+                    <DialogTitle>{title}</DialogTitle>
+                    <DialogDescription>Details for {title}.</DialogDescription>
                 </DialogHeader>
                 {/* Header */}
                 <div className="text-center mb-4 border-b-2 border-black pb-2">
@@ -123,7 +123,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                 {/* Main Content Grid */}
                 <div className="grid grid-cols-12 gap-x-6">
                     {/* Left Section */}
-                     <div className="col-span-3 space-y-3 flex flex-col items-center justify-center">
+                     <div className="col-span-3 space-y-2 flex flex-col items-center justify-center">
                         <Truck className="h-16 w-16 text-gray-400" />
                         <p className="font-bold text-lg text-black tracking-wider leading-tight">{v.registrationNumber}</p>
                     </div>
