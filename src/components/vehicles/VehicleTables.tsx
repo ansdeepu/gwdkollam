@@ -1,4 +1,3 @@
-
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
@@ -227,7 +226,7 @@ export function DepartmentVehicleTable({ data, onEdit, onDelete, canEdit, onView
                     {(data || []).map((v, index) => (
                         <TableRow key={v.id}>
                             <TableCell className="p-2 text-sm">{index + 1}</TableCell>
-                            <TableCell className="p-2 text-sm font-medium whitespace-normal break-words">
+                             <TableCell className="p-2 text-sm font-medium whitespace-normal break-words">
                                 <button onClick={() => onView(v)} className="text-left hover:underline">
                                     <div className="flex flex-col">
                                         <span className="font-bold">{v.registrationNumber}</span>
