@@ -97,7 +97,7 @@ const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     const { status, colorClass } = getExpiryStatus(expiryDate);
 
     return (
-        <div className="flex justify-between items-center text-sm py-2.5">
+        <div className="flex justify-between items-center text-sm py-3 border-b border-black/10 last:border-b-0">
             <span className="font-medium text-gray-700">{label}</span>
             <div className="text-right">
                 <span className={cn("font-mono font-semibold", colorClass)}>
@@ -136,6 +136,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                         <div className="col-span-12">
                              <div className="text-center py-2">
                                 <span className="block font-bold text-2xl text-black tracking-wider whitespace-nowrap">{v.registrationNumber}</span>
+                                <span className="block font-semibold text-sm text-gray-800">{v.typeOfVehicle}</span>
                             </div>
                         </div>
 
@@ -155,7 +156,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                      {/* Certificate Details */}
                     <div className="mt-2 pt-2 border-b-2 border-black pb-2">
                         <h3 className="text-center font-bold text-sm mb-1">Certificate Validity</h3>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3 text-xs">
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6">
                              <CertificateRow label="Fitness" date={v.fitnessExpiry} />
                              <CertificateRow label="Tax" date={v.taxExpiry} />
                              <CertificateRow label="Insurance" date={v.insuranceExpiry} />
