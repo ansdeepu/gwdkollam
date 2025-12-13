@@ -193,14 +193,14 @@ export function RigCompressorTable({ data, onEdit, onDelete, canEdit }: RigCompr
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead className="p-2 text-xs">Sl. No</TableHead>
-                        <TableHead className="p-2 text-xs">Type of Rig Unit</TableHead>
-                        <TableHead className="p-2 text-xs">Status</TableHead>
-                        <TableHead className="p-2 text-xs">Rig Vehicle Reg. No</TableHead>
-                        <TableHead className="p-2 text-xs">Compressor Vehicle Reg. No</TableHead>
-                        <TableHead className="p-2 text-xs">Supporting Vehicle Reg. No</TableHead>
-                        <TableHead className="p-2 text-xs">Compressor Details</TableHead>
-                        {canEdit && <TableHead className="text-right p-2 text-xs">Actions</TableHead>}
+                        <TableHead className="p-2 text-xs whitespace-normal">Sl. No</TableHead>
+                        <TableHead className="p-2 text-xs whitespace-normal">Type of Rig Unit</TableHead>
+                        <TableHead className="p-2 text-xs whitespace-normal">Status</TableHead>
+                        <TableHead className="p-2 text-xs whitespace-normal">Rig Vehicle Reg. No</TableHead>
+                        <TableHead className="p-2 text-xs whitespace-normal">Compressor Vehicle Reg. No</TableHead>
+                        <TableHead className="p-2 text-xs whitespace-normal">Supporting Vehicle Reg. No</TableHead>
+                        <TableHead className="p-2 text-xs whitespace-normal">Compressor Details</TableHead>
+                        {canEdit && <TableHead className="text-right p-2 text-xs whitespace-normal">Actions</TableHead>}
                     </TableRow>
                 </TableHeader>
                 <TableBody>
