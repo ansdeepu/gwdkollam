@@ -90,7 +90,7 @@ const CertificateRow = ({ label, date }: { label: string, date?: any }) => {
     const hasAlert = status === 'Expired' || status === 'Expiring Soon';
 
     return (
-        <div className="grid grid-cols-2 items-center text-sm py-1">
+        <div className="grid grid-cols-2 items-center text-sm py-0.5">
             <span className="font-medium flex items-center gap-2">
                 {hasAlert && <AlertTriangle className={cn("h-4 w-4", colorClass)} />}
                 {label}
@@ -120,25 +120,29 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
         title = vehicle.registrationNumber;
         const v = vehicle as DepartmentVehicle | HiredVehicle;
         details = (
-            <div className="space-y-4">
-                 <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                 <div className="col-span-2 space-y-2">
                     <h4 className="font-semibold text-primary border-b pb-1">Vehicle Particulars</h4>
-                    <DetailRow label="Registration Number" value={v.registrationNumber} />
-                    <DetailRow label="Model" value={v.model} />
-                    {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
-                    <DetailRow label="Vehicle Class" value={v.vehicleClass} />
-                    <DetailRow label="RC Status" value={v.rcStatus} />
-                    {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
+                    <div className="grid grid-cols-3 gap-4">
+                        <DetailRow label="Registration Number" value={v.registrationNumber} />
+                        <DetailRow label="Model" value={v.model} />
+                        {'typeOfVehicle' in v && <DetailRow label="Type of Vehicle" value={v.typeOfVehicle} />}
+                        <DetailRow label="Vehicle Class" value={v.vehicleClass} />
+                        <DetailRow label="RC Status" value={v.rcStatus} />
+                        {'fuelConsumptionRate' in v && <DetailRow label="Fuel Consumption" value={v.fuelConsumptionRate} />}
+                    </div>
                 </div>
-                 <div className="space-y-2">
+                 <div className="col-span-1 space-y-2">
                     <h4 className="font-semibold text-primary border-b pb-1">Registration Details</h4>
-                    <DetailRow label="Date of Registration" value={formatDateSafe(v.registrationDate)} />
-                    {'hireCharges' in v && <DetailRow label="Hire Charges" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}`: '-'} />}
-                    {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
+                     <div className="space-y-2">
+                        <DetailRow label="Date of Registration" value={formatDateSafe(v.registrationDate)} />
+                        {'hireCharges' in v && <DetailRow label="Hire Charges" value={v.hireCharges ? `₹ ${v.hireCharges.toLocaleString('en-IN')}`: '-'} />}
+                        {'agreementValidity' in v && <DetailRow label="Agreement Validity" value={formatDateSafe(v.agreementValidity)} />}
+                    </div>
                 </div>
-                <div className="pt-2">
+                <div className="col-span-1 pt-2">
                      <h4 className="font-semibold text-primary border-b pb-1 mb-2">Certificate Validity</h4>
-                     <div className="space-y-1">
+                     <div className="space-y-0.5">
                         <CertificateRow label="Fitness" date={v.fitnessExpiry} />
                         <CertificateRow label="Tax" date={v.taxExpiry} />
                         <CertificateRow label="Insurance" date={v.insuranceExpiry} />
@@ -169,8 +173,8 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     }
 
     return (
-        <DialogContent className="max-w-md">
-            <DialogHeader className="p-0">
+        <DialogContent className="max-w-2xl">
+            <DialogHeader className="p-0 mb-4">
               <div className="p-4 bg-blue-600 text-white rounded-t-lg">
                 <DialogTitle className="text-lg font-bold tracking-wider text-white">GROUND WATER DEPARTMENT</DialogTitle>
                 <DialogDescription className="text-xs text-blue-100">Government of Kerala</DialogDescription>
