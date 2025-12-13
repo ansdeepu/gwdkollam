@@ -15,13 +15,13 @@ export default function FileDatabasePage() {
     setHeader('All File Entries', 'Browse, view, edit, or delete submitted file entries.');
   }, [setHeader]);
 
-  const { fileEntries } = useFileEntries();
+  const { fileEntries, isLoading } = useFileEntries();
 
   return (
     <div className="space-y-6">
       <Card className="shadow-lg">
         <CardContent className="pt-6">
-          <FileDatabaseTable fileEntries={fileEntries} />
+          <FileDatabaseTable fileEntries={fileEntries} isLoading={isLoading} searchActive={false} />
         </CardContent>
       </Card>
     </div>
