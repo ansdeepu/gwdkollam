@@ -1,3 +1,4 @@
+
 // src/app/dashboard/settings/page.tsx
 "use client";
 
@@ -549,7 +550,7 @@ export default function SettingsPage() {
             <DialogTitle>{listDialogContent.title}</DialogTitle>
             <DialogDescription>Total count: {listDialogContent.items.length}</DialogDescription>
           </DialogHeader>
-          <div className="py-4 pt-0">
+          <div className="py-4">
             <ScrollArea className="h-96 pr-4">
                 <Table>
                     <TableHeader>
