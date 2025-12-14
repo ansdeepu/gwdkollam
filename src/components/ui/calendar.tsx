@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -70,7 +69,7 @@ function Calendar({
             <select
               className="rounded-md border px-2 py-1 text-sm bg-background"
               value={month.getMonth()}
-              onInput={(e) => {
+              onChange={(e) => {
                 const newMonth = new Date(month)
                 newMonth.setMonth(Number((e.target as HTMLSelectElement).value))
                 setMonth(newMonth)
@@ -87,7 +86,7 @@ function Calendar({
             <select
               className="rounded-md border px-2 py-1 text-sm bg-background"
               value={month.getFullYear()}
-              onInput={(e) => {
+              onChange={(e) => {
                 const newMonth = new Date(month)
                 newMonth.setFullYear(Number((e.target as HTMLSelectElement).value))
                 setMonth(newMonth)

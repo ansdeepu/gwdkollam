@@ -9,7 +9,6 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/AppSidebar';
-import { Clock, Loader2 } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { PageNavigationProvider, usePageNavigation } from '@/hooks/usePageNavigation';
 import { PageHeaderProvider, usePageHeader } from '@/hooks/usePageHeader';
@@ -20,6 +19,14 @@ import { useAuth, updateUserLastActive } from '@/hooks/useAuth';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import FirebaseErrorListener from '@/components/FirebaseErrorListener';
+
+const Loader2 = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+);
+const Clock = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+);
+
 
 const IDLE_TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes in milliseconds
 const LAST_ACTIVE_UPDATE_INTERVAL = 5 * 60 * 1000; // Update Firestore lastActiveAt at most once per 5 minutes

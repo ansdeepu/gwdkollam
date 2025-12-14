@@ -1,4 +1,3 @@
-
 // src/components/auth/RegisterForm.tsx
 "use client";
 
