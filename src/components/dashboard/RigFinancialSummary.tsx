@@ -7,9 +7,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { DollarSign, XCircle } from "lucide-react";
 import type { AgencyApplication, RigType } from '@/lib/schemas';
 import { format, startOfDay, endOfDay, isWithinInterval, isValid, parse } from 'date-fns';
+
+const DollarSign = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+);
+const XCircle = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+);
+
 
 interface RigFinancialSummaryProps {
     applications: AgencyApplication[];
@@ -50,7 +57,7 @@ const safeParseDate = (dateValue: any): Date | null => {
   }
   if (typeof dateValue === 'string') {
     const parsed = new Date(dateValue);
-    if (isValid(parsed)) return parsed;
+    if (!isNaN(parsed.getTime())) return parsed;
   }
   return null;
 };
@@ -282,7 +289,7 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
     
         let columns: any[] = [];
         if (dataType === 'agencyRegData') columns = [{ key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'regNo', label: 'Reg No.'}, {key: 'regDate', label: 'Reg Date'}];
-        else if (dataType === 'rigRegData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regNo', label: 'Rig No'}, {key: 'regDate', label: 'Reg Date'}];
+        else if (dataType === 'rigRegData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regNo', label: 'Rig Reg No.'}, {key: 'regDate', label: 'Reg Date'}];
         else if (dataType === 'renewalData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'rigType', label: 'Rig Type'}, {key: 'regNo', label: 'Rig No.'}, {key: 'renewalDate', label: 'Renewal Date'}];
         else if (dataType.includes('AppFeeData')) columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'amount', label: 'Amount', isNumeric: true}];
         else if (dataType === 'agencyRegFeeData') columns = [ { key: 'slNo', label: 'Sl.No.'}, {key: 'agencyName', label: 'Agency Name'}, {key: 'regNo', label: 'Reg No.'}, {key: 'paymentDate', label: 'Payment Date'}, {key: 'fee', label: 'Fee', isNumeric: true}];
@@ -418,3 +425,5 @@ export default function RigFinancialSummary({ applications, onCellClick }: RigFi
         </Card>
     )
 }
+
+    

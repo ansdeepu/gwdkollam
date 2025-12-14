@@ -6,10 +6,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Megaphone, Cake, Gift, PartyPopper } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { StaffMember, Designation } from '@/lib/schemas';
 import { isValid, format } from 'date-fns';
+
+const Megaphone = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+);
+const Cake = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h16c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2"/><path d="M16 16.5a2.5 2.5 0 1 1-5 0"/><path d="M12 8v4"/><path d="M12 4h.01"/></svg>
+);
+const Gift = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 5a4.8 8 0 0 1 4.5-2 2.5 2.5 0 0 1 0 5"/></svg>
+);
+const PartyPopper = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M19.65 12.35a2.12 2.12 0 0 1 0 3l-2.82 2.83a2.12 2.12 0 0 1-3 0L3.3 6.6a2.12 2.12 0 0 1 0-3l2.83-2.83a2.12 2.12 0 0 1 3 0l10.52 10.53z"/><path d="m13.41 12 4.25 4.24"/><path d="m6.12 5.12 1.41-1.42"/><path d="m3.3 20.7-.7-.7"/><path d="M12 22v-3.5"/><path d="M7.05 7.05 17 17"/><path d="m9 11 1 1"/><path d="M4 14h.01"/><path d="M20 9h.01"/><path d="m21.12 3.88.7.7"/><path d="M12.5 3.5c.3.3.5.7.7 1.1"/><path d="M3.5 12.5c.3-.3.7-.5 1.1-.7"/></svg>
+);
+
 
 const hashCode = (str: string): number => {
     let hash = 0;
