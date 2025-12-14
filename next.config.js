@@ -10,6 +10,10 @@ const nextConfig = {
     // Set to false to ignore linting errors during build.
     ignoreDuringBuilds: false,
   },
+  httpAgentOptions: {
+    // This is a dummy option to force cache invalidation.
+    keepAlive: true,
+  },
   images: {
     remotePatterns: [
       {
@@ -52,5 +56,5 @@ const nextConfig = {
   },
 };
 
-// Force cache invalidation by updating this comment one more time.
+// Force cache invalidation by updating this comment one more time and adding httpAgentOptions.
 module.exports = nextConfig;
