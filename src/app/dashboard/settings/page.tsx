@@ -1,4 +1,3 @@
-
 // src/app/dashboard/settings/page.tsx
 "use client";
 
@@ -546,11 +545,11 @@ export default function SettingsPage() {
 
       <Dialog open={isListDialogOpen} onOpenChange={setIsListDialogOpen}>
         <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="sm:max-w-md">
-          <DialogHeader>
+          <DialogHeader className="p-6 pb-0">
             <DialogTitle>{listDialogContent.title}</DialogTitle>
             <DialogDescription>Total count: {listDialogContent.items.length}</DialogDescription>
           </DialogHeader>
-          <div className="py-4">
+          <div className="p-6 pt-2">
             <ScrollArea className="h-96 pr-4">
                 <Table>
                     <TableHeader>
