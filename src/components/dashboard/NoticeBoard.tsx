@@ -4,7 +4,7 @@
 import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import type { StaffMember, Designation } from '@/lib/schemas';
