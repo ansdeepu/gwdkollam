@@ -588,5 +588,3 @@ export const RigCompressorSchema = z.object({
     remarks: z.string().optional(),
 });
 export type RigCompressor = z.infer<typeof RigCompressorSchema>;
-
-    

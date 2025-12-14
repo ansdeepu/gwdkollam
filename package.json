@@ -41,7 +41,6 @@
     "exceljs": "^4.4.0",
     "firebase": "^12.4.0",
     "genkit": "1.26.0",
-    "lucide-react": "0.417.0",
     "next": "14.2.5",
     "pdf-lib": "^1.17.1",
     "react": "18.3.1",
@@ -56,7 +55,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@types/downloadjs": "^1.4.9",
+    "@types/downloadjs": "^1.4.6",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
