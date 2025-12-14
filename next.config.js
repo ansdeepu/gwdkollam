@@ -12,7 +12,7 @@ const nextConfig = {
   },
   httpAgentOptions: {
     // This is a dummy option to force cache invalidation.
-    keepAlive: true,
+    keepAlive: false,
   },
   images: {
     remotePatterns: [

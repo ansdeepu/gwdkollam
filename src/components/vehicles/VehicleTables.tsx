@@ -122,7 +122,9 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     <h2 className="font-bold text-sm tracking-wider">VEHICLE REGISTRATION</h2>
                     <p className="text-xs font-semibold">GROUND WATER DEPARTMENT, KOLLAM</p>
                     <p className="text-3xl font-bold tracking-widest pt-2">{v.registrationNumber}</p>
-                    <p className="text-base font-semibold">{v.typeOfVehicle || v.model || 'N/A'}</p>
+                    <p className="text-base font-semibold">
+                        {isDepartment ? (v as DepartmentVehicle).typeOfVehicle || v.model || 'N/A' : v.model || 'N/A'}
+                    </p>
                 </div>
                 
                 <div className="space-y-2">
