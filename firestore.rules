@@ -103,17 +103,17 @@ service cloud.firestore {
 
     // === Vehicle Management ===
     match /departmentVehicles/{docId} {
-      allow read: if canReadCollection();
+      allow read: if canReadCollection() || isSupervisor();
       allow write: if isEditor();
     }
 
     match /hiredVehicles/{docId} {
-      allow read: if canReadCollection();
+      allow read: if canReadCollection() || isSupervisor();
       allow write: if isEditor();
     }
 
     match /rigCompressors/{docId} {
-      allow read: if canReadCollection();
+      allow read: if canReadCollection() || isSupervisor();
       allow write: if isEditor();
     }
 
