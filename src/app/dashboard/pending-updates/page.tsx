@@ -4,8 +4,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { usePendingUpdates, type PendingUpdate } from '@/hooks/usePendingUpdates';
-import { useFileEntries } from '@/hooks/useFileEntries';
-import { useArsEntries, type ArsEntry } from '@/hooks/useArsEntries';
+import { useDataStore } from '@/hooks/use-data-store';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { formatDistanceToNow, format, isValid } from 'date-fns';
@@ -79,7 +78,7 @@ const UpdateTable = ({
   setUpdateToDelete: (id: string | null) => void;
   isRejecting: boolean;
   isDeleting: boolean;
-  arsEntries: ArsEntry[];
+  arsEntries: any[];
 }) => {
   return (
     <Card className="overflow-hidden">
@@ -198,8 +197,8 @@ const UpdateTable = ({
 export default function PendingUpdatesTable() {
   const { setHeader } = usePageHeader();
   const { rejectUpdate, deleteUpdate, subscribeToPendingUpdates } = usePendingUpdates();
-  const { fileEntries, isLoading: filesLoading } = useFileEntries();
-  const { arsEntries, isLoading: arsLoading } = useArsEntries();
+  const { allFileEntries: fileEntries, isLoading: filesLoading } = useDataStore();
+  const { allArsEntries: arsEntries, isLoading: arsLoading } = useDataStore();
   const { toast } = useToast();
   
   const [pendingUpdates, setPendingUpdates] = useState<PendingUpdate[]>([]);
@@ -242,7 +241,6 @@ export default function PendingUpdatesTable() {
         title: "Update Rejected",
         description: "The supervisor's changes have been rejected and they have been notified.",
       });
-      // No need to manually refetch, onSnapshot will handle it
     } catch (error: any) {
       toast({ title: "Rejection Failed", description: error.message || "Could not reject the update.", variant: "destructive" });
     } finally {
@@ -258,7 +256,6 @@ export default function PendingUpdatesTable() {
     try {
       await deleteUpdate(updateToDelete);
       toast({ title: "Update Deleted", description: "The pending update has been permanently removed." });
-      // No need to manually refetch, onSnapshot will handle it
     } catch (error: any) {
       toast({ title: "Deletion Failed", description: error.message || "Could not delete the update.", variant: "destructive" });
     } finally {
@@ -268,7 +265,7 @@ export default function PendingUpdatesTable() {
   };
 
   const handleViewChanges = (update: PendingUpdate) => {
-    let originalEntry: DataEntryFormData | ArsEntry | undefined;
+    let originalEntry: DataEntryFormData | any | undefined;
     if (update.isArsUpdate) {
         originalEntry = arsEntries.find(f => f.id === update.arsId);
     } else {

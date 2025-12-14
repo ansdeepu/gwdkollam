@@ -4,8 +4,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { usePendingUpdates, type PendingUpdate } from '@/hooks/usePendingUpdates';
-import { useFileEntries } from '@/hooks/useFileEntries';
-import { useArsEntries, type ArsEntry } from '@/hooks/useArsEntries';
+import { useDataStore } from '@/hooks/use-data-store';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Loader2, CheckCircle, XCircle, UserX, ListChecks, Trash2, FolderOpen, Waves } from 'lucide-react';
@@ -69,7 +68,7 @@ const UpdateTable = ({
   setUpdateToDelete: (id: string | null) => void;
   isRejecting: boolean;
   isDeleting: boolean;
-  arsEntries: ArsEntry[];
+  arsEntries: any[];
 }) => {
   return (
     <Card className="overflow-hidden">
@@ -186,9 +185,9 @@ const UpdateTable = ({
 
 
 export default function PendingUpdatesTable() {
-  const { rejectUpdate, getPendingUpdatesForFile, deleteUpdate } = usePendingUpdates();
-  const { fileEntries, isLoading: filesLoading } = useFileEntries();
-  const { arsEntries, isLoading: arsLoading } = useArsEntries();
+  const { rejectUpdate, deleteUpdate, subscribeToPendingUpdates } = usePendingUpdates();
+  const { allFileEntries: fileEntries, isLoading: filesLoading } = useDataStore();
+  const { allArsEntries: arsEntries, isLoading: arsLoading } = useDataStore();
   const { toast } = useToast();
   
   const [pendingUpdates, setPendingUpdates] = useState<PendingUpdate[]>([]);
@@ -203,17 +202,14 @@ export default function PendingUpdatesTable() {
   
   const [changesToView, setChangesToView] = useState<{ title: string; changes: { field: string; oldValue: string; newValue: string }[] } | null>(null);
 
-  const fetchUpdates = useCallback(async () => {
-      setIsLoading(true);
-      const updates = await getPendingUpdatesForFile(null);
-      updates.sort((a, b) => b.submittedAt.getTime() - a.submittedAt.getTime());
+  useEffect(() => {
+    setIsLoading(true);
+    const unsubscribe = subscribeToPendingUpdates((updates) => {
       setPendingUpdates(updates);
       setIsLoading(false);
-  }, [getPendingUpdatesForFile]);
-
-  useEffect(() => {
-    fetchUpdates();
-  }, [fetchUpdates]);
+    });
+    return () => unsubscribe();
+  }, [subscribeToPendingUpdates]);
 
   const { depositWorkUpdates, arsUpdates } = useMemo(() => {
     const depositWorkUpdates = pendingUpdates.filter(u => !u.isArsUpdate);
@@ -230,7 +226,6 @@ export default function PendingUpdatesTable() {
         title: "Update Rejected",
         description: "The supervisor's changes have been rejected and they have been notified.",
       });
-      fetchUpdates(); // Refetch data
     } catch (error: any) {
       toast({ title: "Rejection Failed", description: error.message || "Could not reject the update.", variant: "destructive" });
     } finally {
@@ -246,7 +241,6 @@ export default function PendingUpdatesTable() {
     try {
       await deleteUpdate(updateToDelete);
       toast({ title: "Update Deleted", description: "The pending update has been permanently removed." });
-      fetchUpdates(); // Refetch data
     } catch (error: any) {
       toast({ title: "Deletion Failed", description: error.message || "Could not delete the update.", variant: "destructive" });
     } finally {
@@ -256,7 +250,7 @@ export default function PendingUpdatesTable() {
   };
 
   const handleViewChanges = (update: PendingUpdate) => {
-    let originalEntry: DataEntryFormData | ArsEntry | undefined;
+    let originalEntry: DataEntryFormData | any | undefined;
     if (update.isArsUpdate) {
         originalEntry = arsEntries.find(f => f.id === update.arsId);
     } else {
