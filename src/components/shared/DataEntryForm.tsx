@@ -84,7 +84,7 @@ const calculatePaymentEntryTotalGlobal = (payment: PaymentDetailFormData | undef
 const PURPOSES_REQUIRING_DIAMETER: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev"];
 const PURPOSES_REQUIRING_RIG_ACCESSIBILITY: SitePurpose[] = ["BWC", "TWC", "FPW", "BW Dev", "TW Dev", "FPW Dev"];
 const FINAL_WORK_STATUSES: SiteWorkStatus[] = ['Work Failed', 'Work Completed'];
-const SUPERVISOR_WORK_STATUS_OPTIONS: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Work Failed", "Work Completed"];
+const SUPERVISOR_WORK_STATUS_OPTIONS: SiteWorkStatus[] = ["Work Order Issued", "Work Initiated", "Work in Progress", "Work Failed", "Work Completed"];
 const SITE_DIALOG_WORK_STATUS_OPTIONS = siteWorkStatusOptions.filter(
     (status) => !["Bill Prepared", "Payment Completed", "Utilization Certificate Issued"].includes(status)
 );
