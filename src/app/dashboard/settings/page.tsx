@@ -196,7 +196,7 @@ const OfficeAddressDialog = ({
 // Main Page Component
 export default function SettingsPage() {
   const { setHeader } = usePageHeader();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   const { allLsgConstituencyMaps, allStaffMembers, refetchLsgConstituencyMaps } = useDataStore();
   const canManage = user?.role === 'editor';
@@ -410,6 +410,14 @@ export default function SettingsPage() {
     setIsListDialogOpen(true);
   };
   
+  if (authLoading) {
+    return (
+      <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   if (user?.role !== 'editor' && user?.role !== 'viewer') {
     return (
       <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
@@ -541,7 +549,7 @@ export default function SettingsPage() {
             <DialogTitle>{listDialogContent.title}</DialogTitle>
             <DialogDescription>Total count: {listDialogContent.items.length}</DialogDescription>
           </DialogHeader>
-          <div className="p-6 pt-0">
+          <div className="py-4 pt-0">
             <ScrollArea className="h-96 pr-4">
                 <Table>
                     <TableHeader>
