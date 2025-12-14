@@ -41,6 +41,7 @@
     "exceljs": "^4.4.0",
     "firebase": "^12.4.0",
     "genkit": "1.26.0",
+    "lucide-react": "^0.561.0",
     "next": "14.2.35",
     "pdf-lib": "^1.17.1",
     "react": "18.3.1",

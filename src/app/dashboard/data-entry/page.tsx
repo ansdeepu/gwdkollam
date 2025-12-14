@@ -125,11 +125,11 @@ export default function DataEntryPage() {
   
   const returnPath = useMemo(() => {
     let base = '/dashboard/file-room';
-    if (workTypeContext === 'private') base = '/dashboard/private-deposit-works';
+    if (workType === 'private') base = '/dashboard/private-deposit-works';
     if (isApprovingUpdate) base = '/dashboard/pending-updates';
     
     return pageToReturnTo ? `${base}?page=${pageToReturnTo}` : base;
-  }, [workTypeContext, isApprovingUpdate, pageToReturnTo]);
+  }, [workType, isApprovingUpdate, pageToReturnTo]);
 
   useEffect(() => {
     const loadAllData = async () => {
@@ -206,7 +206,7 @@ export default function DataEntryPage() {
             description = errorState;
         } else if (user?.role === 'editor') {
             if (isCreatingNew) {
-                title = workTypeContext === 'private'
+                title = workType === 'private'
                     ? "New File Data Entry - Private Deposit"
                     : "New File Data Entry - Deposit Work";
                 description = "Use this form to input new work orders, project updates, or other relevant data for the Ground Water Department.";
@@ -246,7 +246,7 @@ export default function DataEntryPage() {
     }
     
     setHeader(title, description);
-  }, [fileIdToEdit, user, approveUpdateId, setHeader, fileNoForHeader, workTypeContext, dataLoading, errorState]);
+  }, [fileIdToEdit, user, approveUpdateId, setHeader, fileNoForHeader, workType, dataLoading, errorState]);
 
 
   const supervisorList = useMemo(() => {
@@ -338,7 +338,7 @@ export default function DataEntryPage() {
                 initialData={pageData.initialData}
                 supervisorList={supervisorList}
                 userRole={user?.role}
-                workTypeContext={workTypeContext}
+                workTypeContext={workType}
                 pageToReturnTo={pageToReturnTo}
                 isFormDisabled={isFormDisabledForSupervisor}
              />
