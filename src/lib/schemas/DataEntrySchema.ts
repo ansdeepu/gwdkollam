@@ -111,9 +111,9 @@ export type PaymentAccount = typeof paymentAccountOptions[number];
 export const PaymentDetailSchema = z.object({
   dateOfPayment: z.preprocess(
     (val) => (val === "" || val === null ? undefined : val),
-    z.string().min(1, "Date of payment is required.")
+    z.string().optional()
   ),
-  paymentAccount: z.enum(paymentAccountOptions, { required_error: "Payment Account is required."}),
+  paymentAccount: z.enum(paymentAccountOptions).optional(),
   revenueHead: optionalNumber("Revenue Head must be a valid number."),
   contractorsPayment: optionalNumber("Contractor's Payment must be a valid number."),
   gst: optionalNumber("GST must be a valid number."),
@@ -131,12 +131,23 @@ export const PaymentDetailSchema = z.object({
         (data.kbcwb && data.kbcwb > 0) ||
         (data.refundToParty && data.refundToParty > 0);
 
-    if (!hasAnyAmount && !data.paymentRemarks?.trim()) {
-         ctx.addIssue({
+    const hasAnyData = hasAnyAmount || data.paymentRemarks?.trim();
+
+    if (hasAnyData) {
+      if (!data.dateOfPayment) {
+        ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "At least one payment amount or a remark is required.",
-            path: ["contractorsPayment"], // Attach error to a field
+            message: "Date of payment is required.",
+            path: ["dateOfPayment"],
         });
+      }
+      if (!data.paymentAccount) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Payment Account is required.",
+            path: ["paymentAccount"],
+        });
+      }
     }
 });
 export type PaymentDetailFormData = z.infer<typeof PaymentDetailSchema>;
