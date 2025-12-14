@@ -1,4 +1,3 @@
-
 // src/app/dashboard/vehicles/page.tsx
 "use client";
 
@@ -7,7 +6,6 @@ import { usePageHeader } from '@/hooks/usePageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Loader2, PlusCircle, Truck, FileDown, AlertTriangle, CalendarClock } from 'lucide-react';
 import type { DepartmentVehicle, HiredVehicle, RigCompressor } from '@/lib/schemas';
 import { DepartmentVehicleForm, HiredVehicleForm, RigCompressorForm } from '@/components/vehicles/VehicleForms';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,6 +17,27 @@ import { useDataStore } from '@/hooks/use-data-store';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+
+// Inline SVGs
+const Loader2 = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+);
+const PlusCircle = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+);
+const Truck = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M5 18H3c-.6 0-1-.4-1-1V7c0-.6.4-1 1-1h10c.6 0 1 .4 1 1v11"/><path d="M14 9h4l4 4v4c0 .6-.4 1-1 1h-2"/><circle cx="7" cy="18" r="2"/><path d="M15 18H9"/><circle cx="17" cy="18" r="2"/></svg>
+);
+const FileDown = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 18v-6"/><path d="m15 15-3 3-3-3"/></svg>
+);
+const AlertTriangle = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+);
+const CalendarClock = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 7.5V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3.5"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/><path d="M17.5 17.5 16 16.25V14"/><circle cx="16" cy="16" r="6"/></svg>
+);
+
 
 const safeParseDate = (dateValue: any): Date | null => {
   if (!dateValue) return null;
@@ -155,16 +174,25 @@ export default function VehiclesPage() {
         const thirtyDaysFromNow = addDays(today, 30);
         const alertsMap = new Map<string, ExpiryInfo>();
 
+        const departmentDateFields: Array<{ key: keyof DepartmentVehicle; label: string }> = [
+            { key: 'fitnessExpiry', label: 'Fitness' },
+            { key: 'taxExpiry', label: 'Tax' },
+            { key: 'insuranceExpiry', label: 'Insurance' },
+            { key: 'pollutionExpiry', label: 'Pollution' },
+            { key: 'fuelTestExpiry', label: 'Fuel Test' },
+        ];
+
+        const hiredDateFields: Array<{ key: keyof HiredVehicle; label: string }> = [
+            { key: 'fitnessExpiry', label: 'Fitness' },
+            { key: 'taxExpiry', label: 'Tax' },
+            { key: 'insuranceExpiry', label: 'Insurance' },
+            { key: 'pollutionExpiry', label: 'Pollution' },
+            { key: 'agreementValidity', label: 'Agreement' },
+            { key: 'permitExpiry', label: 'Permit' },
+        ];
+
         const processVehicle = (vehicle: DepartmentVehicle | HiredVehicle, type: 'Department' | 'Hired') => {
-            const dateFields: Array<{ key: keyof (DepartmentVehicle | HiredVehicle), label: string }> = [
-                { key: 'fitnessExpiry', label: 'Fitness' },
-                { key: 'taxExpiry', label: 'Tax' },
-                { key: 'insuranceExpiry', label: 'Insurance' },
-                { key: 'pollutionExpiry', label: 'Pollution' },
-                { key: 'fuelTestExpiry', label: 'Fuel Test' },
-                { key: 'agreementValidity', label: 'Agreement' },
-                { key: 'permitExpiry', label: 'Permit' },
-            ];
+            const dateFields = type === 'Department' ? departmentDateFields : hiredDateFields;
 
             for (const { key, label } of dateFields) {
                 const expiryDate = safeParseDate((vehicle as any)[key]);
@@ -485,4 +513,3 @@ export default function VehiclesPage() {
     );
 }
 
-    
