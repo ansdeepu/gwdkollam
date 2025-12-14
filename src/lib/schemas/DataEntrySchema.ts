@@ -73,26 +73,26 @@ export const RemittanceDetailSchema = z.object({
   amountRemitted: optionalNumber("Amount Remitted must be a valid number."),
   dateOfRemittance: z.preprocess(
     (val) => (val === "" || val === null ? undefined : val),
-    z.string().min(1, "Date of remittance is required.")
+    z.string().optional()
   ),
-  remittedAccount: z.enum(remittedAccountOptions, { required_error: "Account is required." }),
+  remittedAccount: z.enum(remittedAccountOptions).optional(),
   remittanceRemarks: z.string().optional(),
 }).superRefine((data, ctx) => {
     // If an amount or account is present, date is strictly required.
     const hasAnyValue = (data.amountRemitted && data.amountRemitted > 0) || (data.remittanceRemarks && data.remittanceRemarks.trim() !== '');
 
-    if (hasAnyValue && (!data.dateOfRemittance || !data.remittedAccount)) {
+    if (hasAnyValue) {
         if (!data.dateOfRemittance) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "is required when any other remittance detail is entered.",
+                message: "Date is required when any other remittance detail is entered.",
                 path: ["dateOfRemittance"],
             });
         }
         if (!data.remittedAccount) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "is required when any other remittance detail is entered.",
+                message: "Account is required when any other remittance detail is entered.",
                 path: ["remittedAccount"],
             });
         }
