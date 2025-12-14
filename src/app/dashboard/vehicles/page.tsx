@@ -483,7 +483,7 @@ export default function VehiclesPage() {
             )}
 
             <Dialog open={isDepartmentDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) setEditingDepartmentVehicle(null); setIsDepartmentDialogOpen(isOpen); }}>
-                <DialogContent className="max-w-4xl">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-4xl">
                     <DepartmentVehicleForm 
                         initialData={editingDepartmentVehicle}
                         onFormSubmit={handleDepartmentFormSubmit}
@@ -492,7 +492,7 @@ export default function VehiclesPage() {
                 </DialogContent>
             </Dialog>
             <Dialog open={isHiredDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) setEditingHiredVehicle(null); setIsHiredDialogOpen(isOpen); }}>
-                <DialogContent className="max-w-4xl">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-4xl">
                      <HiredVehicleForm 
                         initialData={editingHiredVehicle}
                         onFormSubmit={handleHiredFormSubmit}
@@ -501,7 +501,7 @@ export default function VehiclesPage() {
                 </DialogContent>
             </Dialog>
             <Dialog open={isRigDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) setEditingRigCompressor(null); setIsRigDialogOpen(isOpen); }}>
-                <DialogContent className="max-w-2xl">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-2xl">
                     <RigCompressorForm
                         initialData={editingRigCompressor}
                         onFormSubmit={handleRigCompressorFormSubmit}
