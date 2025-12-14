@@ -129,7 +129,7 @@ export default function ArsStatusOverview({ onOpenDialog, dates, onSetDates }: A
   const handleWorkStatusCellClick = (data: ArsEntry[], title: string) => {
     const dialogData = data.map((site, index) => ({
       slNo: index + 1, fileNo: site.fileNo, siteName: site.nameOfSite, purpose: site.arsTypeOfScheme,
-      workStatus: site.workStatus, supervisorName: site.supervisorName || 'N/A'
+      workStatus: site.arsStatus, supervisorName: site.supervisorName || 'N/A'
     }));
     const columns = [
       { key: 'slNo', label: 'Sl. No.' }, { key: 'fileNo', label: 'File No.' },

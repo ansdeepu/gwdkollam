@@ -111,8 +111,8 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
       });
     }
     
-    const arsGrouping: SitePurpose[] = ["ARS", "Check Dam", "Dugwell Recharge", "Borewell Recharge", "Recharge Pit", "Sub-Surface Dyke", "Pond Renovation", "Percolation Ponds"];
-    const allDisplayPurposes = [...sitePurposeOptions.filter(p => !arsGrouping.includes(p)), "ARS"];
+    const arsGrouping = ["ARS", "Check Dam", "Dugwell Recharge", "Borewell Recharge", "Recharge Pit", "Sub-Surface Dyke", "Pond Renovation", "Percolation Ponds"] as const;
+    const allDisplayPurposes = [...sitePurposeOptions.filter(p => !arsGrouping.includes(p as any)), "ARS"];
 
     const initialCounts = () => allDisplayPurposes.reduce((acc, purpose) => ({
       ...acc, [purpose]: { count: 0, data: [], expenditure: 0 }
@@ -137,7 +137,7 @@ export default function ConstituencyWiseOverview({ allWorks, depositWorksCount, 
         let purpose = (work.purpose || 'N/A') as string;
         const isCompleted = work.workStatus && FINAL_WORK_STATUSES.includes(work.workStatus as SiteWorkStatus);
         
-        if (arsGrouping.includes(purpose as SitePurpose)) {
+        if (arsGrouping.includes(purpose as any)) {
             purpose = "ARS";
         }
         
