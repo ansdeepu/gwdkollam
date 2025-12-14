@@ -10,7 +10,13 @@ import { toast } from '@/hooks/use-toast';
 // ideally within your main Firebase provider.
 export default function FirebaseErrorListener() {
   useEffect(() => {
-    const handlePermissionError = (error: FirestorePermissionError) => {
+    const handlePermissionError = (error: Error) => {
+      if (!(error instanceof FirestorePermissionError)) {
+        // Safety guard – should never happen, but keeps TS happy
+        console.error("Unknown error received:", error);
+        return;
+      }
+    
       console.error(
         "Firestore Permission Error Caught:",
         JSON.stringify(error, null, 2)
