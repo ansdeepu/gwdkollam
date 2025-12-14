@@ -399,7 +399,7 @@ export default function ProgressReportPage() {
     filesToIncludeForFinancials.forEach(entry => {
         entry.remittanceDetails?.forEach(rd => {
             const remDate = safeParseDate(rd.dateOfRemittance);
-            if (rd.remittedAccount === 'RevenueHead' && remDate && isWithinInterval(remDate, { start: sDate, end: eDate })) {
+            if (rd.remittedAccount === 'Revenue Head' && remDate && isWithinInterval(remDate, { start: sDate, end: eDate })) {
                 const amount = Number(rd.amountRemitted) || 0;
                 if (amount > 0) {
                     totalRevenueHeadCredit += amount;

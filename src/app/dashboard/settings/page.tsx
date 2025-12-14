@@ -2,7 +2,7 @@
 // src/app/dashboard/settings/page.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,6 +39,7 @@ const OfficeAddressSchema = z.object({
   officeName: z.string().min(1, "Office Name is required."),
   address: z.string().optional(),
   phoneNo: z.string().optional(),
+  email: z.string().email().optional(),
   districtOfficerStaffId: z.string().optional(),
   districtOfficer: z.string().optional(),
   gstNo: z.string().optional(),
@@ -82,12 +83,12 @@ const OfficeAddressDialog = ({
     const form = useForm<OfficeAddressFormData>({
         resolver: zodResolver(OfficeAddressSchema),
         defaultValues: initialData || {
-        officeName: '', address: '', phoneNo: '', districtOfficerStaffId: '', districtOfficer: '', gstNo: '', panNo: '', otherDetails: '',
+        officeName: '', address: '', phoneNo: '', email: '', districtOfficerStaffId: '', districtOfficer: '', gstNo: '', panNo: '', otherDetails: '',
         },
     });
 
     useEffect(() => {
-        form.reset(initialData || { officeName: '', address: '', phoneNo: '', districtOfficerStaffId: '', districtOfficer: '', gstNo: '', panNo: '', otherDetails: '' });
+        form.reset(initialData || { officeName: '', address: '', phoneNo: '', email: '', districtOfficerStaffId: '', districtOfficer: '', gstNo: '', panNo: '', otherDetails: '' });
     }, [initialData, form]);
 
     const handleOfficerChange = (staffId: string) => {
@@ -127,7 +128,10 @@ const OfficeAddressDialog = ({
                       </FormItem>
                       )}
                   />
-                  <FormField name="phoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField name="phoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        <FormField name="email" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                    </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField name="gstNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>GST No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
@@ -424,6 +428,7 @@ export default function SettingsPage() {
                                 <DetailRow label="District Officer" value={officeAddress.districtOfficer} />
                             </div>
                             <DetailRow label="Phone No." value={officeAddress.phoneNo} />
+                            <DetailRow label="Email" value={officeAddress.email} />
                             <DetailRow label="GST No." value={officeAddress.gstNo} />
                             <DetailRow label="PAN No." value={officeAddress.panNo} />
                         </div>
@@ -479,7 +484,7 @@ export default function SettingsPage() {
       />
       
       <AlertDialog open={isClearConfirmOpen} onOpenChange={setIsClearConfirmOpen}>
-        <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
+        <AlertDialogContent>
             <AlertDialogHeader>
                 <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                 <AlertDialogDescription>This will permanently delete ALL Local Self Governments from the database. This action cannot be undone and may affect existing records.</AlertDialogDescription>
@@ -524,5 +529,3 @@ export default function SettingsPage() {
     </>
   );
 }
-
-      
