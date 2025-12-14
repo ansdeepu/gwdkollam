@@ -295,8 +295,8 @@ export const reportableFields: Array<{ id: string; label: string; accessor: (ent
   { id: 'schemeBeneficiaries', label: '# Beneficiaries', accessor: (entry) => (entry as any).noOfBeneficiary, arsApplicable: true },
   
   // --- ARS Fields ---
-  { id: 'arsSchemeType', label: 'Type of Scheme', accessor: (entry) => (entry as ArsEntryFormData).arsTypeOfScheme, arsOnly: true },
-  { id: 'arsBlock', label: 'Block', accessor: (entry) => (entry as ArsEntryFormData).arsBlock, arsOnly: true },
+  { id: 'arsSchemeType', label: 'Type of Scheme', accessor: (entry) => (entry as ArsEntryFormData).arsTypeOfScheme, arsApplicable: true, arsOnly: true },
+  { id: 'arsBlock', label: 'Block', accessor: (entry) => (entry as ArsEntryFormData).arsBlock, arsApplicable: true, arsOnly: true },
   { id: 'arsStructures', label: 'ARS # Structures', accessor: (entry) => (entry as any).arsNumberOfStructures, arsOnly: true },
   { id: 'arsStorage', label: 'ARS Storage (m³)', accessor: (entry) => (entry as any).arsStorageCapacity, arsOnly: true },
   { id: 'arsFillings', label: 'ARS # Fillings', accessor: (entry) => (entry as any).arsNumberOfFillings, arsOnly: true },
@@ -592,5 +592,3 @@ export const RigCompressorSchema = z.object({
     remarks: z.string().optional(),
 });
 export type RigCompressor = z.infer<typeof RigCompressorSchema>;
-
-    
