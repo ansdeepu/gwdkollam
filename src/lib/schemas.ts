@@ -68,30 +68,30 @@ export const RegisterSchema = z.object({
 export type RegisterFormData = z.infer<typeof RegisterSchema>;
 
 export const designationOptions = [
-  "Executive Engineer",
-  "Senior Hydrogeologist",
-  "Assistant Executive Engineer",
-  "Hydrogeologist",
-  "Assistant Engineer",
-  "Junior Hydrogeologist",
-  "Junior Geophysicist",
-  "Master Driller",
-  "Senior Driller",
-  "Driller",
-  "Driller Mechanic",
-  "Drilling Assistant",
-  "Compressor Driver",
-  "Pump Operator",
-  "Driver, HDV",
-  "Driver, LDV",
-  "Senior Clerk",
-  "L D Typist",
-  "U D Typist",
-  "Tracer",
-  "Lascar",
-  "Office Attendant",
-  "Watcher",
-  "PTS",
+    "Executive Engineer",
+    "Senior Hydrogeologist",
+    "Assistant Executive Engineer",
+    "Hydrogeologist",
+    "Assistant Engineer",
+    "Junior Hydrogeologist",
+    "Junior Geophysicist",
+    "Master Driller",
+    "Senior Driller",
+    "Driller",
+    "Driller Mechanic",
+    "Drilling Assistant",
+    "Compressor Driver",
+    "Pump Operator",
+    "Driver, HDV",
+    "Driver, LDV",
+    "Senior Clerk",
+    "L D Typist",
+    "U D Typist",
+    "Tracer",
+    "Lascar",
+    "Office Attendant",
+    "Watcher",
+    "PTS",
 ] as const;
 export type Designation = typeof designationOptions[number];
 
@@ -295,10 +295,14 @@ export const reportableFields: Array<{ id: string; label: string; accessor: (ent
   { id: 'schemeBeneficiaries', label: '# Beneficiaries', accessor: (entry) => (entry as any).noOfBeneficiary, arsApplicable: true },
   
   // --- ARS Fields ---
+  { id: 'arsSchemeType', label: 'Type of Scheme', accessor: (entry) => (entry as ArsEntryFormData).arsTypeOfScheme, arsOnly: true },
+  { id: 'arsBlock', label: 'Block', accessor: (entry) => (entry as ArsEntryFormData).arsBlock, arsOnly: true },
   { id: 'arsStructures', label: 'ARS # Structures', accessor: (entry) => (entry as any).arsNumberOfStructures, arsOnly: true },
   { id: 'arsStorage', label: 'ARS Storage (m³)', accessor: (entry) => (entry as any).arsStorageCapacity, arsOnly: true },
   { id: 'arsFillings', label: 'ARS # Fillings', accessor: (entry) => (entry as any).arsNumberOfFillings, arsOnly: true },
-
+  { id: 'arsEstimateAmount', label: 'Estimate Amount (₹)', accessor: (entry) => (entry as ArsEntryFormData).estimateAmount, arsOnly: true },
+  { id: 'arsExpenditure', label: 'Expenditure (₹)', accessor: (entry) => (entry as ArsEntryFormData).totalExpenditure, arsOnly: true },
+  
   // --- Work Status ---
   { id: 'siteWorkStatus', label: 'Work Status', accessor: (entry) => (entry as any).workStatus || (entry as any).arsStatus, arsApplicable: true },
   { id: 'siteCompletionDate', label: 'Completion Date', accessor: (entry) => formatDateHelper((entry as any).dateOfCompletion), arsApplicable: true },
@@ -588,3 +592,5 @@ export const RigCompressorSchema = z.object({
     remarks: z.string().optional(),
 });
 export type RigCompressor = z.infer<typeof RigCompressorSchema>;
+
+    
