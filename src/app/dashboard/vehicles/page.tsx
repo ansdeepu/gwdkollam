@@ -493,7 +493,7 @@ export default function VehiclesPage() {
                 </DialogContent>
             </Dialog>
             <Dialog open={isHiredDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) setEditingHiredVehicle(null); setIsHiredDialogOpen(isOpen); }}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-4xl flex flex-col p-0">
+                 <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-4xl h-[90vh] flex flex-col p-0">
                      <HiredVehicleForm 
                         initialData={editingHiredVehicle}
                         onFormSubmit={handleHiredFormSubmit}

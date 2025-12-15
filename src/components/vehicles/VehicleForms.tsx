@@ -1,3 +1,4 @@
+
 // src/components/vehicles/VehicleForms.tsx
 "use client";
 
@@ -155,48 +156,52 @@ export function HiredVehicleForm({ initialData, onFormSubmit, onClose }: FormPro
                 <DialogHeader className="p-6 pb-4">
                     <DialogTitle>{initialData ? 'Edit' : 'Add'} Hired Vehicle</DialogTitle>
                 </DialogHeader>
-                <ScrollArea className="max-h-[70vh] px-6">
-                    <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FormField name="registrationNumber" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Registration Number</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
-                            <FormField name="model" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
-                            <FormField name="ownerName" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Owner Name</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
-                            <FormField name="ownerAddress" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Owner Address</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} className="min-h-[40px]" /></FormControl><FormMessage/></FormItem> )}/>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                             <FormField name="agreementValidity" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Agreement Validity</FormLabel><FormControl><Input type="date" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || undefined)}/></FormControl><FormMessage/></FormItem> )}/>
-                            <FormField name="vehicleClass" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Vehicle Class</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
-                            <FormField name="registrationDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Registration Date</FormLabel><FormControl><Input type="date" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || undefined)}/></FormControl><FormMessage/></FormItem> )}/>
-                            <FormField
-                                name="rcStatus"
-                                control={form.control}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>RC Status</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl>
-                                            <SelectContent>
-                                                {rcStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField name="hireCharges" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Hire Charges</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
-                        </div>
-                        <div className="space-y-2 pt-4 border-t">
-                            <h4 className="font-medium text-sm text-primary">Certificate Validity</h4>
-                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <FormField name="fitnessExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Fitness</FormLabel><FormControl><Input type="date" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || undefined)}/></FormControl><FormMessage/></FormItem> )}/>
-                                <FormField name="taxExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tax</FormLabel><FormControl><Input type="date" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || undefined)}/></FormControl><FormMessage/></FormItem> )}/>
-                                <FormField name="insuranceExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Insurance</FormLabel><FormControl><Input type="date" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || undefined)}/></FormControl><FormMessage/></FormItem> )}/>
-                                <FormField name="pollutionExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Pollution</FormLabel><FormControl><Input type="date" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || undefined)}/></FormControl><FormMessage/></FormItem> )}/>
-                                <FormField name="permitExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Permit</FormLabel><FormControl><Input type="date" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || undefined)}/></FormControl><FormMessage/></FormItem> )}/>
+                <div className="flex-1 min-h-0">
+                    <ScrollArea className="h-full px-6">
+                        <div className="space-y-4 py-4">
+                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <FormField name="registrationNumber" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Registration Number</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                                <FormField name="model" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                            </div>
+                            <div className="grid grid-cols-1 gap-4">
+                                <FormField name="ownerName" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Owner Name</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                                <FormField name="ownerAddress" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Owner Address</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} className="min-h-[40px]" /></FormControl><FormMessage/></FormItem> )}/>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <FormField name="agreementValidity" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Agreement Validity</FormLabel><FormControl><Input type="date" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || undefined)}/></FormControl><FormMessage/></FormItem> )}/>
+                                <FormField name="vehicleClass" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Vehicle Class</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                                <FormField name="registrationDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Registration Date</FormLabel><FormControl><Input type="date" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || undefined)}/></FormControl><FormMessage/></FormItem> )}/>
+                                <FormField
+                                    name="rcStatus"
+                                    control={form.control}
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>RC Status</FormLabel>
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl>
+                                                <SelectContent>
+                                                    {rcStatusOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField name="hireCharges" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Hire Charges</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                            </div>
+                            <div className="space-y-2 pt-4 border-t">
+                                <h4 className="font-medium text-sm text-primary">Certificate Validity</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <FormField name="fitnessExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Fitness</FormLabel><FormControl><Input type="date" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || undefined)}/></FormControl><FormMessage/></FormItem> )}/>
+                                    <FormField name="taxExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tax</FormLabel><FormControl><Input type="date" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || undefined)}/></FormControl><FormMessage/></FormItem> )}/>
+                                    <FormField name="insuranceExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Insurance</FormLabel><FormControl><Input type="date" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || undefined)}/></FormControl><FormMessage/></FormItem> )}/>
+                                    <FormField name="pollutionExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Pollution</FormLabel><FormControl><Input type="date" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || undefined)}/></FormControl><FormMessage/></FormItem> )}/>
+                                    <FormField name="permitExpiry" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Permit</FormLabel><FormControl><Input type="date" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || undefined)}/></FormControl><FormMessage/></FormItem> )}/>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </ScrollArea>
+                    </ScrollArea>
+                </div>
                 <DialogFooter className="p-6 pt-4">
                     <Button type="button" variant="outline" onClick={onClose} disabled={form.formState.isSubmitting}>Cancel</Button>
                     <Button type="submit" disabled={form.formState.isSubmitting}>
