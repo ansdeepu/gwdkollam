@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Loader2, X, Save, Info } from "lucide-react";
+import { Loader2, X, Save, Info, ArrowLeft } from "lucide-react";
 import {
   SiteDetailSchema,
   type SiteDetailFormData,
@@ -215,6 +215,8 @@ export default function SiteEntryPage() {
         }
         return ['Land Dispute', 'Work Disputes and Conflicts'];
     }, [watchedPurpose]);
+    
+    type Designation = NonNullable<StaffMember["designation"]>;
 
     const supervisorList = useMemo(() => {
         const designationSortOrder: Record<Designation, number> = {
@@ -326,7 +328,7 @@ export default function SiteEntryPage() {
                                                       <FormControl><SelectTrigger><SelectValue placeholder="Assign a Supervisor" /></SelectTrigger></FormControl>
                                                       <SelectContent>
                                                           <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
-                                                          {supervisorList.map((s) => (<SelectItem key={s.uid} value={s.id}>{s.name} ({s.designation})</SelectItem>))}
+                                                          {supervisorList.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name} ({s.designation})</SelectItem>))}
                                                       </SelectContent>
                                                   </Select>
                                               )}
