@@ -1,4 +1,3 @@
-
 // src/lib/schemas.ts
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
@@ -564,6 +563,8 @@ export const HiredVehicleSchema = z.object({
     id: z.string().optional(),
     registrationNumber: z.string().min(1, "Registration Number is required."),
     model: z.string().optional(),
+    ownerName: z.string().optional(),
+    ownerAddress: z.string().optional(),
     agreementValidity: optionalDateSchema,
     vehicleClass: z.string().optional(),
     registrationDate: optionalDateSchema,

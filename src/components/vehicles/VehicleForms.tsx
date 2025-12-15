@@ -129,11 +129,13 @@ export function HiredVehicleForm({ initialData, onFormSubmit, onClose }: FormPro
         defaultValues: {
             registrationNumber: initialData?.registrationNumber || '',
             model: initialData?.model || '',
+            ownerName: initialData?.ownerName || '',
+            ownerAddress: initialData?.ownerAddress || '',
+            agreementValidity: formatDateForInput(initialData?.agreementValidity),
             vehicleClass: initialData?.vehicleClass || '',
+            registrationDate: formatDateForInput(initialData?.registrationDate),
             rcStatus: initialData?.rcStatus || '',
             hireCharges: initialData?.hireCharges || undefined,
-            agreementValidity: formatDateForInput(initialData?.agreementValidity),
-            registrationDate: formatDateForInput(initialData?.registrationDate),
             fitnessExpiry: formatDateForInput(initialData?.fitnessExpiry),
             taxExpiry: formatDateForInput(initialData?.taxExpiry),
             insuranceExpiry: formatDateForInput(initialData?.insuranceExpiry),
@@ -155,9 +157,13 @@ export function HiredVehicleForm({ initialData, onFormSubmit, onClose }: FormPro
                 </DialogHeader>
                 <ScrollArea className="max-h-[70vh] px-6">
                     <div className="space-y-4">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <FormField name="registrationNumber" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Registration Number</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                             <FormField name="model" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Model</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                            <FormField name="ownerName" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Owner Name</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
+                            <FormField name="ownerAddress" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Owner Address</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} className="min-h-[40px]" /></FormControl><FormMessage/></FormItem> )}/>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                              <FormField name="agreementValidity" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Agreement Validity</FormLabel><FormControl><Input type="date" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || undefined)}/></FormControl><FormMessage/></FormItem> )}/>
                             <FormField name="vehicleClass" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Vehicle Class</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage/></FormItem> )}/>
                             <FormField name="registrationDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Registration Date</FormLabel><FormControl><Input type="date" value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || undefined)}/></FormControl><FormMessage/></FormItem> )}/>
