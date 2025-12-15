@@ -105,12 +105,12 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     const isRigCompressor = !('registrationNumber' in vehicle);
     const dialogWidthClass = isRigCompressor ? "max-w-2xl" : "max-w-xl";
     const title = isRigCompressor ? (vehicle as RigCompressor).typeOfRigUnit : (vehicle as DepartmentVehicle).registrationNumber;
-    let details;
+    let details: React.ReactNode;
 
     if ('registrationNumber' in vehicle) {
         const v = vehicle as DepartmentVehicle | HiredVehicle;
-        const isHired = 'hireCharges' in v;
-        const isDepartment = 'fuelConsumptionRate' in v;
+        const isHired = 'ownerName' in v;
+        const isDepartment = !isHired;
 
         details = (
             <div className="w-full mx-auto border-2 border-black bg-white p-4 font-serif text-black">
@@ -180,20 +180,29 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     } else {
         const u = vehicle as RigCompressor;
         details = (
-             <Card className="shadow-lg border-2 border-black">
+             <Card className="shadow-lg">
                 <CardHeader className="text-center">
                     <CardTitle className="text-xl font-bold">{u.typeOfRigUnit}</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4 text-center">
-                     <DetailRow label="Status" value={u.status} isUppercase />
-                    <DetailRow label="Fuel Consumption" value={u.fuelConsumption} />
+                <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4 text-center">
+                        <DetailRow label="Status" value={u.status} isUppercase />
+                        <DetailRow label="Fuel Consumption" value={u.fuelConsumption} />
+                    </div>
                     <Separator />
-                    <DetailRow label="Rig Vehicle Reg. No" value={u.rigVehicleRegNo} />
-                    <DetailRow label="Compressor Vehicle Reg. No" value={u.compressorVehicleRegNo} />
-                    <DetailRow label="Supporting Vehicle Reg. No" value={u.supportingVehicleRegNo} />
+                    <div className="space-y-2">
+                        <h4 className="text-sm font-semibold text-muted-foreground text-center">Associated Vehicles</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                            <DetailRow label="Rig Vehicle Reg. No" value={u.rigVehicleRegNo} />
+                            <DetailRow label="Compressor Vehicle Reg. No" value={u.compressorVehicleRegNo} />
+                            <DetailRow label="Supporting Vehicle Reg. No" value={u.supportingVehicleRegNo} />
+                        </div>
+                    </div>
                     <Separator/>
-                    <DetailRow label="Compressor Details" value={u.compressorDetails} />
-                    <DetailRow label="Remarks" value={u.remarks} />
+                    <div className="space-y-2 text-center">
+                        <DetailRow label="Compressor Details" value={u.compressorDetails} />
+                        <DetailRow label="Remarks" value={u.remarks} />
+                    </div>
                 </CardContent>
             </Card>
         );
