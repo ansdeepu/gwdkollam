@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
 
 // Helper for robust optional numeric fields
-const optionalNumber = (errorMessage: string = "Must be a valid number.") =>
+export const optionalNumber = (errorMessage: string = "Must be a valid number.") =>
   z.preprocess((val) => {
     if (val === null || val === undefined || val === "") return undefined;
     if (typeof val === 'string' && isNaN(Number(val))) return undefined;
