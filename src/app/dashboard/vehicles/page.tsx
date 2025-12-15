@@ -289,7 +289,7 @@ export default function VehiclesPage() {
                 break;
             case 'hired':
                 data = allHiredVehicles;
-                headers = ["Registration Number", "Model", "Agreement Validity", "Vehicle Class", "Registration Date", "RC Status", "Hire Charges", "Fitness Expiry", "Tax Expiry", "Insurance Expiry", "Pollution Expiry", "Permit Expiry"];
+                headers = ["Registration Number", "Model", "Owner Name", "Owner Address", "Agreement Validity", "Vehicle Class", "Registration Date", "RC Status", "Hire Charges", "Fitness Expiry", "Tax Expiry", "Insurance Expiry", "Pollution Expiry", "Permit Expiry"];
                 sheetName = 'Hired Vehicles';
                 fileNamePrefix = 'GWD_Hired_Vehicles';
                 break;
@@ -306,8 +306,8 @@ export default function VehiclesPage() {
 
         data.forEach(item => {
             const row = headers.map(header => {
-                const key = header.toLowerCase().replace(/ & /g, 'And').replace(/ /g, '');
-                let value = (item as any)[Object.keys(item).find(k => k.toLowerCase().replace(/ /g, '') === key) || ''];
+                const key = header.toLowerCase().replace(/ & /g, 'And').replace(/\./g, '').replace(/ /g, '');
+                let value = (item as any)[Object.keys(item).find(k => k.toLowerCase().replace(/\./g, '').replace(/ /g, '') === key) || ''];
                 if (header.toLowerCase().includes('date') || header.toLowerCase().includes('validity') || header.toLowerCase().includes('expiry')) {
                     value = formatDateSafe(value);
                 }
@@ -484,7 +484,7 @@ export default function VehiclesPage() {
             )}
 
             <Dialog open={isDepartmentDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) setEditingDepartmentVehicle(null); setIsDepartmentDialogOpen(isOpen); }}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-4xl">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-4xl flex flex-col p-0">
                     <DepartmentVehicleForm 
                         initialData={editingDepartmentVehicle}
                         onFormSubmit={handleDepartmentFormSubmit}
@@ -493,7 +493,7 @@ export default function VehiclesPage() {
                 </DialogContent>
             </Dialog>
             <Dialog open={isHiredDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) setEditingHiredVehicle(null); setIsHiredDialogOpen(isOpen); }}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-4xl">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-4xl flex flex-col p-0">
                      <HiredVehicleForm 
                         initialData={editingHiredVehicle}
                         onFormSubmit={handleHiredFormSubmit}
@@ -502,7 +502,7 @@ export default function VehiclesPage() {
                 </DialogContent>
             </Dialog>
             <Dialog open={isRigDialogOpen} onOpenChange={(isOpen) => { if (!isOpen) setEditingRigCompressor(null); setIsRigDialogOpen(isOpen); }}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-2xl">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-2xl flex flex-col p-0">
                     <RigCompressorForm
                         initialData={editingRigCompressor}
                         onFormSubmit={handleRigCompressorFormSubmit}
