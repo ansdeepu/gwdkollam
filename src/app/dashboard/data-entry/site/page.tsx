@@ -219,7 +219,7 @@ export default function SiteEntryPage() {
     type Designation = NonNullable<StaffMember["designation"]>;
 
     const supervisorList = useMemo(() => {
-        const designationSortOrder: Record<Designation, number> = {
+        const designationSortOrder: Partial<Record<Designation, number>> = {
           'Executive Engineer': 0, 'Senior Hydrogeologist': 1, 'Assistant Executive Engineer': 2, 'Hydrogeologist': 3,
           'Assistant Engineer': 4, 'Junior Hydrogeologist': 5, 'Junior Geophysicist': 6, 'Master Driller': 7,
           'Senior Driller': 8, 'Driller': 9, 'Driller Mechanic': 10, 'Drilling Assistant': 11, 'Pump Operator': 12,
