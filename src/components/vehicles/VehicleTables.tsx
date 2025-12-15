@@ -1,3 +1,4 @@
+
 // src/components/vehicles/VehicleTables.tsx
 "use client";
 
@@ -199,7 +200,10 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     }
     
     return (
-        <DialogContent className={cn("p-0 border-0 bg-transparent shadow-none w-auto", dialogWidthClass)}>
+        <DialogContent
+            className={cn("p-0 border-0 bg-transparent shadow-none w-auto", dialogWidthClass)}
+            onPointerDownOutside={(e) => e.preventDefault()}
+        >
              {details}
         </DialogContent>
     );
