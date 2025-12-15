@@ -73,26 +73,26 @@ export const RemittanceDetailSchema = z.object({
   amountRemitted: optionalNumber("Amount Remitted must be a valid number."),
   dateOfRemittance: z.preprocess(
     (val) => (val === "" || val === null ? undefined : val),
-    z.string().optional()
+    z.string().min(1, "Date of remittance is required.")
   ),
-  remittedAccount: z.enum(remittedAccountOptions).optional(),
+  remittedAccount: z.enum(remittedAccountOptions, { required_error: "Account is required." }),
   remittanceRemarks: z.string().optional(),
 }).superRefine((data, ctx) => {
     // If an amount or account is present, date is strictly required.
     const hasAnyValue = (data.amountRemitted && data.amountRemitted > 0) || (data.remittanceRemarks && data.remittanceRemarks.trim() !== '');
 
-    if (hasAnyValue) {
+    if (hasAnyValue && (!data.dateOfRemittance || !data.remittedAccount)) {
         if (!data.dateOfRemittance) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "Date is required when any other remittance detail is entered.",
+                message: "is required when any other remittance detail is entered.",
                 path: ["dateOfRemittance"],
             });
         }
         if (!data.remittedAccount) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "Account is required when any other remittance detail is entered.",
+                message: "is required when any other remittance detail is entered.",
                 path: ["remittedAccount"],
             });
         }
@@ -109,16 +109,19 @@ export const paymentAccountOptions = [
 export type PaymentAccount = typeof paymentAccountOptions[number];
 
 export const PaymentDetailSchema = z.object({
-    dateOfPayment: z.string().min(1, 'Date of payment is required.').optional(),
-    paymentAccount: z.enum(paymentAccountOptions, { required_error: "Payment account is required." }).optional(),
-    revenueHead: optionalNumber("Revenue Head must be a valid number."),
-    contractorsPayment: optionalNumber("Contractor's Payment must be a valid number."),
-    gst: optionalNumber("GST must be a valid number."),
-    incomeTax: optionalNumber("Income Tax must be a valid number."),
-    kbcwb: optionalNumber("KBCWB must be a valid number."),
-    refundToParty: optionalNumber("Refund to Party must be a valid number."),
-    totalPaymentPerEntry: z.coerce.number().optional(),
-    paymentRemarks: z.string().optional(),
+  dateOfPayment: z.preprocess(
+    (val) => (val === "" || val === null ? undefined : val),
+    z.string().min(1, "Date of payment is required.")
+  ),
+  paymentAccount: z.enum(paymentAccountOptions, { required_error: "Payment Account is required."}),
+  revenueHead: optionalNumber("Revenue Head must be a valid number."),
+  contractorsPayment: optionalNumber("Contractor's Payment must be a valid number."),
+  gst: optionalNumber("GST must be a valid number."),
+  incomeTax: optionalNumber("Income Tax must be a valid number."),
+  kbcwb: optionalNumber("KBCWB must be a valid number."),
+  refundToParty: optionalNumber("Refund to Party must be a valid number."),
+  totalPaymentPerEntry: z.coerce.number().optional(),
+  paymentRemarks: z.string().optional(),
 }).superRefine((data, ctx) => {
     const hasAnyAmount =
         (data.revenueHead && data.revenueHead > 0) ||
@@ -127,23 +130,13 @@ export const PaymentDetailSchema = z.object({
         (data.incomeTax && data.incomeTax > 0) ||
         (data.kbcwb && data.kbcwb > 0) ||
         (data.refundToParty && data.refundToParty > 0);
-    const hasAnyData = hasAnyAmount || (data.paymentRemarks && data.paymentRemarks.trim() !== '');
 
-    if (hasAnyData) {
-        if (!data.dateOfPayment) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "Date of payment is required.",
-                path: ["dateOfPayment"],
-            });
-        }
-        if (!data.paymentAccount) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "Payment Account is required.",
-                path: ["paymentAccount"],
-            });
-        }
+    if (!hasAnyAmount && !data.paymentRemarks?.trim()) {
+         ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "At least one payment amount or a remark is required.",
+            path: ["contractorsPayment"], // Attach error to a field
+        });
     }
 });
 export type PaymentDetailFormData = z.infer<typeof PaymentDetailSchema>;
@@ -242,11 +235,10 @@ export const SiteDetailSchema = z.object({
   constituency: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(constituencyOptions).optional()),
   latitude: optionalNumber("Latitude must be a valid number."),
   longitude: optionalNumber("Longitude must be a valid number."),
-  purpose: z.enum(sitePurposeOptions, { required_error: "Purpose is required." }).optional(),
+  purpose: z.enum(sitePurposeOptions, { required_error: "Purpose is required." }),
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
   remittedAmount: optionalNumber("Remitted Amount must be a valid number."),
   siteConditions: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteConditionsOptions).optional()),
-  accessibleRig: z.enum(['Yes', 'No']).optional().nullable(),
   tsAmount: optionalNumber("TS Amount must be a valid number."),
   additionalAS: z.enum(['Yes', 'No']).optional().nullable().default('No'),
   tenderNo: z.string().optional(),
@@ -274,7 +266,7 @@ export const SiteDetailSchema = z.object({
   supervisorName: z.string().optional().nullable(),
   supervisorDesignation: z.string().optional().nullable(),
   totalExpenditure: optionalNumber("Total Expenditure must be a valid number."),
-  workStatus: z.enum(siteWorkStatusOptions, { required_error: "Work Status is required." }).optional(),
+  workStatus: z.enum(siteWorkStatusOptions, { required_error: "Work Status is required." }),
   workRemarks: z.string().optional().nullable().default(""),
 
   // Survey fields (Actuals)
@@ -352,8 +344,6 @@ export const DataEntrySchema = z.object({
 
   fileStatus: z.enum(fileStatusOptions).optional(),
   remarks: z.string().optional(),
-  createdAt: z.any().optional(),
-  updatedAt: z.any().optional(),
 }).superRefine((data, ctx) => {
     if (!data.fileStatus) {
         ctx.addIssue({
