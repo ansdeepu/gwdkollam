@@ -132,8 +132,8 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
                     {/* Top Details Grid */}
                     <div className="grid grid-cols-4 gap-x-6 gap-y-3 py-2">
                         <DetailRow label="Regd. date" value={formatDateSafe(v.registrationDate)} />
-                        <DetailRow label="Owner" value="Ground Water Department" />
-                        <DetailRow label="Address" value="Kollam, Kerala" />
+                        <DetailRow label="Owner" value={isHired ? (v as HiredVehicle).ownerName || 'N/A' : 'Ground Water Department'} />
+                        <DetailRow label="Address" value={isHired ? (v as HiredVehicle).ownerAddress || 'N/A' : 'Kollam, Kerala'} />
                         <DetailRow label="Class" value={v.vehicleClass} isUppercase={true} />
                         
                         <DetailRow label="Mfg" value={v.model || '-'} />
