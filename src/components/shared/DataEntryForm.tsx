@@ -522,7 +522,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                           </FormItem>
                                       )}
                                   />
-                                  <FormField name="workRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-3"><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
+                                  <FormField name="drillingRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-3"><FormLabel>Implementation Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                 </div>
                             </CardContent></Card>
                             
@@ -561,7 +561,6 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                             <FormField name="zoneDetails" control={control} render={({ field }) => <FormItem><FormLabel>Zone Details (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                             <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Static Water (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
                                             <FormField name="typeOfRig" control={control} render={({field})=> <FormItem><FormLabel>Type of Rig</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isFieldReadOnly(true)}><FormControl><SelectTrigger><SelectValue placeholder="Select Rig Type"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteTypeOfRigOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
-                                            <FormField name="drillingRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Drilling Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                         </div>
                                     </CardContent></Card>
                             )}
@@ -594,7 +593,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                         <FormField name="dateOfCompletion" control={control} render={({ field }) => <FormItem><FormLabel>Completion Date {isCompletionDateRequired && <span className="text-destructive">*</span>}</FormLabel><FormControl><Input type="date" {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                         {!isSupervisor && <FormField name="totalExpenditure" control={control} render={({ field }) => <FormItem><FormLabel>Total Expenditure (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />}
                                     </div>
-                                    <FormField name="workRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
+                                    <FormField name="workRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                 </CardContent>
                             </Card>
                         </form>
@@ -630,7 +629,7 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData | null, o
             "TS Amount (₹)": site.tsAmount, "Tender No.": site.tenderNo, "Contractor Name": site.contractorName,
             "Assigned Supervisor": site.supervisorName,
             "Supervisor Designation": site.supervisorDesignation,
-            "Work Remarks": site.workRemarks
+            "Implementation Remarks": site.drillingRemarks
         },
         "Survey Details": isWellPurpose && {
             "Recommended Diameter (mm)": site.surveyRecommendedDiameter, "Recommended TD (m)": site.surveyRecommendedTD,
@@ -645,7 +644,7 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData | null, o
             "Actual Casing Pipe (m)": site.casingPipeUsed, ...(purpose === 'BWC' && { "Outer Casing (m)": site.outerCasingPipe, "Inner Casing (m)": site.innerCasingPipe }),
             ...(purpose === 'TWC' && { "Plain Pipe (m)": site.surveyPlainPipe, "Slotted Pipe (m)": site.surveySlottedPipe, "MS Casing Pipe (m)": site.outerCasingPipe }),
             "Yield (LPH)": site.yieldDischarge, "Zone Details (m)": site.zoneDetails, "Static Water (m)": site.waterLevel,
-            "Type of Rig": site.typeOfRig, "Drilling Remarks": site.drillingRemarks,
+            "Type of Rig": site.typeOfRig,
         },
         "Developing Details": isDevPurpose && {
             "Diameter (mm)": site.diameter, "TD (m)": site.totalDepth, "Discharge (LPH)": site.yieldDischarge,
@@ -654,11 +653,11 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData | null, o
         "Scheme Details": (isMWSSSchemePurpose || isHPSPurpose) && {
             ...(isMWSSSchemePurpose && { "Well Discharge (LPH)": site.yieldDischarge, "Pump Details": site.pumpDetails, "Pumping Line (m)": site.pumpingLineLength, "Delivery Line (m)": site.deliveryLineLength, "Tank Capacity (L)": site.waterTankCapacity, "# Taps": site.noOfTapConnections }),
             ...(isHPSPurpose && { "Depth Erected (m)": site.totalDepth, "Water Level (m)": site.waterLevel }),
-            "# Beneficiaries": site.noOfBeneficiary, "Remarks": site.workRemarks,
+            "# Beneficiaries": site.noOfBeneficiary,
         },
         "Work Status": {
             "Status": site.workStatus, "Completion Date": site.dateOfCompletion,
-            "Total Expenditure (₹)": site.totalExpenditure, "Work Remarks": site.workRemarks,
+            "Total Expenditure (₹)": site.totalExpenditure, "Remarks": site.workRemarks,
         }
     };
     
