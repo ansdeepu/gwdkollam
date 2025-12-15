@@ -104,7 +104,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
 
     let details: React.ReactNode;
     const isRigCompressor = !('registrationNumber' in vehicle);
-    const dialogWidthClass = isRigCompressor ? "max-w-md" : "max-w-xl";
+    const dialogWidthClass = isRigCompressor ? "max-w-lg" : "max-w-xl";
     const title = isRigCompressor ? (vehicle as RigCompressor).typeOfRigUnit : (vehicle as DepartmentVehicle).registrationNumber;
 
     if ('registrationNumber' in vehicle) {
