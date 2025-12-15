@@ -102,9 +102,8 @@ const CertificateItem = ({ label, date }: { label: string, date?: any }) => {
 export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVehicle | HiredVehicle | RigCompressor | null, onClose: () => void }) {
     if (!vehicle) return null;
 
-    let details: React.ReactNode;
     const isRigCompressor = !('registrationNumber' in vehicle);
-    const dialogWidthClass = isRigCompressor ? "max-w-lg" : "max-w-xl";
+    const dialogWidthClass = isRigCompressor ? "max-w-2xl" : "max-w-xl";
     const title = isRigCompressor ? (vehicle as RigCompressor).typeOfRigUnit : (vehicle as DepartmentVehicle).registrationNumber;
 
     if ('registrationNumber' in vehicle) {
@@ -201,8 +200,8 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     
     return (
         <DialogContent
-            className={cn("p-0 border-0 bg-transparent shadow-none w-auto", dialogWidthClass)}
             onPointerDownOutside={(e) => e.preventDefault()}
+            className={cn("p-0 border-0 bg-transparent shadow-none w-auto", dialogWidthClass)}
         >
              {details}
         </DialogContent>
