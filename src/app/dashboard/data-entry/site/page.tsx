@@ -38,7 +38,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useFileEntries } from "@/hooks/useFileEntries";
 import type { StaffMember } from "@/lib/schemas";
 import { useAuth } from "@/hooks/useAuth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { useDataStore } from "@/hooks/use-data-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { format } from "date-fns";
