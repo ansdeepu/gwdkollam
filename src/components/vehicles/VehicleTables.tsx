@@ -105,6 +105,7 @@ export function VehicleViewDialog({ vehicle, onClose }: { vehicle: DepartmentVeh
     const isRigCompressor = !('registrationNumber' in vehicle);
     const dialogWidthClass = isRigCompressor ? "max-w-2xl" : "max-w-xl";
     const title = isRigCompressor ? (vehicle as RigCompressor).typeOfRigUnit : (vehicle as DepartmentVehicle).registrationNumber;
+    let details;
 
     if ('registrationNumber' in vehicle) {
         const v = vehicle as DepartmentVehicle | HiredVehicle;
