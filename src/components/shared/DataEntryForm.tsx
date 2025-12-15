@@ -522,7 +522,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                           </FormItem>
                                       )}
                                   />
-                                   <FormField name="workRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-3"><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
+                                  <FormField name="workRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-3"><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                 </div>
                             </CardContent></Card>
                             
@@ -594,6 +594,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                         <FormField name="dateOfCompletion" control={control} render={({ field }) => <FormItem><FormLabel>Completion Date {isCompletionDateRequired && <span className="text-destructive">*</span>}</FormLabel><FormControl><Input type="date" {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                         {!isSupervisor && <FormField name="totalExpenditure" control={control} render={({ field }) => <FormItem><FormLabel>Total Expenditure (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />}
                                     </div>
+                                    <FormField name="workRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                 </CardContent>
                             </Card>
                         </form>
