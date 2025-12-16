@@ -282,7 +282,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
                     <FormField name="amountRemitted" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl><FormMessage /></FormItem> )}/>
                     <FormField name="remittedAccount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Account <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger></FormControl><SelectContent>{remittedAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
                 </div>
-                <FormField name="remittanceRemarks" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} placeholder="Add any remarks for this remittance entry..." /></FormControl><FormMessage /></FormItem> )}/>
+                <FormField name="remittanceRemarks" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Remittance Remarks</FormLabel><FormControl><Textarea {...field} placeholder="Add any remarks for this remittance entry..." /></FormControl><FormMessage /></FormItem> )}/>
             </div>
             <DialogFooter className="p-6 pt-4">
                 <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
@@ -336,7 +336,7 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
                               <FormField name="refundToParty" control={form.control} render={({ field }) => <FormItem><FormLabel>Refund to Party (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl><FormMessage /></FormItem>} />
                           </div>
                           <Separator/>
-                          <FormField name="paymentRemarks" control={form.control} render={({ field }) => <FormItem><FormLabel>Remarks</FormLabel><FormControl><Textarea {...field} placeholder="Add any remarks for this payment entry..." /></FormControl><FormMessage /></FormItem>} />
+                          <FormField name="paymentRemarks" control={form.control} render={({ field }) => <FormItem><FormLabel>Payment Remarks</FormLabel><FormControl><Textarea {...field} placeholder="Add any remarks for this payment entry..." /></FormControl><FormMessage /></FormItem>} />
                       </div>
                   </ScrollArea>
                 </div>
@@ -472,7 +472,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                         {watchedPurpose === 'TWC' && <FormField name="surveyRecommendedMsCasingPipe" control={control} render={({ field }) => <FormItem><FormLabel>MS Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />}
                                         {watchedPurpose === 'FPW' && <FormField name="surveyRecommendedCasingPipe" control={control} render={({ field }) => <FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />}
                                         <FormField name="surveyLocation" control={control} render={({ field }) => <FormItem><FormLabel>Survey Location</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />
-                                        <FormField name="surveyRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Survey Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField name="surveyRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-1"><FormLabel>Implementation Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                     </div>
                                 </CardContent></Card>
                             )}
@@ -523,7 +523,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                           </FormItem>
                                       )}
                                   />
-                                   <FormField name="surveyRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Implementation Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
+                                   <FormField name="drillingRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-1"><FormLabel>Implementation Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                 </div>
                             </CardContent></Card>
                             
@@ -536,7 +536,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                             <FormField name="totalDepth" control={control} render={({ field }) => <FormItem><FormLabel>Total Depth (m)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                             <FormField name="yieldDischarge" control={control} render={({ field }) => <FormItem><FormLabel>Yield (LPH)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                             <FormField name="waterLevel" control={control} render={({ field }) => <FormItem><FormLabel>Static Water (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
-                                            <FormField name="developingRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Developing Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
+                                            <FormField name="developingRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-1"><FormLabel>Developing Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -560,7 +560,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                             <FormField name="zoneDetails" control={control} render={({ field }) => <FormItem><FormLabel>Zone Details (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                             <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Static Water (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
                                             <FormField name="typeOfRig" control={control} render={({field})=> <FormItem><FormLabel>Type of Rig</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isFieldReadOnly(true)}><FormControl><SelectTrigger><SelectValue placeholder="Select Rig Type"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteTypeOfRigOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
-                                            <FormField name="drillingRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Drilling Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
+                                            <FormField name="drillingRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-1"><FormLabel>Drilling Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                         </div>
                                     </CardContent></Card>
                             )}
@@ -572,7 +572,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             {isMWSSSchemePurpose && <>
                                                 <FormField name="yieldDischarge" control={control} render={({field})=> <FormItem><FormLabel>Well Discharge (LPH)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
-                                                <FormField name="pumpDetails" control={control} render={({field})=> <FormItem><FormLabel>Scheme Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
+                                                <FormField name="pumpDetails" control={control} render={({field})=> <FormItem className="md:col-span-1"><FormLabel>Scheme Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
                                                 <FormField name="pumpingLineLength" control={control} render={({field})=> <FormItem><FormLabel>Pumping Line (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
                                                 <FormField name="deliveryLineLength" control={control} render={({field})=> <FormItem><FormLabel>Delivery Line (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
                                                 <FormField name="waterTankCapacity" control={control} render={({field})=> <FormItem><FormLabel>Tank Capacity (L)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
@@ -583,7 +583,6 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                                 <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
                                             </>}
                                             <FormField name="noOfBeneficiary" control={control} render={({field})=> <FormItem><FormLabel># Beneficiaries</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
-                                            <FormField name="developingRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Developing Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -596,7 +595,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                         <FormField name="workStatus" control={control} render={({ field }) => <FormItem><FormLabel>Work Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isFieldReadOnly(true)}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent className="max-h-80"><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : SITE_DIALOG_WORK_STATUS_OPTIONS).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
                                         <FormField name="dateOfCompletion" control={control} render={({ field }) => <FormItem><FormLabel>Completion Date {isCompletionDateRequired && <span className="text-destructive">*</span>}</FormLabel><FormControl><Input type="date" {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                         {!isSupervisor && <FormField name="totalExpenditure" control={control} render={({ field }) => <FormItem><FormLabel>Total Expenditure (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />}
-                                        <FormField name="workRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField name="workRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-1"><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                     </div>
                                 </CardContent>
                             </Card>
@@ -613,7 +612,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
 };
 
 const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData | null, onCancel: () => void }) => {
-    if (!site) return null; // Add null check here
+    if (!site) return null;
     
     const purpose = site.purpose as SitePurpose;
     const wellConstructionPurposes: SitePurpose[] = ["BWC", "TWC", "FPW"];
@@ -660,7 +659,6 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData | null, o
             ...(isMWSSSchemePurpose && { "Well Discharge (LPH)": site.yieldDischarge, "Pump Details": site.pumpDetails, "Pumping Line (m)": site.pumpingLineLength, "Delivery Line (m)": site.deliveryLineLength, "Tank Capacity (L)": site.waterTankCapacity, "# Taps": site.noOfTapConnections }),
             ...(isHPSPurpose && { "Depth Erected (m)": site.totalDepth, "Water Level (m)": site.waterLevel }),
             "# Beneficiaries": site.noOfBeneficiary,
-            "Scheme Remarks": site.workRemarks,
         },
         "Work Status": {
             "Status": site.workStatus, "Completion Date": site.dateOfCompletion,
