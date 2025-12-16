@@ -373,7 +373,7 @@ export default function EstablishmentPage() {
               setIsFormOpen(true);
           }
       }}>
-        <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="sm:max-w-3xl max-h-[90vh]">
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="sm:max-w-5xl max-h-[90vh]">
           <DialogHeader className="p-6 pb-4">
             <DialogTitle>{editingStaff ? (isViewer ? "View Staff Details" : "Edit Staff Details") : "Add New Staff Member"}</DialogTitle>
             <DialogDescription>
