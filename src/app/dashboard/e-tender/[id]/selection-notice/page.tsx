@@ -104,7 +104,7 @@ export default function SelectionNoticePrintPage() {
 
               <div className="pt-6">
                   <p>പ്രേഷകൻ</p>
-                  <p className="ml-8">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
+                  <p className="ml-8">ജില്ലാ ആഫീസർ</p>
               </div>
 
               <div className="pt-2">
