@@ -173,6 +173,8 @@ export default function ArsEntryPage() {
     });
 
     const watchedArsStatus = useWatch({ control: form.control, name: 'arsStatus' });
+    const watchedLsg = useWatch({ control: form.control, name: "localSelfGovt" });
+    const isSupervisorDropdownDisabled = false;
 
     const isFieldReadOnly = (fieldName: keyof ArsEntryFormData): boolean => {
         if (canEdit) return false; // Editor can edit everything
@@ -188,6 +190,19 @@ export default function ArsEntryPage() {
         return true; // Default to read-only for any other unhandled case
     };
 
+    const constituencyOptionsForLsg = useMemo(() => {
+        if (!watchedLsg) return [];
+        const map = allLsgConstituencyMaps.find(m => m.name === watchedLsg);
+        if (!map || !map.constituencies) return [];
+        return [...map.constituencies].sort((a,b) => a.localeCompare(b));
+    }, [watchedLsg, allLsgConstituencyMaps]);
+    
+    const isConstituencyDisabled = useMemo(() => {
+        if (isFieldReadOnly('constituency')) return true;
+        if (!watchedLsg) return true;
+        if (constituencyOptionsForLsg.length <= 1) return true;
+        return false;
+    }, [isFieldReadOnly, watchedLsg, constituencyOptionsForLsg]);
 
      useEffect(() => {
         let title = 'Add New ARS Entry';
@@ -229,16 +244,6 @@ export default function ArsEntryPage() {
             })
             .filter((s): s is StaffMember & { id: string; name: string } => s !== null);
     }, [allUsers, staffMembers, canEdit]);
-    
-    const watchedLsg = useWatch({ control: form.control, name: "localSelfGovt" });
-    const isSupervisorDropdownDisabled = false;
-
-    const constituencyOptionsForLsg = useMemo(() => {
-        if (!watchedLsg) return [];
-        const map = allLsgConstituencyMaps.find(m => m.name === watchedLsg);
-        if (!map || !map.constituencies) return [];
-        return [...map.constituencies].sort((a,b) => a.localeCompare(b));
-    }, [watchedLsg, allLsgConstituencyMaps]);
     
     const handleLsgChange = useCallback((lsgName: string) => {
         form.setValue('localSelfGovt', lsgName);
@@ -361,7 +366,7 @@ export default function ArsEntryPage() {
           setIsSubmitting(false);
         }
     };
-
+    
     if (entriesLoading || staffIsLoading) {
         return ( <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center"> <Loader2 className="h-12 w-12 animate-spin text-primary" /> <p className="ml-3 text-muted-foreground">Loading form data...</p> </div> );
     }
@@ -378,13 +383,6 @@ export default function ArsEntryPage() {
         );
     }
     
-    const isConstituencyDisabled = useMemo(() => {
-        if (isFieldReadOnly('constituency')) return true;
-        if (!watchedLsg) return true;
-        if (constituencyOptionsForLsg.length <= 1) return true;
-        return false;
-    }, [isFieldReadOnly, watchedLsg, constituencyOptionsForLsg]);
-
     const supervisorWorkStatusOptions = isSupervisor
         ? arsStatusOptions.filter(status =>
             SUPERVISOR_EDITABLE_STATUSES.includes(status as (typeof arsStatusOptions)[number])
