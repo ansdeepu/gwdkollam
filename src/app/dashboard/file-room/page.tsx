@@ -1,3 +1,4 @@
+
 // src/app/dashboard/file-room/page.tsx
 "use client";
 
@@ -85,8 +86,8 @@ export default function FileManagerPage() {
         return dateB.getTime() - dateA.getTime();
       }
       if (!dateA && !dateB) {
-        const createdAtA = safeParseDate(a.createdAt);
-        const createdAtB = safeParseDate(b.createdAt);
+        const createdAtA = safeParseDate((a as any).createdAt);
+        const createdAtB = safeParseDate((b as any).createdAt);
         if (createdAtA && createdAtB) {
           return createdAtB.getTime() - createdAtA.getTime();
         }
