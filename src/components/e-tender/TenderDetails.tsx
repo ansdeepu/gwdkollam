@@ -224,9 +224,9 @@ export default function TenderDetails() {
             performanceGuaranteeAmount: undefined,
             additionalPerformanceGuaranteeAmount: undefined,
             stampPaperAmount: undefined,
-            performanceGuaranteeDescription: undefined,
-            additionalPerformanceGuaranteeDescription: undefined,
-            stampPaperDescription: undefined,
+            performanceGuaranteeDescription: null,
+            additionalPerformanceGuaranteeDescription: null,
+            stampPaperDescription: null,
         };
         await handleSave(clearedData);
         toast({ title: "Selection Notice Cleared", description: "The details have been cleared and saved." });
