@@ -219,15 +219,16 @@ export default function TenderDetails() {
     };
     
     const handleClearSelectionNotice = async () => {
-        setValue('selectionNoticeDate', null);
-        setValue('performanceGuaranteeAmount', undefined);
-        setValue('additionalPerformanceGuaranteeAmount', undefined);
-        setValue('stampPaperAmount', undefined);
-        setValue('performanceGuaranteeDescription', null);
-        setValue('additionalPerformanceGuaranteeDescription', null);
-        setValue('stampPaperDescription', null);
-    
-        await handleSave(getValues());
+        const clearedData = {
+            selectionNoticeDate: null,
+            performanceGuaranteeAmount: undefined,
+            additionalPerformanceGuaranteeAmount: undefined,
+            stampPaperAmount: undefined,
+            performanceGuaranteeDescription: null,
+            additionalPerformanceGuaranteeDescription: null,
+            stampPaperDescription: null,
+        };
+        await handleSave(clearedData);
         toast({ title: "Selection Notice Cleared", description: "The details have been cleared and saved." });
         setIsClearSelectionNoticeConfirmOpen(false);
     };
