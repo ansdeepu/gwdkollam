@@ -234,7 +234,7 @@ export default function ArsEntryPage() {
     const isSupervisorDropdownDisabled = false;
 
     const constituencyOptionsForLsg = useMemo(() => {
-        if (!watchedLsg) return [...constituencyOptions].sort((a, b) => a.localeCompare(b));
+        if (!watchedLsg) return [];
         const map = allLsgConstituencyMaps.find(m => m.name === watchedLsg);
         if (!map || !map.constituencies) return [];
         return [...map.constituencies].sort((a,b) => a.localeCompare(b));
@@ -378,7 +378,12 @@ export default function ArsEntryPage() {
         );
     }
     
-    const isConstituencyDisabled = isFieldReadOnly('constituency') || constituencyOptionsForLsg.length <= 1;
+    const isConstituencyDisabled = useMemo(() => {
+        if (isFieldReadOnly('constituency')) return true;
+        if (!watchedLsg) return true;
+        if (constituencyOptionsForLsg.length <= 1) return true;
+        return false;
+    }, [isFieldReadOnly, watchedLsg, constituencyOptionsForLsg]);
 
     const supervisorWorkStatusOptions = isSupervisor
         ? arsStatusOptions.filter(status =>
