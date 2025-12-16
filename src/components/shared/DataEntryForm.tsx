@@ -472,7 +472,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                         {watchedPurpose === 'TWC' && <FormField name="surveyRecommendedMsCasingPipe" control={control} render={({ field }) => <FormItem><FormLabel>MS Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />}
                                         {watchedPurpose === 'FPW' && <FormField name="surveyRecommendedCasingPipe" control={control} render={({ field }) => <FormItem><FormLabel>Casing Pipe (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />}
                                         <FormField name="surveyLocation" control={control} render={({ field }) => <FormItem><FormLabel>Survey Location</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />
-                                        <FormField name="surveyRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-1"><FormLabel>Implementation Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField name="surveyRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Implementation Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                     </div>
                                 </CardContent></Card>
                             )}
@@ -536,7 +536,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                             <FormField name="totalDepth" control={control} render={({ field }) => <FormItem><FormLabel>Total Depth (m)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                             <FormField name="yieldDischarge" control={control} render={({ field }) => <FormItem><FormLabel>Yield (LPH)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                             <FormField name="waterLevel" control={control} render={({ field }) => <FormItem><FormLabel>Static Water (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
-                                            <FormField name="developingRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-1"><FormLabel>Developing Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
+                                            <FormField name="developingRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-1"><FormLabel>Developing Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -560,7 +560,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                             <FormField name="zoneDetails" control={control} render={({ field }) => <FormItem><FormLabel>Zone Details (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                             <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Static Water (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
                                             <FormField name="typeOfRig" control={control} render={({field})=> <FormItem><FormLabel>Type of Rig</FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isFieldReadOnly(true)}><FormControl><SelectTrigger><SelectValue placeholder="Select Rig Type"/></SelectTrigger></FormControl><SelectContent><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{siteTypeOfRigOptions.map(o=><SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage/></FormItem>} />
-                                            <FormField name="drillingRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-1"><FormLabel>Drilling Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
+                                            <FormField name="drillingRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Drilling Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                         </div>
                                     </CardContent></Card>
                             )}
@@ -572,7 +572,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             {isMWSSSchemePurpose && <>
                                                 <FormField name="yieldDischarge" control={control} render={({field})=> <FormItem><FormLabel>Well Discharge (LPH)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
-                                                <FormField name="pumpDetails" control={control} render={({field})=> <FormItem className="md:col-span-1"><FormLabel>Scheme Remarks</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
+                                                <FormField name="pumpDetails" control={control} render={({ field }) => <FormItem><FormLabel>Scheme Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                                 <FormField name="pumpingLineLength" control={control} render={({field})=> <FormItem><FormLabel>Pumping Line (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
                                                 <FormField name="deliveryLineLength" control={control} render={({field})=> <FormItem><FormLabel>Delivery Line (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
                                                 <FormField name="waterTankCapacity" control={control} render={({field})=> <FormItem><FormLabel>Tank Capacity (L)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
@@ -595,7 +595,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                         <FormField name="workStatus" control={control} render={({ field }) => <FormItem><FormLabel>Work Status <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value} disabled={isFieldReadOnly(true)}><FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl><SelectContent className="max-h-80"><SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>-- Clear Selection --</SelectItem>{(isSupervisor ? SUPERVISOR_WORK_STATUS_OPTIONS : SITE_DIALOG_WORK_STATUS_OPTIONS).map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem>} />
                                         <FormField name="dateOfCompletion" control={control} render={({ field }) => <FormItem><FormLabel>Completion Date {isCompletionDateRequired && <span className="text-destructive">*</span>}</FormLabel><FormControl><Input type="date" {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                         {!isSupervisor && <FormField name="totalExpenditure" control={control} render={({ field }) => <FormItem><FormLabel>Total Expenditure (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />}
-                                        <FormField name="workRemarks" control={control} render={({ field }) => <FormItem className="md:col-span-1"><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField name="workRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Work Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                     </div>
                                 </CardContent>
                             </Card>
@@ -734,9 +734,9 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const { fields: siteFields, append: appendSite, remove: removeSite, update: updateSite, move: moveSite } = useFieldArray({ control, name: "siteDetails" });
   const { fields: paymentFields, append: appendPayment, remove: removePayment, update: updatePayment } = useFieldArray({ control, name: "paymentDetails" });
 
-  const watchedPaymentDetails = useWatch({ control, name: "paymentDetails" });
-  const watchedRemittanceDetails = useWatch({ control, name: "remittanceDetails" });
-  const watchedSiteDetails = useWatch({ control, name: "siteDetails" });
+  const watchedRemittanceDetails = watch("remittanceDetails");
+  const watchedPaymentDetails = watch("paymentDetails");
+  const watchedSiteDetails = watch("siteDetails");
 
   const returnPath = useMemo(() => {
     let base = '/dashboard/file-room';
@@ -907,6 +907,9 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
     }
   };
 
+  const totalRemittanceWatched = watch('totalRemittance');
+  const totalPaymentWatched = watch('totalPaymentAllEntries');
+
   return (
     <FormProvider {...form}>
       <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-6">
@@ -937,7 +940,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <CardContent>
                 <div className="relative max-h-[400px] overflow-auto">
                     <Table>
-                        <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount (₹)</TableHead><TableHead>Account</TableHead><TableHead>Remarks</TableHead>{isEditor && !isFormDisabled && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
+                        <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount (₹)</TableHead><TableHead>Account</TableHead><TableHead>Remittance Remarks</TableHead>{isEditor && !isFormDisabled && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
                         <TableBody>
                             {remittanceFields.length > 0 ? remittanceFields.map((item, index) => (
                                 <TableRow key={item.id}>
@@ -949,7 +952,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                                 </TableRow>
                             )) : <TableRow><TableCell colSpan={isEditor && !isFormDisabled ? 5 : 4} className="text-center h-24">No remittance details added.</TableCell></TableRow>}
                         </TableBody>
-                        <TableFooterComponent><TableRow><TableCell colSpan={isEditor && !isFormDisabled ? 4 : 3} className="text-right font-bold">Total Remittance</TableCell><TableCell className="font-bold">₹{getValues('totalRemittance')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</TableCell></TableRow></TableFooterComponent>
+                        <TableFooterComponent><TableRow><TableCell colSpan={isEditor && !isFormDisabled ? 4 : 3} className="text-right font-bold">Total Remittance</TableCell><TableCell className="font-bold">₹{totalRemittanceWatched?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</TableCell></TableRow></TableFooterComponent>
                     </Table>
                 </div>
             </CardContent>
@@ -1071,7 +1074,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                  <div className="flex justify-end font-bold text-lg pt-4 border-t mt-4">
                     <div className="flex items-baseline gap-4">
                         <span>Total Payment:</span>
-                        <span>₹{getValues('totalPaymentAllEntries')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</span>
+                        <span>₹{totalPaymentWatched?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</span>
                     </div>
                 </div>
             </CardContent>
@@ -1085,10 +1088,10 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                      <dl className="space-y-2">
                         <div className="flex justify-between items-baseline"><dt>Total Estimate (Sites)</dt><dd className="font-mono">₹{totalEstimate.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
                         <Separator />
-                        <div className="flex justify-between items-baseline"><dt>Total Remittance</dt><dd className="font-mono">₹{getValues('totalRemittance')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
-                        <div className="flex justify-between items-baseline"><dt>Total Payment</dt><dd className="font-mono">₹{getValues('totalPaymentAllEntries')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
+                        <div className="flex justify-between items-baseline"><dt>Total Remittance</dt><dd className="font-mono">₹{watch('totalRemittance')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
+                        <div className="flex justify-between items-baseline"><dt>Total Payment</dt><dd className="font-mono">₹{watch('totalPaymentAllEntries')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
                         <Separator />
-                        <div className="flex justify-between items-baseline font-bold"><dt>Overall Balance</dt><dd className="font-mono text-xl">₹{getValues('overallBalance')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
+                        <div className="flex justify-between items-baseline font-bold"><dt>Overall Balance</dt><dd className="font-mono text-xl">₹{watch('overallBalance')?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</dd></div>
                      </dl>
                 </div>
                  <div className="p-4 border rounded-lg space-y-4 bg-secondary/30">
@@ -1189,3 +1192,4 @@ const ReorderSiteDialog = ({ fromIndex, siteCount, onConfirm, onCancel }: { from
 
 
     
+
