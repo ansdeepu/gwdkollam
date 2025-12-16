@@ -1,3 +1,4 @@
+
 // src/lib/schemas.ts
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
@@ -93,6 +94,34 @@ export const designationOptions = [
     "PTS",
 ] as const;
 export type Designation = typeof designationOptions[number];
+
+export const designationMalayalamOptions = [
+    "എക്സിക്യൂട്ടീവ് എഞ്ചിനീയർ",
+    "സീനിയർ ഹൈഡ്രോജിയോളജിസ്റ്റ്",
+    "അസിസ്റ്റന്റ് എക്സിക്യൂട്ടീവ് എഞ്ചിനീയർ",
+    "ഹൈഡ്രോജിയോളജിസ്റ്റ്",
+    "അസിസ്റ്റന്റ് എഞ്ചിനീയർ",
+    "ജൂനിയർ ഹൈഡ്രോജിയോളജിസ്റ്റ്",
+    "ജൂനിയർ ജിയോഫിസിസ്റ്റ്",
+    "മാസ്റ്റർ ഡ്രില്ലർ",
+    "സീനിയർ ഡ്രില്ലർ",
+    "ഡ്രില്ലർ",
+    "ഡ്രില്ലർ മെക്കാനിക്ക്",
+    "ഡ്രില്ലിംഗ് അസിസ്റ്റന്റ്",
+    "കംപ്രസ്സർ ഡ്രൈവർ",
+    "പമ്പ് ഓപ്പറേറ്റർ",
+    "ഡ്രൈവർ, എച്ച്ഡിവി",
+    "ഡ്രൈവർ, എൽഡിവി",
+    "സീനിയർ ക്ലർക്ക്",
+    "എൽ.ഡി ടൈപ്പിസ്റ്റ്",
+    "യു.ഡി ടൈപ്പിസ്റ്റ്",
+    "ട്രേസർ",
+    "ലാസ്കർ",
+    "ഓഫീസ് അറ്റൻഡന്റ്",
+    "വാച്ചർ",
+    "പിടിഎസ്"
+] as const;
+export type DesignationMalayalam = typeof designationMalayalamOptions[number];
 
 // Schema for new user creation by an admin
 export const NewUserByAdminSchema = z.object({
@@ -351,7 +380,9 @@ const dateOrString = z.union([
 export const StaffMemberFormDataSchema = z.object({
   photoUrl: z.string().url({ message: "Please enter a valid image URL." }).optional().or(z.literal("")),
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  nameMalayalam: z.string().optional(),
   designation: z.enum(designationOptions).optional(),
+  designationMalayalam: z.enum(designationMalayalamOptions).optional(),
   pen: z.string().min(1, { message: "PEN is required." }),
   dateOfBirth: z.string().optional(),
   phoneNo: z.string().regex(/^\d{10}$/, { message: "Phone number must be 10 digits." }).optional().or(z.literal("")),

@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { Loader2, Save, X, ImageUp, Unplug, Expand, Info } from "lucide-react";
-import { StaffMemberFormDataSchema, type StaffMemberFormData, designationOptions, staffStatusOptions, type StaffStatusType } from "@/lib/schemas";
+import { StaffMemberFormDataSchema, type StaffMemberFormData, designationOptions, staffStatusOptions, type StaffStatusType, designationMalayalamOptions } from "@/lib/schemas";
 import type { StaffMember } from "@/lib/schemas";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
@@ -67,7 +67,9 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
 
     return {
       name: initialData?.name || "",
+      nameMalayalam: initialData?.nameMalayalam || "",
       designation: initialData?.designation || undefined,
+      designationMalayalam: initialData?.designationMalayalam || undefined,
       pen: initialData?.pen || "",
       dateOfBirth: formattedDob,
       phoneNo: initialData?.phoneNo || "",
@@ -132,6 +134,19 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
           />
           <FormField
             control={form.control}
+            name="nameMalayalam"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Full Name (in Malayalam)</FormLabel>
+                <FormControl>
+                  <Input placeholder="Enter full name in Malayalam" {...field} value={field.value ?? ""} readOnly={isViewer} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
             name="designation"
             render={({ field }) => (
               <FormItem>
@@ -144,6 +159,28 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
                   </FormControl>
                   <SelectContent>
                     {designationOptions.map(option => (
+                      <SelectItem key={option} value={option}>{option}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="designationMalayalam"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Designation (in Malayalam)</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value} disabled={isViewer}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Malayalam designation" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {designationMalayalamOptions.map(option => (
                       <SelectItem key={option} value={option}>{option}</SelectItem>
                     ))}
                   </SelectContent>
