@@ -225,6 +225,7 @@ export default function TenderDetails() {
             additionalPerformanceGuaranteeAmount: undefined,
             stampPaperAmount: undefined,
             performanceGuaranteeDescription: undefined,
+            additionalPerformanceGuaranteeDescription: undefined,
             stampPaperDescription: undefined,
         };
         await handleSave(clearedData);
@@ -526,13 +527,15 @@ export default function TenderDetails() {
                                         <CardTitle className="text-lg font-semibold text-primary">Selection Notice Details</CardTitle>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        {hasAnySelectionNoticeData ? (
-                                            <>
-                                                {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('selectionNotice'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>}
-                                                {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearSelectionNoticeConfirmOpen(true); }}><Trash2 className="h-4 w-4 mr-2"/>Delete</Button>}
-                                            </>
-                                        ) : (
-                                            !isReadOnly && <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('selectionNotice'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
+                                        {!isReadOnly && (
+                                            hasAnySelectionNoticeData ? (
+                                                <>
+                                                    <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('selectionNotice')}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                                    <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearSelectionNoticeConfirmOpen(true)}><Trash2 className="h-4 w-4 mr-2"/>Delete</Button>
+                                                </>
+                                            ) : (
+                                                <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('selectionNotice')}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
+                                            )
                                         )}
                                     </div>
                                 </CardHeader>
