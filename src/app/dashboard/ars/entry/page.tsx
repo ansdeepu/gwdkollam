@@ -434,18 +434,25 @@ export default function ArsEntryPage() {
                               render={({ field }) => (
                                 <FormItem>
                                   <FormLabel>Constituency (LAC)</FormLabel>
-                                  <FormControl>
-                                    <Input
-                                      readOnly
-                                      value={field.value || ""}
-                                      placeholder={
-                                        constituencyOptionsForLsg.length > 1
-                                          ? "Select LSG to see options"
-                                          : "Auto-selected"
-                                      }
-                                      className="bg-muted/50"
-                                    />
-                                  </FormControl>
+                                    <Select
+                                        onValueChange={field.onChange}
+                                        value={field.value}
+                                        disabled={isConstituencyDisabled}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={!watchedLsg ? "Select LSG first" : "Select Constituency"} />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {constituencyOptionsForLsg.length > 1 && (
+                                                <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>
+                                                    -- Clear Selection --
+                                                </SelectItem>
+                                            )}
+                                            {constituencyOptionsForLsg.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
                                   <FormMessage />
                                 </FormItem>
                               )}
