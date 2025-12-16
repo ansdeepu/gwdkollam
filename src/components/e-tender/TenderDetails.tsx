@@ -124,11 +124,12 @@ export default function TenderDetails() {
         }
     };
 
-    const handleSave = async (data: Partial<E_tenderFormData>, isFinalSave = false) => {
+    const handleSave = async (data: Partial<E_tenderFormData>, isFinalSave = false, isDeletion = false) => {
         setIsSubmitting(true);
         try {
             const currentData = getValues();
-            const updatedData = { ...currentData, ...data };
+            // If it's a deletion, we don't merge with existing form state to avoid re-introducing deleted values.
+            const updatedData = isDeletion ? { ...currentData, ...data } : { ...currentData, ...data };
             
             const dataForSave = {
               ...updatedData,
@@ -219,7 +220,7 @@ export default function TenderDetails() {
     };
     
     const handleClearSelectionNotice = async () => {
-        const clearedData = {
+        const clearedData: Partial<E_tenderFormData> = {
             selectionNoticeDate: null,
             performanceGuaranteeAmount: undefined,
             additionalPerformanceGuaranteeAmount: undefined,
@@ -228,7 +229,7 @@ export default function TenderDetails() {
             additionalPerformanceGuaranteeDescription: null,
             stampPaperDescription: null,
         };
-        await handleSave(clearedData);
+        await handleSave(clearedData, false, true); // Pass true for isDeletion
         toast({ title: "Selection Notice Cleared", description: "The details have been cleared and saved." });
         setIsClearSelectionNoticeConfirmOpen(false);
     };
