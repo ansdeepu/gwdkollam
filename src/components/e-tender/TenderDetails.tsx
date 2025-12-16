@@ -129,6 +129,7 @@ export default function TenderDetails() {
         setIsSubmitting(true);
         try {
             const currentData = getValues();
+            
             const updatedData = isDeletion ? { ...currentData, ...data } : { ...currentData, ...data };
             
             const dataForSave = {
@@ -214,7 +215,7 @@ export default function TenderDetails() {
             technicalCommitteeMember2: undefined,
             technicalCommitteeMember3: undefined,
         };
-        await handleSave(clearedData);
+        await handleSave(clearedData, false, true);
         toast({ title: "Opening Details Cleared", description: "The details have been cleared and saved." });
         setIsClearOpeningDetailsConfirmOpen(false);
     };
@@ -229,6 +230,12 @@ export default function TenderDetails() {
             additionalPerformanceGuaranteeDescription: null,
             stampPaperDescription: null,
         };
+        
+        // Directly update form state before saving
+        Object.keys(clearedData).forEach(key => {
+            setValue(key as keyof E_tenderFormData, clearedData[key as keyof E_tenderFormData]);
+        });
+
         await handleSave(clearedData, false, true);
         toast({ title: "Selection Notice Cleared", description: "The details have been cleared and saved." });
         setIsClearSelectionNoticeConfirmOpen(false);
@@ -243,6 +250,10 @@ export default function TenderDetails() {
             supervisor2Id: null, supervisor2Name: null, supervisor2Phone: null,
             supervisor3Id: null, supervisor3Name: null, supervisor3Phone: null,
         };
+        
+        Object.keys(clearedData).forEach(key => {
+            setValue(key as keyof E_tenderFormData, clearedData[key as keyof E_tenderFormData]);
+        });
         await handleSave(clearedData, false, true);
         toast({ title: "Work Order Details Cleared", description: "The details have been cleared and saved." });
         setIsClearWorkOrderConfirmOpen(false);
@@ -577,8 +588,16 @@ export default function TenderDetails() {
                                         <CardTitle className="text-lg font-semibold text-primary">{workOrderTitle}</CardTitle>
                                     </div>
                                      <div className="flex items-center gap-2">
-                                        {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('workOrder'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>}
-                                        {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearWorkOrderConfirmOpen(true); }}><Trash2 className="h-4 w-4"/></Button>}
+                                        {!isReadOnly && (
+                                            hasAnyWorkOrderData ? (
+                                                <>
+                                                    <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('workOrder')}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
+                                                    <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearWorkOrderConfirmOpen(true)}><Trash2 className="h-4 w-4 mr-2"/>Delete</Button>
+                                                </>
+                                            ) : (
+                                                <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('workOrder')}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
+                                            )
+                                        )}
                                     </div>
                                 </CardHeader>
                                 {hasAnyWorkOrderData ? (
