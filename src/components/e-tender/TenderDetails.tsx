@@ -130,7 +130,7 @@ export default function TenderDetails() {
         try {
             const currentData = getValues();
             
-            // If it's a deletion, we start with the current data and overwrite specific fields with null.
+            // If it's a deletion, we start with the current data and overwrite specific fields.
             // If it's a normal save/update, we merge the new data on top of the current data.
             const updatedData = isDeletion ? { ...currentData, ...data } : { ...currentData, ...data };
             
@@ -232,6 +232,12 @@ export default function TenderDetails() {
             additionalPerformanceGuaranteeDescription: undefined,
             stampPaperDescription: undefined,
         };
+        
+        // Directly update form state to ensure UI reflects cleared state
+        Object.keys(clearedData).forEach(key => {
+            setValue(key as keyof E_tenderFormData, clearedData[key as keyof typeof clearedData]);
+        });
+        
         await handleSave(clearedData, false, true);
         toast({ title: "Selection Notice Details Cleared", description: "The details have been cleared and saved." });
         setIsClearSelectionNoticeConfirmOpen(false);
@@ -242,10 +248,15 @@ export default function TenderDetails() {
             agreementDate: null,
             dateWorkOrder: null,
             nameOfAssistantEngineer: undefined,
-            supervisor1Id: null, supervisor1Name: null, supervisor1Phone: null,
-            supervisor2Id: null, supervisor2Name: null, supervisor2Phone: null,
-            supervisor3Id: null, supervisor3Name: null, supervisor3Phone: null,
+            supervisor1Id: undefined, supervisor1Name: undefined, supervisor1Phone: undefined,
+            supervisor2Id: undefined, supervisor2Name: undefined, supervisor2Phone: undefined,
+            supervisor3Id: undefined, supervisor3Name: undefined, supervisor3Phone: undefined,
         };
+        
+        Object.keys(clearedData).forEach(key => {
+            setValue(key as keyof E_tenderFormData, clearedData[key as keyof typeof clearedData]);
+        });
+        
         await handleSave(clearedData, false, true);
         toast({ title: "Work Order Details Cleared", description: "The details have been cleared and saved." });
         setIsClearWorkOrderConfirmOpen(false);
@@ -546,7 +557,7 @@ export default function TenderDetails() {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('selectionNotice')}><Edit className="h-4 w-4 mr-2" />{hasAnySelectionNoticeData ? 'Edit' : 'Add'}</Button>}
-                                        {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearSelectionNoticeConfirmOpen(true)}><Trash2 className="mr-2 h-4 w-4" />Delete</Button>}
+                                        {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearSelectionNoticeConfirmOpen(true)}>Delete</Button>}
                                     </div>
                                 </CardHeader>
                                 {hasAnySelectionNoticeData ? (
@@ -573,7 +584,7 @@ export default function TenderDetails() {
                                     </div>
                                      <div className="flex items-center gap-2">
                                         {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('workOrder')}><Edit className="h-4 w-4 mr-2"/>{hasAnyWorkOrderData ? 'Edit' : 'Add'}</Button>}
-                                        {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearWorkOrderConfirmOpen(true)}><Trash2 className="h-4 w-4"/></Button>}
+                                        {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearWorkOrderConfirmOpen(true)}><Trash2 className="mr-2 h-4 w-4"/></Button>}
                                     </div>
                                 </CardHeader>
                                 {hasAnyWorkOrderData ? (
