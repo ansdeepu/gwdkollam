@@ -219,16 +219,15 @@ export default function TenderDetails() {
     };
     
     const handleClearSelectionNotice = async () => {
-        const clearedData = {
-            selectionNoticeDate: null,
-            performanceGuaranteeAmount: undefined,
-            additionalPerformanceGuaranteeAmount: undefined,
-            stampPaperAmount: undefined,
-            performanceGuaranteeDescription: null,
-            additionalPerformanceGuaranteeDescription: null,
-            stampPaperDescription: null,
-        };
-        await handleSave(clearedData);
+        setValue('selectionNoticeDate', null);
+        setValue('performanceGuaranteeAmount', undefined);
+        setValue('additionalPerformanceGuaranteeAmount', undefined);
+        setValue('stampPaperAmount', undefined);
+        setValue('performanceGuaranteeDescription', null);
+        setValue('additionalPerformanceGuaranteeDescription', null);
+        setValue('stampPaperDescription', null);
+    
+        await handleSave(getValues());
         toast({ title: "Selection Notice Cleared", description: "The details have been cleared and saved." });
         setIsClearSelectionNoticeConfirmOpen(false);
     };
@@ -531,7 +530,7 @@ export default function TenderDetails() {
                                             hasAnySelectionNoticeData ? (
                                                 <>
                                                     <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('selectionNotice')}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
-                                                    <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearSelectionNoticeConfirmOpen(true)}><Trash2 className="h-4 w-4 mr-2"/>Delete</Button>
+                                                    <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearSelectionNoticeConfirmOpen(true)}><Trash2 className="h-4 w-4 mr-2" />Delete</Button>
                                                 </>
                                             ) : (
                                                 <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('selectionNotice')}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
