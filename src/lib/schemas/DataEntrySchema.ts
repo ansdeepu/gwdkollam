@@ -254,8 +254,8 @@ export const SiteDetailSchema = z.object({
   waterLevel: z.string().optional().nullable(),
   drillingRemarks: z.string().optional().nullable().default(""),
   developingRemarks: z.string().optional().nullable().default(""),
+  schemeRemarks: z.string().optional().nullable().default(""),
   pumpDetails: z.string().optional().nullable(),
-  schemeRemarks: z.string().optional().nullable(), // Added new field
   pumpingLineLength: z.string().optional().nullable(),
   deliveryLineLength: z.string().optional().nullable(),
   waterTankCapacity: z.string().optional().nullable(),
@@ -269,6 +269,7 @@ export const SiteDetailSchema = z.object({
   supervisorDesignation: z.string().optional().nullable(),
   totalExpenditure: optionalNumber("Total Expenditure must be a valid number."),
   workStatus: z.enum(siteWorkStatusOptions, { required_error: "Work Status is required." }),
+  implementationRemarks: z.string().optional().nullable().default(""),
   workRemarks: z.string().optional().nullable().default(""),
 
   // Survey fields (Actuals)
