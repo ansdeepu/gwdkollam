@@ -26,7 +26,7 @@ const Bell = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
 );
 const FileSignature = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M20 19.5v.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/><polyline points="14 2 14 8 20 8"/><path d="M16 18h2"/><path d="m22 14-4.5 4.5L16 17"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M20 19.5v.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/><polyline points="14 2 14 8 20 8"/><path d="M16 18h2"/><path d="m22 14-4.5 4.5L16 17"/></svg>
 );
 
 
@@ -66,40 +66,40 @@ export default function ETenderNoticeBoard() {
         const numB = getTenderNumber(b.eTenderNo);
         return numB - numA;
     };
-
-    const review: E_tender[] = [];
-    const toBeOpened: E_tender[] = [];
-    const pendingSelection: E_tender[] = [];
-    const pendingWorkOrder: E_tender[] = [];
-
+    
+    let review: E_tender[] = [];
+    let toBeOpened: E_tender[] = [];
+    let pendingSelection: E_tender[] = [];
+    let pendingWorkOrder: E_tender[] = [];
+    
     activeTenders.forEach(t => {
-        const receipt = toDateOrNull(t.dateTimeOfReceipt);
-        const opening = toDateOrNull(t.dateTimeOfOpening);
-        const bidOpeningDate = toDateOrNull(t.dateOfOpeningBid);
-        const selectionNoticeDate = toDateOrNull(t.selectionNoticeDate);
-        const agreementDate = toDateOrNull(t.agreementDate);
-        const workOrderDate = toDateOrNull(t.dateWorkOrder);
-
-        // To be opened: Current time is before the submission deadline (receipt date)
-        if (receipt && isValid(receipt) && isBefore(now, receipt)) {
-            toBeOpened.push(t);
-        }
-        
-        // Review: after receipt date, but before opening date
-        if (receipt && opening && isValid(receipt) && isValid(opening) && isAfter(now, receipt) && isBefore(now, opening)) {
-            review.push(t);
-        }
-        
-        // Pending Selection: Bid has been opened, but no selection notice yet
-        if (bidOpeningDate && isValid(bidOpeningDate) && !selectionNoticeDate) {
-            pendingSelection.push(t);
-        }
-
-        // Pending Work Order: Selection notice issued, but no agreement/work order yet
-        if (selectionNoticeDate && isValid(selectionNoticeDate) && (!agreementDate || !workOrderDate)) {
-            pendingWorkOrder.push(t);
-        }
+      const receipt = toDateOrNull(t.dateTimeOfReceipt);
+      const opening = toDateOrNull(t.dateTimeOfOpening);
+    
+      // Review: Current time is between receipt and opening
+      if (receipt && opening && isValid(receipt) && isValid(opening) && isAfter(now, receipt) && isBefore(now, opening)) {
+        review.push(t);
+      }
+    
+      // To Be Opened: No opening details at all
+      const hasOpeningDetails = t.dateOfOpeningBid || t.dateOfTechnicalAndFinancialBidOpening || t.technicalCommitteeMember1 || t.technicalCommitteeMember2 || t.technicalCommitteeMember3;
+      if (!hasOpeningDetails) {
+        toBeOpened.push(t);
+      }
+    
+      // Pending Selection Notice: No selection notice details
+      const hasSelectionDetails = t.selectionNoticeDate || t.performanceGuaranteeAmount || t.additionalPerformanceGuaranteeAmount || t.stampPaperAmount;
+      if (!hasSelectionDetails) {
+          pendingSelection.push(t);
+      }
+    
+      // Pending Work Order: No work order details
+      const hasWorkOrderDetails = t.agreementDate || t.dateWorkOrder || t.nameOfAssistantEngineer || t.supervisor1Id || t.supervisor2Id || t.supervisor3Id;
+      if (!hasWorkOrderDetails) {
+          pendingWorkOrder.push(t);
+      }
     });
+
 
     review.sort(sortByTenderNoDesc);
     toBeOpened.sort(sortByTenderNoDesc);
