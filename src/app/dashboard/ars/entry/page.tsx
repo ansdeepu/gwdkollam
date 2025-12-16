@@ -428,25 +428,28 @@ export default function ArsEntryPage() {
                                 <FormMessage/>
                             </FormItem>
                           )}/>
-                          <FormField name="constituency" control={form.control} render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Constituency (LAC)</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value} disabled={isConstituencyDisabled}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Constituency" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(undefined); }}>
-                                            -- Clear Selection --
-                                        </SelectItem>
-                                        {constituencyOptionsForLsg.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                          )}/>
+                           <FormField
+                              name="constituency"
+                              control={form.control}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Constituency (LAC)</FormLabel>
+                                  <FormControl>
+                                    <Input
+                                      readOnly
+                                      value={field.value || ""}
+                                      placeholder={
+                                        constituencyOptionsForLsg.length > 1
+                                          ? "Select LSG to see options"
+                                          : "Auto-selected"
+                                      }
+                                      className="bg-muted/50"
+                                    />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
                           <FormField name="latitude" control={form.control} render={({ field }) => (<FormItem><FormLabel>Latitude</FormLabel><FormControl><Input type="number" step="any" placeholder="e.g., 8.8932" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('latitude')}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="longitude" control={form.control} render={({ field }) => (<FormItem><FormLabel>Longitude</FormLabel><FormControl><Input type="number" step="any" placeholder="e.g., 76.6141" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('longitude')} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsNumberOfStructures" control={form.control} render={({ field }) => (<FormItem><FormLabel>Number of Structures</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('arsNumberOfStructures')}/></FormControl><FormMessage /></FormItem>)} />
