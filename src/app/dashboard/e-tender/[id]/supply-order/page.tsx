@@ -16,7 +16,8 @@ export default function SupplyOrderPrintPage() {
         const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
         document.title = `eSupplyOrder${formattedTenderNo}`;
         setTimeout(() => window.print(), 500);
-    }, [tender]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const l1Bidder = useMemo(() => {
         if (!tender.bidders || tender.bidders.length === 0) return null;

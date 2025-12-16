@@ -15,7 +15,8 @@ export default function SelectionNoticePrintPage() {
         document.title = `dSelectionNotice${formattedTenderNo}`;
         // Automatically trigger print dialog
         setTimeout(() => window.print(), 500);
-    }, [tender]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
     
     const l1Bidder = useMemo(() => {
         if (!tender.bidders || tender.bidders.length === 0) return null;
@@ -67,14 +68,14 @@ export default function SelectionNoticePrintPage() {
 
             return (
                  <p className="leading-relaxed text-justify indent-8">
-                    മേൽ സൂചന പ്രകാരം {workName} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന് മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ <span className="font-mono">പതിന്നാല്</span> ദിവസത്തിനകം പെർഫോമൻസ് ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന <span className="font-mono">{quotedAmountStr}/-</span> രൂപയുടെ <span className="font-mono">5%</span> തുകയായ <span className="font-mono">{performanceGuaranteeStr}/-</span> രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായും, അഡിഷണൽ പെർഫോമൻസ് ഗ്യാരന്റിയായി എസ്റ്റിമേറ്റ് തുകയുടെ <span className="font-mono">{excessPercentageText}%</span> കുറവ് വന്ന തുകയായ <span className="font-mono">{additionalPerformanceGuaranteeStr}/-</span> രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായും ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും <span className="font-mono">{stampPaperValueStr}/-</span> രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെന്റ് വയ്ക്കുന്നതിനും നിർദ്ദേശിക്കുന്നു.
+                    മേൽ സൂചന പ്രകാരം {workName} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന് മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ് ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന {quotedAmountStr}/- രൂപയുടെ 5% തുകയായ {performanceGuaranteeStr}/- രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായും, അഡിഷണൽ പെർഫോമൻസ് ഗ്യാരന്റിയായി എസ്റ്റിമേറ്റ് തുകയുടെ {excessPercentageText}% കുറവ് വന്ന തുകയായ {additionalPerformanceGuaranteeStr}/- രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായും ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും {stampPaperValueStr}/- രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെന്റ് വയ്ക്കുന്നതിനും നിർദ്ദേശിക്കുന്നു.
                 </p>
             );
         }
 
         return (
             <p className="leading-relaxed text-justify indent-8">
-                മേൽ സൂചന പ്രകാരം {workName} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന് മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ <span className="font-mono">പതിന്നാല്</span> ദിവസത്തിനകം പെർഫോമൻസ് ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന <span className="font-mono">{quotedAmountStr}/-</span> രൂപയുടെ <span className="font-mono">5%</span> തുകയായ <span className="font-mono">{performanceGuaranteeStr}/-</span> രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായി ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും <span className="font-mono">{stampPaperValueStr}/-</span> രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ് വയ്ക്കുന്നതിനും നിർദ്ദേശിക്കുന്നു.
+                മേൽ സൂചന പ്രകാരം {workName} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന് മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ് ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന {quotedAmountStr}/- രൂപയുടെ 5% തുകയായ {performanceGuaranteeStr}/- രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായി ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും {stampPaperValueStr}/- രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ് വയ്ക്കുന്നതിനും നിർദ്ദേശിക്കുന്നു.
             </p>
         );
     };
@@ -88,16 +89,15 @@ export default function SelectionNoticePrintPage() {
               
               <div className="text-sm flex justify-between pt-2">
                   <div>
-                      <p>നമ്പർ: ജി.കെ.റ്റി / <span className="font-mono">{tender.fileNo || '__________'}</span></p>
-                      <p>ടെണ്ടർ നമ്പർ : <span className="font-mono">{tender.eTenderNo || '__________'}</span></p>
+                      <p>നമ്പർ: ജി.കെ.റ്റി / {tender.fileNo || '__________'}</p>
+                      <p>ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
                   </div>
                   <div className="text-right">
-                      <p>ജില്ലാ ഓഫീസറുടെ കാര്യാലയം</p>
-                      <p>ഭൂജലവകുപ്പ്</p>
+                      <p className="whitespace-pre-wrap">{officeAddress?.officeNameMalayalam || 'ജില്ലാ ഓഫീസറുടെ കാര്യാലയം\nഭൂജലവകുപ്പ്'}</p>
                       <p className="whitespace-pre-wrap">{officeAddress?.addressMalayalam || 'ഹൈസ്കൂൾ ജംഗ്ഷൻ\nതേവള്ളി പി. ഓ.\nകൊല്ലം - 691009'}</p>
-                      <p>ഫോൺനമ്പർ: <span className="font-mono">{officeAddress?.phoneNo || '0474 - 2790313'}</span></p>
+                      <p>ഫോൺനമ്പർ: {officeAddress?.phoneNo || '0474 - 2790313'}</p>
                       <p>ഇമെയിൽ: {officeAddress?.email || 'gwdklm@gmail.com'}</p>
-                      <p>തീയതി: <span className="font-mono">{formatDateSafe(tender.selectionNoticeDate) || '__________'}</span></p>
+                      <p>തീയതി: {formatDateSafe(tender.selectionNoticeDate) || '__________'}</p>
                   </div>
               </div>
 
@@ -125,7 +125,7 @@ export default function SelectionNoticePrintPage() {
                   </div>
                   <div className="grid grid-cols-[auto,1fr] gap-x-2">
                       <span className="font-semibold">സൂചന:</span>
-                      <span>: ഈ ഓഫീസിലെ <span className="font-mono">{formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening) || '__________'}</span> തീയതിയിലെ ടെണ്ടർ നമ്പർ <span className="font-mono">{tender.eTenderNo || '__________'}</span></span>
+                      <span>: ഈ ഓഫീസിലെ {formatDateSafe(tender.dateOfTechnicalAndFinancialBidOpening) || '__________'} തീയതിയിലെ ടെണ്ടർ നമ്പർ {tender.eTenderNo || '__________'}</span>
                   </div>
               </div>
               
@@ -136,7 +136,7 @@ export default function SelectionNoticePrintPage() {
               <div className="pt-10 text-right">
                   <p>വിശ്വസ്തതയോടെ</p>
                   <div className="h-16" />
-                  <p className="font-semibold">ജില്ലാ ആഫീസർ</p>
+                  <p className="font-semibold">{officeAddress?.districtOfficer || 'ജില്ലാ ആഫീസർ'}</p>
               </div>
           </div>
         </div>

@@ -16,7 +16,8 @@ export default function WorkOrderPrintPage() {
         const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
         document.title = `eWorkOrder${formattedTenderNo}`;
         setTimeout(() => window.print(), 500); // Automatically trigger print
-    }, [tender]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const l1Bidder = useMemo(() => {
         if (!tender.bidders || tender.bidders.length === 0) return null;
@@ -62,15 +63,15 @@ export default function WorkOrderPrintPage() {
 
               <div className="flex justify-between text-lg">
                   <div>
-                      <p>നമ്പർ: ജി.കെ.റ്റി / <span className="font-mono text-xl">{tender.fileNo || '__________'}</span></p>
-                      <p>ടെണ്ടർ നമ്പർ : <span className="font-mono text-xl">{tender.eTenderNo || '__________'}</span></p>
+                      <p>നമ്പർ: ജി.കെ.റ്റി / {tender.fileNo || '__________'}</p>
+                      <p>ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
                   </div>
                   <div className="text-right">
-                      <p>{officeAddress?.officeNameMalayalam || officeAddress?.officeName || 'ജില്ലാ ആഫീസറുടെ കാര്യാലയം,'}</p>
-                      <p className="whitespace-pre-wrap">{officeAddress?.addressMalayalam || officeAddress?.address || 'ഭൂജലവകുപ്പ്, കൊല്ലം - 691009'}</p>
-                      <p>ഫോൺനമ്പർ. <span className="font-mono text-xl">{officeAddress?.phoneNo || '0474 - 2790313'}</span></p>
-                      <p>ഇമെയിൽ: <span className="font-mono text-xl">{officeAddress?.email || 'gwdklm@gmail.com'}</span></p>
-                      <p>തീയതി: <span className="font-mono text-xl">{formatDateSafe(tender.dateWorkOrder) || '__________'}</span></p>
+                      <p className="whitespace-pre-wrap">{officeAddress?.officeNameMalayalam || 'ജില്ലാ ഓഫീസറുടെ കാര്യാലയം, ഭൂജലവകുപ്പ്'}</p>
+                      <p className="whitespace-pre-wrap">{officeAddress?.addressMalayalam || 'ഹൈസ്കൂൾ ജംഗ്ഷൻ, തേവള്ളി പി. ഓ., കൊല്ലം - 691009'}</p>
+                      <p>ഫോൺനമ്പർ. {officeAddress?.phoneNo || '0474 - 2790313'}</p>
+                      <p>ഇമെയിൽ: {officeAddress?.email || 'gwdklm@gmail.com'}</p>
+                      <p>തീയതി: {formatDateSafe(tender.dateWorkOrder) || '__________'}</p>
                   </div>
               </div>
 
@@ -96,8 +97,8 @@ export default function WorkOrderPrintPage() {
                 <div className="grid grid-cols-[auto,1fr] gap-x-2 text-lg">
                     <span className="font-semibold">സൂചന:</span>
                     <span className="flex flex-col">
-                        <span>1. ഈ ഓഫീസിലെ <span className="font-mono text-xl">{formatDateSafe(tender.dateOfOpeningBid) || '__________'}</span> തീയതിയിലെ ടെണ്ടർ നമ്പർ <span className="font-mono text-xl">{tender.eTenderNo || '__________'}</span></span>
-                        <span>2. വർക്ക് എഗ്രിമെന്റ് നമ്പർ <span className="font-mono text-xl">{tender.eTenderNo || '__________'}</span> തീയതി <span className="font-mono text-xl">{formatDateSafe(tender.agreementDate) || '__________'}</span></span>
+                        <span>1. ഈ ഓഫീസിലെ {formatDateSafe(tender.dateOfOpeningBid) || '__________'} തീയതിയിലെ ടെണ്ടർ നമ്പർ {tender.eTenderNo || '__________'}</span>
+                        <span>2. വർക്ക് എഗ്രിമെന്റ് നമ്പർ {tender.eTenderNo || '__________'} തീയതി {formatDateSafe(tender.agreementDate) || '__________'}</span>
                     </span>
                 </div>
               
