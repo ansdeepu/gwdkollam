@@ -130,6 +130,8 @@ export default function TenderDetails() {
         try {
             const currentData = getValues();
             
+            // If it's a deletion, we start with the current data and overwrite specific fields with null.
+            // If it's a normal save/update, we merge the new data on top of the current data.
             const updatedData = isDeletion ? { ...currentData, ...data } : { ...currentData, ...data };
             
             const dataForSave = {
@@ -230,7 +232,6 @@ export default function TenderDetails() {
             additionalPerformanceGuaranteeDescription: undefined,
             stampPaperDescription: undefined,
         };
-        Object.keys(clearedData).forEach(key => setValue(key as keyof E_tenderFormData, null));
         await handleSave(clearedData, false, true);
         toast({ title: "Selection Notice Details Cleared", description: "The details have been cleared and saved." });
         setIsClearSelectionNoticeConfirmOpen(false);
@@ -245,10 +246,6 @@ export default function TenderDetails() {
             supervisor2Id: null, supervisor2Name: null, supervisor2Phone: null,
             supervisor3Id: null, supervisor3Name: null, supervisor3Phone: null,
         };
-        
-        Object.keys(clearedData).forEach(key => {
-            setValue(key as keyof E_tenderFormData, clearedData[key as keyof E_tenderFormData]);
-        });
         await handleSave(clearedData, false, true);
         toast({ title: "Work Order Details Cleared", description: "The details have been cleared and saved." });
         setIsClearWorkOrderConfirmOpen(false);
@@ -548,8 +545,8 @@ export default function TenderDetails() {
                                         <CardTitle className="text-lg font-semibold text-primary">Selection Notice Details</CardTitle>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('selectionNotice')}><Edit className="h-4 w-4 mr-2" /> {hasAnySelectionNoticeData ? 'Edit' : 'Add'}</Button>}
-                                        {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearSelectionNoticeConfirmOpen(true)}><Trash2 className="h-4 w-4 mr-2" />Delete</Button>}
+                                        {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('selectionNotice')}><Edit className="h-4 w-4 mr-2" />{hasAnySelectionNoticeData ? 'Edit' : 'Add'}</Button>}
+                                        {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearSelectionNoticeConfirmOpen(true)}><Trash2 className="mr-2 h-4 w-4" />Delete</Button>}
                                     </div>
                                 </CardHeader>
                                 {hasAnySelectionNoticeData ? (
