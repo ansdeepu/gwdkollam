@@ -1,3 +1,4 @@
+
 // src/components/dashboard/ETenderNoticeBoard.tsx
 "use client";
 
@@ -17,7 +18,7 @@ const Hammer = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m15 12-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9"/><path d="M17.64 15 22 10.64"/><path d="m20.91 11.7-1.25-1.25c-.6-.6-.93-1.4-.93-2.25v-.86L16.01 4.6a5.56 5.56 0 0 0-3.94-1.64H9l.92.92a2.29 2.29 0 0 1-.17 3.23l-2.48 2.48a2.29 2.29 0 0 1-3.23-.17L2 15h6.83a2 2 0 0 0 1.42-.59L15 12Z"/></svg>
 );
 const Clock = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
 );
 const FolderOpen = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H16.5a2 2 0 0 1 2 2v1"/></svg>
@@ -75,28 +76,22 @@ export default function ETenderNoticeBoard() {
     activeTenders.forEach(t => {
       const receipt = toDateOrNull(t.dateTimeOfReceipt);
       const opening = toDateOrNull(t.dateTimeOfOpening);
+      
+      const hasOpeningDetails = t.dateOfOpeningBid || t.dateOfTechnicalAndFinancialBidOpening || t.technicalCommitteeMember1 || t.technicalCommitteeMember2 || t.technicalCommitteeMember3;
+      const hasSelectionDetails = t.selectionNoticeDate || t.performanceGuaranteeAmount || t.additionalPerformanceGuaranteeAmount || t.stampPaperAmount;
+      const hasWorkOrderDetails = t.agreementDate || t.dateWorkOrder || t.nameOfAssistantEngineer || t.supervisor1Id || t.supervisor2Id || t.supervisor3Id;
     
       // Review: Current time is between receipt and opening
       if (receipt && opening && isValid(receipt) && isValid(opening) && isAfter(now, receipt) && isBefore(now, opening)) {
         review.push(t);
       }
     
-      // To Be Opened: No opening details at all
-      const hasOpeningDetails = t.dateOfOpeningBid || t.dateOfTechnicalAndFinancialBidOpening || t.technicalCommitteeMember1 || t.technicalCommitteeMember2 || t.technicalCommitteeMember3;
       if (!hasOpeningDetails) {
         toBeOpened.push(t);
-      }
-    
-      // Pending Selection Notice: No selection notice details
-      const hasSelectionDetails = t.selectionNoticeDate || t.performanceGuaranteeAmount || t.additionalPerformanceGuaranteeAmount || t.stampPaperAmount;
-      if (!hasSelectionDetails) {
-          pendingSelection.push(t);
-      }
-    
-      // Pending Work Order: No work order details
-      const hasWorkOrderDetails = t.agreementDate || t.dateWorkOrder || t.nameOfAssistantEngineer || t.supervisor1Id || t.supervisor2Id || t.supervisor3Id;
-      if (!hasWorkOrderDetails) {
-          pendingWorkOrder.push(t);
+      } else if (!hasSelectionDetails) {
+        pendingSelection.push(t);
+      } else if (!hasWorkOrderDetails) {
+        pendingWorkOrder.push(t);
       }
     });
 
@@ -174,7 +169,7 @@ export default function ETenderNoticeBoard() {
                           cat.data,
                           (t) => t.eTenderNo || 'N/A',
                           cat.type === 'review' ? (t) => `Opens: ${formatDateSafe(t.dateTimeOfOpening, true)}` :
-                          cat.type === 'toBeOpened' ? (t) => `Receipt by: ${formatDateSafe(t.dateTimeOfReceipt, true)}` : undefined
+                          (t) => `Receipt by: ${formatDateSafe(t.dateTimeOfReceipt, true)}`
                       )}
                   </ScrollArea>
                 </TabsContent>
