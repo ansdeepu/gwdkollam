@@ -230,6 +230,7 @@ export default function TenderDetails() {
             additionalPerformanceGuaranteeDescription: undefined,
             stampPaperDescription: undefined,
         };
+        Object.keys(clearedData).forEach(key => setValue(key as keyof E_tenderFormData, null));
         await handleSave(clearedData, false, true);
         toast({ title: "Selection Notice Details Cleared", description: "The details have been cleared and saved." });
         setIsClearSelectionNoticeConfirmOpen(false);
