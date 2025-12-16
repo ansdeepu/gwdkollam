@@ -40,6 +40,33 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 
 type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | 'addCorrigendum' | 'editCorrigendum' | null;
 
+const SELECTION_NOTICE_CLEAR_DATA: Partial<E_tenderFormData> = {
+  selectionNoticeDate: null,
+  performanceGuaranteeAmount: null,
+  additionalPerformanceGuaranteeAmount: null,
+  stampPaperAmount: null,
+  performanceGuaranteeDescription: null,
+  additionalPerformanceGuaranteeDescription: null,
+  stampPaperDescription: null,
+};
+
+const OPENING_DETAILS_CLEAR_DATA: Partial<E_tenderFormData> = {
+  dateOfOpeningBid: null,
+  dateOfTechnicalAndFinancialBidOpening: null,
+  technicalCommitteeMember1: null,
+  technicalCommitteeMember2: null,
+  technicalCommitteeMember3: null,
+};
+
+const WORK_ORDER_CLEAR_DATA: Partial<E_tenderFormData> = {
+    agreementDate: null,
+    dateWorkOrder: null,
+    nameOfAssistantEngineer: null,
+    supervisor1Id: null, supervisor1Name: null, supervisor1Phone: null,
+    supervisor2Id: null, supervisor2Name: null, supervisor2Phone: null,
+    supervisor3Id: null, supervisor3Name: null, supervisor3Phone: null,
+};
+
 
 const DetailRow = ({ label, value, subValue, isCurrency = false, align = 'left' }: { label: string; value: any; subValue?: string; isCurrency?: boolean, align?: 'left' | 'center' | 'right' }) => {
     if (value === null || value === undefined || value === '' || (typeof value === 'number' && isNaN(value))) {
@@ -125,14 +152,11 @@ export default function TenderDetails() {
         }
     };
 
-    const handleSave = async (data: Partial<E_tenderFormData>, isFinalSave = false, isDeletion = false) => {
+    const handleSave = async (data: Partial<E_tenderFormData>, isFinalSave = false) => {
         setIsSubmitting(true);
         try {
             const currentData = getValues();
-            
-            // If it's a deletion, we start with the current data and overwrite specific fields.
-            // If it's a normal save/update, we merge the new data on top of the current data.
-            const updatedData = isDeletion ? { ...currentData, ...data } : { ...currentData, ...data };
+            const updatedData = { ...currentData, ...data };
             
             const dataForSave = {
               ...updatedData,
@@ -210,54 +234,28 @@ export default function TenderDetails() {
     };
     
     const handleClearOpeningDetails = async () => {
-        const clearedData = {
-            dateOfOpeningBid: null,
-            dateOfTechnicalAndFinancialBidOpening: null,
-            technicalCommitteeMember1: undefined,
-            technicalCommitteeMember2: undefined,
-            technicalCommitteeMember3: undefined,
-        };
-        await handleSave(clearedData, false, true);
+        Object.entries(OPENING_DETAILS_CLEAR_DATA).forEach(([key, value]) => {
+            setValue(key as keyof E_tenderFormData, value);
+        });
+        await handleSave(OPENING_DETAILS_CLEAR_DATA);
         toast({ title: "Opening Details Cleared", description: "The details have been cleared and saved." });
         setIsClearOpeningDetailsConfirmOpen(false);
     };
 
     const handleClearSelectionNotice = async () => {
-        const clearedData: Partial<E_tenderFormData> = {
-            selectionNoticeDate: null,
-            performanceGuaranteeAmount: undefined,
-            additionalPerformanceGuaranteeAmount: undefined,
-            stampPaperAmount: undefined,
-            performanceGuaranteeDescription: undefined,
-            additionalPerformanceGuaranteeDescription: undefined,
-            stampPaperDescription: undefined,
-        };
-        
-        // Directly update form state to ensure UI reflects cleared state
-        Object.keys(clearedData).forEach(key => {
-            setValue(key as keyof E_tenderFormData, clearedData[key as keyof typeof clearedData]);
+        Object.entries(SELECTION_NOTICE_CLEAR_DATA).forEach(([key, value]) => {
+            setValue(key as keyof E_tenderFormData, value);
         });
-        
-        await handleSave(clearedData, false, true);
-        toast({ title: "Selection Notice Details Cleared", description: "The details have been cleared and saved." });
+        await handleSave(SELECTION_NOTICE_CLEAR_DATA);
+        toast({ title: "Selection Notice Details Cleared", description: "Selection notice details have been permanently removed." });
         setIsClearSelectionNoticeConfirmOpen(false);
     };
     
     const handleClearWorkOrderDetails = async () => {
-        const clearedData: Partial<E_tenderFormData> = {
-            agreementDate: null,
-            dateWorkOrder: null,
-            nameOfAssistantEngineer: undefined,
-            supervisor1Id: undefined, supervisor1Name: undefined, supervisor1Phone: undefined,
-            supervisor2Id: undefined, supervisor2Name: undefined, supervisor2Phone: undefined,
-            supervisor3Id: undefined, supervisor3Name: undefined, supervisor3Phone: undefined,
-        };
-        
-        Object.keys(clearedData).forEach(key => {
-            setValue(key as keyof E_tenderFormData, clearedData[key as keyof typeof clearedData]);
+        Object.entries(WORK_ORDER_CLEAR_DATA).forEach(([key, value]) => {
+            setValue(key as keyof E_tenderFormData, value);
         });
-        
-        await handleSave(clearedData, false, true);
+        await handleSave(WORK_ORDER_CLEAR_DATA);
         toast({ title: "Work Order Details Cleared", description: "The details have been cleared and saved." });
         setIsClearWorkOrderConfirmOpen(false);
     };
@@ -584,7 +582,7 @@ export default function TenderDetails() {
                                     </div>
                                      <div className="flex items-center gap-2">
                                         {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('workOrder')}><Edit className="h-4 w-4 mr-2"/>{hasAnyWorkOrderData ? 'Edit' : 'Add'}</Button>}
-                                        {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearWorkOrderConfirmOpen(true)}><Trash2 className="mr-2 h-4 w-4"/></Button>}
+                                        {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearWorkOrderConfirmOpen(true)}><Trash2 className="h-4 w-4"/></Button>}
                                     </div>
                                 </CardHeader>
                                 {hasAnyWorkOrderData ? (
@@ -730,11 +728,11 @@ export default function TenderDetails() {
                     <AlertDialogContent>
                         <AlertDialogHeader>
                             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>This will clear all selection notice details. This action cannot be undone until you save all changes.</AlertDialogDescription>
+                            <AlertDialogDescription>This action will permanently delete the selection notice details. This cannot be undone.</AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleClearSelectionNotice}>Yes, Clear</AlertDialogAction>
+                            <AlertDialogAction onClick={handleClearSelectionNotice}>Yes, Delete</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
