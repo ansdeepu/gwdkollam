@@ -83,12 +83,12 @@ export default function TransferredStaffTable({
             <TableRow>
               <TableHead className="w-[50px]">Sl. No.</TableHead>
               <TableHead className="w-[80px] px-2 py-2 text-center">Photo</TableHead>
-              <TableHead className="px-2 py-2 text-center">Name</TableHead>
-              <TableHead className="px-2 py-2 text-center">Designation</TableHead>
-              <TableHead className="px-2 py-2 text-center">PEN</TableHead>
-              <TableHead className="px-2 py-2 text-center">Roles</TableHead>
-              <TableHead className="px-2 py-2 text-center">DOB</TableHead>
-              <TableHead className="px-2 py-2 min-w-[150px] text-center">Remarks</TableHead>
+              <TableHead className="px-2 py-2 text-left">Name</TableHead>
+              <TableHead className="px-2 py-2 text-left">Designation</TableHead>
+              <TableHead className="px-2 py-2 text-left">PEN</TableHead>
+              <TableHead className="px-2 py-2 text-left">Roles</TableHead>
+              <TableHead className="px-2 py-2 text-left">DOB</TableHead>
+              <TableHead className="px-2 py-2 min-w-[150px] text-left">Remarks</TableHead>
               <TableHead className="text-center w-[100px] px-2 py-2">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -179,8 +179,8 @@ export default function TransferredStaffTable({
               </TableRow>
             )}) : (
               <TableRow>
-                <TableCell colSpan={9} className="h-24 text-center px-2 py-2"> 
-                  {searchActive ? "No staff members found matching your search." : "No transferred staff members found."}
+                <TableCell colSpan={9} className="h-24 text-center px-2 py-2">
+                   {searchActive ? "No staff members found matching your search." : "No transferred staff members found."}
                 </TableCell>
               </TableRow>
             )}

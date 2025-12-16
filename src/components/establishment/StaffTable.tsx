@@ -102,12 +102,12 @@ export default function StaffTable({
               <TableRow>
                 <TableHead className="w-[50px]">Sl. No.</TableHead>
                 <TableHead className="w-[80px] px-2 py-2 text-center">Photo</TableHead>
-                <TableHead className="px-2 py-2 text-center">Name</TableHead>
-                <TableHead className="px-2 py-2 text-center">Designation</TableHead>
-                <TableHead className="px-2 py-2 text-center">PEN</TableHead>
-                <TableHead className="px-2 py-2 text-center">Roles</TableHead>
-                <TableHead className="px-2 py-2 text-center">Phone No.</TableHead>
-                <TableHead className="px-2 py-2 text-center">DOB</TableHead>
+                <TableHead className="px-2 py-2 text-left">Name</TableHead>
+                <TableHead className="px-2 py-2 text-left">Designation</TableHead>
+                <TableHead className="px-2 py-2 text-left">PEN</TableHead>
+                <TableHead className="px-2 py-2 text-left">Roles</TableHead>
+                <TableHead className="px-2 py-2 text-left">Phone No.</TableHead>
+                <TableHead className="px-2 py-2 text-left">DOB</TableHead>
                 <TableHead className="text-center w-[130px] px-2 py-2">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -133,7 +133,7 @@ export default function StaffTable({
                           <AvatarFallback>{getInitials(staff.name)}</AvatarFallback>
                         </Avatar>
                          {canExpandAvatar && (
-                          <div className="absolute bottom-0 right-0 bg-black/60 p-0.5 rounded-full">
+                          <div className="absolute bottom-0 right-0 bg-black/50 p-0.5 rounded-sm">
                             <Expand className="h-3 w-3 text-white" />
                           </div>
                         )}
