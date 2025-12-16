@@ -529,7 +529,7 @@ export default function TenderDetails() {
                                         {hasAnySelectionNoticeData ? (
                                             <>
                                                 {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('selectionNotice'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>}
-                                                {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearSelectionNoticeConfirmOpen(true); }}><Trash2 className="h-4 w-4"/></Button>}
+                                                {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearSelectionNoticeConfirmOpen(true); }}><Trash2 className="h-4 w-4 mr-2"/>Delete</Button>}
                                             </>
                                         ) : (
                                             !isReadOnly && <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('selectionNotice'); }}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
