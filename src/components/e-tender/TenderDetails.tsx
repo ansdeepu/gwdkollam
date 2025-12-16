@@ -98,6 +98,7 @@ export default function TenderDetails() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [activeAccordion, setActiveAccordion] = useState<string>("basic-details");
     const [isClearOpeningDetailsConfirmOpen, setIsClearOpeningDetailsConfirmOpen] = useState(false);
+    const [isClearSelectionNoticeConfirmOpen, setIsClearSelectionNoticeConfirmOpen] = useState(false);
     const [isClearWorkOrderConfirmOpen, setIsClearWorkOrderConfirmOpen] = useState(false);
 
     const isReadOnly = user?.role === 'viewer';
@@ -217,6 +218,21 @@ export default function TenderDetails() {
         await handleSave(clearedData, false, true);
         toast({ title: "Opening Details Cleared", description: "The details have been cleared and saved." });
         setIsClearOpeningDetailsConfirmOpen(false);
+    };
+
+    const handleClearSelectionNotice = async () => {
+        const clearedData: Partial<E_tenderFormData> = {
+            selectionNoticeDate: null,
+            performanceGuaranteeAmount: undefined,
+            additionalPerformanceGuaranteeAmount: undefined,
+            stampPaperAmount: undefined,
+            performanceGuaranteeDescription: undefined,
+            additionalPerformanceGuaranteeDescription: undefined,
+            stampPaperDescription: undefined,
+        };
+        await handleSave(clearedData, false, true);
+        toast({ title: "Selection Notice Details Cleared", description: "The details have been cleared and saved." });
+        setIsClearSelectionNoticeConfirmOpen(false);
     };
     
     const handleClearWorkOrderDetails = async () => {
@@ -531,13 +547,8 @@ export default function TenderDetails() {
                                         <CardTitle className="text-lg font-semibold text-primary">Selection Notice Details</CardTitle>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        {!isReadOnly && (
-                                            hasAnySelectionNoticeData ? (
-                                                <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('selectionNotice')}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
-                                            ) : (
-                                                <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('selectionNotice')}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
-                                            )
-                                        )}
+                                        {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('selectionNotice')}><Edit className="h-4 w-4 mr-2" /> {hasAnySelectionNoticeData ? 'Edit' : 'Add'}</Button>}
+                                        {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearSelectionNoticeConfirmOpen(true)}><Trash2 className="h-4 w-4 mr-2" />Delete</Button>}
                                     </div>
                                 </CardHeader>
                                 {hasAnySelectionNoticeData ? (
@@ -563,16 +574,8 @@ export default function TenderDetails() {
                                         <CardTitle className="text-lg font-semibold text-primary">{workOrderTitle}</CardTitle>
                                     </div>
                                      <div className="flex items-center gap-2">
-                                        {!isReadOnly && (
-                                            hasAnyWorkOrderData ? (
-                                                <>
-                                                    <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('workOrder')}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
-                                                    <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearWorkOrderConfirmOpen(true)}><Trash2 className="h-4 w-4 mr-2"/>Delete</Button>
-                                                </>
-                                            ) : (
-                                                <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('workOrder')}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
-                                            )
-                                        )}
+                                        {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('workOrder')}><Edit className="h-4 w-4 mr-2"/>{hasAnyWorkOrderData ? 'Edit' : 'Add'}</Button>}
+                                        {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearWorkOrderConfirmOpen(true)}><Trash2 className="h-4 w-4"/></Button>}
                                     </div>
                                 </CardHeader>
                                 {hasAnyWorkOrderData ? (
@@ -710,6 +713,19 @@ export default function TenderDetails() {
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction onClick={handleClearOpeningDetails}>Yes, Clear</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+                
+                <AlertDialog open={isClearSelectionNoticeConfirmOpen} onOpenChange={setIsClearSelectionNoticeConfirmOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>This will clear all selection notice details. This action cannot be undone until you save all changes.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleClearSelectionNotice}>Yes, Clear</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
