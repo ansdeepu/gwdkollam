@@ -239,7 +239,7 @@ export const SiteDetailSchema = z.object({
   estimateAmount: optionalNumber("Estimate Amount must be a valid number."),
   remittedAmount: optionalNumber("Remitted Amount must be a valid number."),
   siteConditions: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteConditionsOptions).optional()),
-  accessibleRig: z.string().optional().nullable(),
+  accessibleRig: z.string().optional(),
   tsAmount: optionalNumber("TS Amount must be a valid number."),
   additionalAS: z.enum(['Yes', 'No']).optional().nullable().default('No'),
   tenderNo: z.string().optional(),
@@ -253,8 +253,9 @@ export const SiteDetailSchema = z.object({
   zoneDetails: z.string().optional().nullable(),
   waterLevel: z.string().optional().nullable(),
   drillingRemarks: z.string().optional().nullable().default(""),
-  developingRemarks: z.string().optional().nullable().default(""), // Added this line
+  developingRemarks: z.string().optional().nullable().default(""),
   pumpDetails: z.string().optional().nullable(),
+  schemeRemarks: z.string().optional().nullable(), // Added new field
   pumpingLineLength: z.string().optional().nullable(),
   deliveryLineLength: z.string().optional().nullable(),
   waterTankCapacity: z.string().optional().nullable(),
@@ -362,3 +363,5 @@ export const DataEntrySchema = z.object({
     }
 });
 export type DataEntryFormData = z.infer<typeof DataEntrySchema>;
+
+    
