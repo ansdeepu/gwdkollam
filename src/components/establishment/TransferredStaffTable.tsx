@@ -114,7 +114,7 @@ export default function TransferredStaffTable({
                       <AvatarFallback>{getInitials(staff.name)}</AvatarFallback>
                     </Avatar>
                     {canExpandAvatar && (
-                      <div className="absolute bottom-0 right-0 bg-black/60 p-0.5 rounded-full">
+                      <div className="absolute bottom-0 right-0 bg-black/50 p-0.5 rounded-full">
                         <Expand className="h-3 w-3 text-white" />
                       </div>
                     )}
@@ -122,11 +122,9 @@ export default function TransferredStaffTable({
                 </TableCell>
                 <TableCell className={cn("font-medium whitespace-normal break-words max-w-[150px] px-2 py-2 text-left")}>
                   {staff.name}
-                  {staff.nameMalayalam && <p className="text-xs text-muted-foreground">{staff.nameMalayalam}</p>}
                 </TableCell>
                 <TableCell className={cn("whitespace-normal break-words max-w-[180px] px-2 py-2 text-left")}>
                   {staff.designation}
-                  {staff.designationMalayalam && <p className="text-xs text-muted-foreground">{staff.designationMalayalam}</p>}
                 </TableCell>
                 <TableCell className={cn("whitespace-normal break-words max-w-[100px] px-2 py-2 text-left")}>{staff.pen}</TableCell>
                 <TableCell className={cn("whitespace-normal break-words max-w-[150px] text-xs px-2 py-2 text-left")}>{staff.roles || "N/A"}</TableCell>
