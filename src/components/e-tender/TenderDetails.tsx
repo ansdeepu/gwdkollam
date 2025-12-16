@@ -99,6 +99,7 @@ export default function TenderDetails() {
     const [activeAccordion, setActiveAccordion] = useState<string>("basic-details");
     const [isClearOpeningDetailsConfirmOpen, setIsClearOpeningDetailsConfirmOpen] = useState(false);
     const [isClearSelectionNoticeConfirmOpen, setIsClearSelectionNoticeConfirmOpen] = useState(false);
+    const [isClearWorkOrderConfirmOpen, setIsClearWorkOrderConfirmOpen] = useState(false);
 
     const isReadOnly = user?.role === 'viewer';
 
@@ -128,7 +129,6 @@ export default function TenderDetails() {
         setIsSubmitting(true);
         try {
             const currentData = getValues();
-            // If it's a deletion, we don't merge with existing form state to avoid re-introducing deleted values.
             const updatedData = isDeletion ? { ...currentData, ...data } : { ...currentData, ...data };
             
             const dataForSave = {
@@ -229,9 +229,23 @@ export default function TenderDetails() {
             additionalPerformanceGuaranteeDescription: null,
             stampPaperDescription: null,
         };
-        await handleSave(clearedData, false, true); // Pass true for isDeletion
+        await handleSave(clearedData, false, true);
         toast({ title: "Selection Notice Cleared", description: "The details have been cleared and saved." });
         setIsClearSelectionNoticeConfirmOpen(false);
+    };
+    
+    const handleClearWorkOrderDetails = async () => {
+        const clearedData: Partial<E_tenderFormData> = {
+            agreementDate: null,
+            dateWorkOrder: null,
+            nameOfAssistantEngineer: undefined,
+            supervisor1Id: null, supervisor1Name: null, supervisor1Phone: null,
+            supervisor2Id: null, supervisor2Name: null, supervisor2Phone: null,
+            supervisor3Id: null, supervisor3Name: null, supervisor3Phone: null,
+        };
+        await handleSave(clearedData, false, true);
+        toast({ title: "Work Order Details Cleared", description: "The details have been cleared and saved." });
+        setIsClearWorkOrderConfirmOpen(false);
     };
     
     const watchedBasicFields = watch([
@@ -532,7 +546,7 @@ export default function TenderDetails() {
                                             hasAnySelectionNoticeData ? (
                                                 <>
                                                     <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('selectionNotice')}><Edit className="h-4 w-4 mr-2"/>Edit</Button>
-                                                    <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearSelectionNoticeConfirmOpen(true)}><Trash2 className="h-4 w-4 mr-2" />Delete</Button>
+                                                    <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearSelectionNoticeConfirmOpen(true)}><Trash2 className="h-4 w-4 mr-2"/>Delete</Button>
                                                 </>
                                             ) : (
                                                 <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('selectionNotice')}><PlusCircle className="h-4 w-4 mr-2"/>Add</Button>
@@ -562,7 +576,10 @@ export default function TenderDetails() {
                                         <ScrollText className="h-5 w-5 text-primary"/>
                                         <CardTitle className="text-lg font-semibold text-primary">{workOrderTitle}</CardTitle>
                                     </div>
-                                    {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('workOrder'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>}
+                                     <div className="flex items-center gap-2">
+                                        {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('workOrder'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>}
+                                        {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearWorkOrderConfirmOpen(true); }}><Trash2 className="h-4 w-4"/></Button>}
+                                    </div>
                                 </CardHeader>
                                 {hasAnyWorkOrderData ? (
                                     <CardContent className="p-6 pt-0">
@@ -715,6 +732,20 @@ export default function TenderDetails() {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
+
+                <AlertDialog open={isClearWorkOrderConfirmOpen} onOpenChange={setIsClearWorkOrderConfirmOpen}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>This will clear all work order details. This action cannot be undone until you save all changes.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleClearWorkOrderDetails}>Yes, Clear</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
             </div>
         </FormProvider>
     );
