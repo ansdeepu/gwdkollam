@@ -1,10 +1,11 @@
+
 // src/hooks/use-data-store.tsx
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { getFirestore, collection, onSnapshot, query, Timestamp, DocumentData, orderBy, getDocs, type QuerySnapshot, where, deleteDoc, doc, addDoc, updateDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import { useAuth } from './useAuth';
+import { useAuth, type UserProfile } from './useAuth';
 import type { DataEntryFormData } from '@/lib/schemas/DataEntrySchema';
 import type { ArsEntry } from './useArsEntries';
 import type { StaffMember, LsgConstituencyMap, Designation, Bidder as MasterBidder, DepartmentVehicle, HiredVehicle, RigCompressor } from '@/lib/schemas';
@@ -105,8 +106,7 @@ interface DataStoreContextType {
 
 const DataStoreContext = createContext<DataStoreContextType | undefined>(undefined);
 
-export function DataStoreProvider({ children }: { children: ReactNode }) {
-    const { user } = useAuth();
+export function DataStoreProvider({ children, user }: { children: ReactNode, user: UserProfile | null }) {
     const [allFileEntries, setAllFileEntries] = useState<DataEntryFormData[]>([]);
     const [allArsEntries, setAllArsEntries] = useState<ArsEntry[]>([]);
     const [allStaffMembers, setAllStaffMembers] = useState<StaffMember[]>([]);

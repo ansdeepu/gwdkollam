@@ -1,3 +1,4 @@
+
 // src/app/dashboard/layout.tsx
 "use client";
 
@@ -15,7 +16,7 @@ import { PageHeaderProvider, usePageHeader } from '@/hooks/usePageHeader';
 import { DataStoreProvider } from '@/hooks/use-data-store';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { useAuth, updateUserLastActive } from '@/hooks/useAuth';
+import { useAuth, updateUserLastActive, type UserProfile } from '@/hooks/useAuth';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import FirebaseErrorListener from '@/components/FirebaseErrorListener';
@@ -51,8 +52,7 @@ const sectionColors = [
     "text-lime-600", "text-green-600", "text-emerald-600", "text-teal-600", "text-cyan-600"
 ];
 
-function HeaderContent() {
-  const { user } = useAuth();
+function HeaderContent({ user }: { user: UserProfile | null }) {
   const { title, description } = usePageHeader();
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const pathname = usePathname();
@@ -238,25 +238,27 @@ function InnerDashboardLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <SidebarProvider defaultOpen>
-      {isNavigating && (
-        <div className="page-transition-spinner">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      )}
-      <div className="flex h-screen w-full overflow-hidden">
-        <AppSidebar />
-        <SidebarInset className="flex flex-col flex-1 overflow-hidden">
-           <FirebaseErrorListener />
-           <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/95 backdrop-blur-sm">
-                <HeaderContent />
-            </header>
-          <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-6">
-            {children}
-          </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+    <DataStoreProvider user={user}>
+        <SidebarProvider defaultOpen>
+          {isNavigating && (
+            <div className="page-transition-spinner">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          )}
+          <div className="flex h-screen w-full overflow-hidden">
+            <AppSidebar />
+            <SidebarInset className="flex flex-col flex-1 overflow-hidden">
+              <FirebaseErrorListener />
+              <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/95 backdrop-blur-sm">
+                    <HeaderContent user={user} />
+                </header>
+              <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-6">
+                {children}
+              </main>
+            </SidebarInset>
+          </div>
+        </SidebarProvider>
+    </DataStoreProvider>
   );
 }
 
@@ -265,11 +267,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <PageNavigationProvider>
       <PageHeaderProvider>
-        <DataStoreProvider>
-          <TooltipProvider>
+        <TooltipProvider>
             <InnerDashboardLayout>{children}</InnerDashboardLayout>
-          </TooltipProvider>
-        </DataStoreProvider>
+        </TooltipProvider>
       </PageHeaderProvider>
     </PageNavigationProvider>
   );
