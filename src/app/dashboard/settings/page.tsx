@@ -470,9 +470,9 @@ export default function SettingsPage() {
                     <div className="space-y-3 p-4 border rounded-lg bg-secondary/30">
                         <div className="flex flex-col md:flex-row md:items-start gap-4">
                             <div className="flex-1">
-                                <h3 className="font-bold text-lg text-foreground">{officeAddress.officeName}</h3>
-                                {officeAddress.officeNameMalayalam && <p className="text-md text-muted-foreground">{officeAddress.officeNameMalayalam}</p>}
-                                <p className="text-sm text-muted-foreground whitespace-pre-wrap mt-2">{officeAddress.address}</p>
+                                <h3 className="font-bold text-lg text-foreground whitespace-pre-wrap">{officeAddress.officeName}</h3>
+                                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{officeAddress.address}</p>
+                                {officeAddress.officeNameMalayalam && <p className="text-md text-muted-foreground mt-2 whitespace-pre-wrap">{officeAddress.officeNameMalayalam}</p>}
                                 {officeAddress.addressMalayalam && <p className="text-sm text-muted-foreground whitespace-pre-wrap">{officeAddress.addressMalayalam}</p>}
                             </div>
                             <div className="flex items-center gap-3">
