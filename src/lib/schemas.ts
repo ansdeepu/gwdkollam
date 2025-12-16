@@ -1,4 +1,3 @@
-
 // src/lib/schemas.ts
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
@@ -387,7 +386,7 @@ export const StaffMemberFormDataSchema = z.object({
   dateOfBirth: z.string().optional(),
   phoneNo: z.string().regex(/^\d{10}$/, { message: "Phone number must be 10 digits." }).optional().or(z.literal("")),
   roles: z.string().optional(),
-  status: z.enum(staffStatusOptions).default('Active'),
+  status: z.enum(staffStatusOptions).default('Active'), 
   remarks: z.string().optional().default(""), 
 });
 export type StaffMemberFormData = z.infer<typeof StaffMemberFormDataSchema>;

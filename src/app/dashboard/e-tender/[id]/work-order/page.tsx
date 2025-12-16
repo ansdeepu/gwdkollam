@@ -42,7 +42,7 @@ export default function WorkOrderPrintPage() {
     ].filter((s): s is StaffMember => !!s);
     
     const supervisorListText = supervisors.length > 0 
-        ? supervisors.map(s => `${s.name}, ${s.designation}${s.phoneNo ? ` (ഫോൺ നമ്പർ: ${s.phoneNo})` : ''}`).join(', ') 
+        ? supervisors.map(s => `${s.nameMalayalam || s.name}, ${s.designationMalayalam || s.designation}${s.phoneNo ? ` (ഫോൺ നമ്പർ: ${s.phoneNo})` : ''}`).join(', ') 
         : '____________________';
 
     const mainParagraph = `മേൽ സൂചന പ്രകാരം ${tender.nameOfWorkMalayalam || tender.nameOfWork} എന്ന പ്രവൃത്തി നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ ഷെഡ്യൂൾ പ്രവൃത്തികൾ ഏറ്റെടുത്ത് നിശ്ചിത സമയപരിധിയായ ${tender.periodOfCompletion || '___'} ദിവസത്തിനുള്ളിൽ ഈ ഓഫീസിലെ ${supervisorListText} എന്നിവരുടെ മേൽനോട്ടത്തിൽ വിജയകരമായി പൂർത്തിയാക്കി പൂർത്തീകരണ റിപ്പോർട്ടും വർക്ക് ബില്ലും ഓഫീസിൽ ഹാജരാക്കേണ്ടതാണ്.`;
@@ -66,8 +66,8 @@ export default function WorkOrderPrintPage() {
                       <p>ടെണ്ടർ നമ്പർ : <span className="font-mono text-xl">{tender.eTenderNo || '__________'}</span></p>
                   </div>
                   <div className="text-right">
-                      <p>{officeAddress?.officeName || 'ജില്ലാ ആഫീസറുടെ കാര്യാലയം,'}</p>
-                      <p className="whitespace-pre-wrap">{officeAddress?.address || 'ഭൂജലവകുപ്പ്, കൊല്ലം - 691009'}</p>
+                      <p>{officeAddress?.officeNameMalayalam || officeAddress?.officeName || 'ജില്ലാ ആഫീസറുടെ കാര്യാലയം,'}</p>
+                      <p className="whitespace-pre-wrap">{officeAddress?.addressMalayalam || officeAddress?.address || 'ഭൂജലവകുപ്പ്, കൊല്ലം - 691009'}</p>
                       <p>ഫോൺനമ്പർ. <span className="font-mono text-xl">{officeAddress?.phoneNo || '0474 - 2790313'}</span></p>
                       <p>ഇമെയിൽ: <span className="font-mono text-xl">{officeAddress?.email || 'gwdklm@gmail.com'}</span></p>
                       <p>തീയതി: <span className="font-mono text-xl">{formatDateSafe(tender.dateWorkOrder) || '__________'}</span></p>
@@ -141,7 +141,7 @@ export default function WorkOrderPrintPage() {
                   <p>പകർപ്പ്</p>
                   <ol className="list-decimal list-outside ml-8">
                       {copyToList.map((person, index) => (
-                          <li key={index}>{person.name}, {person.designation}</li>
+                          <li key={index}>{person.nameMalayalam || person.name}, {person.designationMalayalam || person.designation}</li>
                       ))}
                       <li>ഫയൽ</li>
                   </ol>

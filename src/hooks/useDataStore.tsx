@@ -1,11 +1,10 @@
-
 // src/hooks/use-data-store.tsx
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { getFirestore, collection, onSnapshot, query, Timestamp, DocumentData, orderBy, getDocs, type QuerySnapshot, where, deleteDoc, doc, addDoc, updateDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { app } from '@/lib/firebase';
-import { useAuth } from './useAuth';
+import { useAuth, type UserProfile } from './useAuth';
 import type { DataEntryFormData } from '@/lib/schemas/DataEntrySchema';
 import type { ArsEntry } from './useArsEntries';
 import type { StaffMember, LsgConstituencyMap, Designation, Bidder as MasterBidder, DepartmentVehicle, HiredVehicle, RigCompressor } from '@/lib/schemas';
@@ -55,7 +54,9 @@ export const defaultRateDescriptions: Record<RateDescriptionId, string> = {
 export interface OfficeAddress {
   id: string;
   officeName?: string;
+  officeNameMalayalam?: string;
   address?: string;
+  addressMalayalam?: string;
   phoneNo?: string;
   email?: string;
   districtOfficerStaffId?: string;
@@ -102,12 +103,12 @@ interface DataStoreContextType {
     addRigCompressor: (data: RigCompressor) => Promise<void>;
     updateRigCompressor: (data: RigCompressor) => Promise<void>;
     deleteRigCompressor: (id: string, name: string) => Promise<void>;
+    refetchOfficeAddress: () => void;
 }
 
 const DataStoreContext = createContext<DataStoreContextType | undefined>(undefined);
 
-export function DataStoreProvider({ children }: { children: ReactNode }) {
-    const { user } = useAuth();
+export function DataStoreProvider({ children, user }: { children: ReactNode, user: UserProfile | null }) {
     const [allFileEntries, setAllFileEntries] = useState<DataEntryFormData[]>([]);
     const [allArsEntries, setAllArsEntries] = useState<ArsEntry[]>([]);
     const [allStaffMembers, setAllStaffMembers] = useState<StaffMember[]>([]);
@@ -145,6 +146,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
         departmentVehicles: 0,
         hiredVehicles: 0,
         rigCompressors: 0,
+        officeAddress: 0,
     });
 
     const refetchFileEntries = useCallback(() => setRefetchCounters(c => ({...c, files: c.files + 1})), []);
@@ -157,6 +159,8 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
     const refetchDepartmentVehicles = useCallback(() => setRefetchCounters(c => ({...c, departmentVehicles: c.departmentVehicles + 1})), []);
     const refetchHiredVehicles = useCallback(() => setRefetchCounters(c => ({...c, hiredVehicles: c.hiredVehicles + 1})), []);
     const refetchRigCompressors = useCallback(() => setRefetchCounters(c => ({...c, rigCompressors: c.rigCompressors + 1})), []);
+    const refetchOfficeAddress = useCallback(() => setRefetchCounters(c => ({...c, officeAddress: c.officeAddress + 1})), []);
+
 
      const deleteArsEntry = useCallback(async (id: string) => {
         if (!user || user.role !== 'editor') {
@@ -400,6 +404,7 @@ export function DataStoreProvider({ children }: { children: ReactNode }) {
             addRigCompressor,
             updateRigCompressor,
             deleteRigCompressor,
+            refetchOfficeAddress,
         }}>
             {children}
         </DataStoreContext.Provider>

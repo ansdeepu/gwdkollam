@@ -94,8 +94,8 @@ export default function SelectionNoticePrintPage() {
                       <p>ടെണ്ടർ നമ്പർ : <span className="font-mono">{tender.eTenderNo || '__________'}</span></p>
                   </div>
                   <div className="text-right">
-                      <p>{officeAddress?.officeName || 'ജില്ലാ ആഫീസറുടെ കാര്യാലയം,'}</p>
-                      <p className="whitespace-pre-wrap">{officeAddress?.address || 'ഭൂജലവകുപ്പ്, കൊല്ലം'}</p>
+                      <p>{officeAddress?.officeNameMalayalam || officeAddress?.officeName || 'ജില്ലാ ആഫീസറുടെ കാര്യാലയം,'}</p>
+                      <p className="whitespace-pre-wrap">{officeAddress?.addressMalayalam || officeAddress?.address || 'ഭൂജലവകുപ്പ്, കൊല്ലം'}</p>
                       <p>ഫോൺനമ്പർ: <span className="font-mono">{officeAddress?.phoneNo || '0474 - 2790313'}</span></p>
                       <p>ഇമെയിൽ: {officeAddress?.email || 'gwdklm@gmail.com'}</p>
                       <p>തീയതി: <span className="font-mono">{formatDateSafe(tender.selectionNoticeDate) || '__________'}</span></p>
