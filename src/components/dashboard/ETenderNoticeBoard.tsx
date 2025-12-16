@@ -27,7 +27,7 @@ const Bell = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
 );
 const FileSignature = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M20 19.5v.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/><polyline points="14 2 14 8 20 8"/><path d="M16 18h2"/><path d="m22 14-4.5 4.5L16 17"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M20 19.5v.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/><polyline points="14 2 14 8 20 8"/><path d="M16 18h2"/><path d="m22 14-4.5 4.5L16 17"/></svg>
 );
 
 
@@ -84,12 +84,13 @@ export default function ETenderNoticeBoard() {
       // Review: Current time is between receipt and opening
       if (receipt && opening && isValid(receipt) && isValid(opening) && isAfter(now, receipt) && isBefore(now, opening)) {
         review.push(t);
-        return; 
+        return;
       }
-    
-      if (!hasOpeningDetails) {
+      
+      // To Be Opened: After opening time, but no opening details recorded yet.
+      if (opening && isValid(opening) && isAfter(now, opening) && !hasOpeningDetails) {
         toBeOpened.push(t);
-      } else if (!hasSelectionDetails && t.presentStatus === 'Bid Opened') {
+      } else if (hasOpeningDetails && !hasSelectionDetails && t.presentStatus === 'Bid Opened') {
         pendingSelection.push(t);
       } else if (hasSelectionDetails && !hasWorkOrderDetails) {
         const excludedStatuses = ["Tender Process", "Bid Opened", "Retender", "Tender Cancelled"];
