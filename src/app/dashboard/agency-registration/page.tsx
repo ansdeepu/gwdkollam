@@ -49,7 +49,7 @@ const Search = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
 );
 const PlusCircle = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="-8 -8 40 40" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
 );
 const Save = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -1494,7 +1494,7 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
              <Dialog open={dialogState.type === 'renew' || dialogState.type === 'editRenewal'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent className="p-0">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="p-0">
                   <DialogHeader className="p-6 pb-0">
                         <DialogTitle>{dialogState.type === 'editRenewal' ? 'Edit Renewal' : 'Renew Rig Registration'}</DialogTitle>
                         <DialogDescription>Enter renewal details for the rig.</DialogDescription>
@@ -1518,7 +1518,7 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
             <Dialog open={dialogState.type === 'addPartner' || dialogState.type === 'editPartner'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent className="max-w-xl flex flex-col p-0">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-xl flex flex-col p-0">
                     <PartnerDialogContent
                         initialData={dialogState.type === 'editPartner' ? dialogState.data?.partner : createDefaultOwner()}
                         onConfirm={handleConfirmPartner}
@@ -2048,34 +2048,38 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleConfirm)} className="p-6 space-y-4 pt-4">
-                <DialogHeader className="pb-4 -mx-6 -mt-6 p-6 mb-0 border-b">
+            <form onSubmit={form.handleSubmit(handleConfirm)} className="flex flex-col h-full">
+                <DialogHeader className="p-6 pb-4 shrink-0">
                     <DialogTitle>{initialData?.name ? 'Edit Partner' : 'Add New Partner'}</DialogTitle>
                 </DialogHeader>
-                <FormField name="name" control={form.control} render={({ field }) => (
-                    <FormItem>
-                        <FormLabel>Partner Name & Address</FormLabel>
-                        <FormControl><Textarea placeholder="Enter name and address" {...field} /></FormControl>
-                        <FormMessage />
-                    </FormItem>
-                )}/>
-                <div className="grid grid-cols-2 gap-4">
-                    <FormField name="mobile" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Mobile No.</FormLabel>
-                            <FormControl><Input placeholder="Enter mobile number" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}/>
-                    <FormField name="secondaryMobile" control={form.control} render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Secondary Mobile No.</FormLabel>
-                            <FormControl><Input placeholder="Enter secondary mobile" {...field} /></FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}/>
+                <div className="flex-1 min-h-0 px-6 py-4">
+                    <div className="space-y-4">
+                        <FormField name="name" control={form.control} render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Partner Name & Address</FormLabel>
+                                <FormControl><Textarea placeholder="Enter name and address" {...field} /></FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}/>
+                        <div className="grid grid-cols-2 gap-4">
+                            <FormField name="mobile" control={form.control} render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Mobile No.</FormLabel>
+                                    <FormControl><Input placeholder="Enter mobile number" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}/>
+                            <FormField name="secondaryMobile" control={form.control} render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Secondary Mobile No.</FormLabel>
+                                    <FormControl><Input placeholder="Enter secondary mobile" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}/>
+                        </div>
+                    </div>
                 </div>
-                <DialogFooter className="-mb-6 -mx-6 p-6 mt-4 border-t">
+                <DialogFooter className="p-6 pt-4 mt-auto shrink-0">
                     <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
                     <Button type="submit">Confirm</Button>
                 </DialogFooter>
