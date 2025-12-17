@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Loader2, Save, Edit, PlusCircle, Trash2, FileText, Building, GitBranch, FolderOpen, ScrollText, Download, Users, Bell, ArrowLeft, Link as LinkIcon } from 'lucide-react';
+import { Loader2, Save, Edit, PlusCircle, Trash2, FileText, Building, GitBranch, FolderOpen, ScrollText, Download, Users, Bell, ArrowLeft, Link as LinkIcon, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { toDateOrNull, formatDateSafe, getStatusBadgeClass } from './utils';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -677,7 +677,11 @@ export default function TenderDetails() {
                         
                          <div className="mt-6 flex flex-col items-center gap-6">
                             {!isReadOnly && 
-                              <TooltipProvider>
+                              <div className="flex items-center gap-2">
+                                <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
+                                    <X className="mr-2 h-4 w-4" /> Cancel
+                                </Button>
+                                <TooltipProvider>
                                   <Tooltip>
                                       <TooltipTrigger asChild>
                                           <Button type="button" size="lg" onClick={handleFinalSave} disabled={isSubmitting}>
@@ -689,7 +693,8 @@ export default function TenderDetails() {
                                           <p>Persists all locally made changes to the database and returns to the list.</p>
                                       </TooltipContent>
                                   </Tooltip>
-                              </TooltipProvider>
+                                </TooltipProvider>
+                              </div>
                             }
 
                              <PdfReportDialogs />
