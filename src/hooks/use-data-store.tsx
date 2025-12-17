@@ -232,12 +232,17 @@ export function DataStoreProvider({ children, user }: { children: ReactNode, use
                             });
                             setter((prev: Record<RateDescriptionId, string>) => ({ ...defaultRateDescriptions, ...prev, ...descriptions }));
                         }
-                    } else if (collectionName === 'officeAddresses') { // Corrected collection name
+                    } else if (collectionName === 'officeAddresses') {
                         if (snapshot.empty) {
                             setter(null);
                         } else {
-                            const doc = snapshot.docs[0];
-                            setter({ id: doc.id, ...doc.data() } as OfficeAddress);
+                            const docData = snapshot.docs[0].data() as Omit<OfficeAddress, 'id'>;
+                            const staffMember = allStaffMembers.find(s => s.id === docData.districtOfficerStaffId);
+                            setter({
+                                id: snapshot.docs[0].id,
+                                ...docData,
+                                districtOfficerPhotoUrl: staffMember?.photoUrl || undefined
+                            } as OfficeAddress);
                         }
                     } else if (collectionName === 'bidders') {
                         const data = snapshot.docs.map(doc => ({
@@ -280,7 +285,7 @@ export function DataStoreProvider({ children, user }: { children: ReactNode, use
             unsubscribes.forEach(unsub => unsub());
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user, refetchCounters]);
+    }, [user, refetchCounters, allStaffMembers]); // Added allStaffMembers dependency for officeAddress photo
 
     const isLoading = Object.values(loadingStates).some(Boolean);
 

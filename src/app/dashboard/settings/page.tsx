@@ -1,3 +1,4 @@
+
 // src/app/dashboard/settings/page.tsx
 "use client";
 
@@ -81,6 +82,7 @@ const OfficeAddressSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email." }).optional().or(z.literal('')),
   districtOfficerStaffId: z.string().optional(),
   districtOfficer: z.string().optional(),
+  districtOfficerPhotoUrl: z.string().url().optional().or(z.literal('')), // Add photo URL
   gstNo: z.string().optional(),
   panNo: z.string().optional(),
   otherDetails: z.string().optional(),
@@ -122,19 +124,20 @@ const OfficeAddressDialog = ({
         resolver: zodResolver(OfficeAddressSchema),
         defaultValues: initialData || {
             officeName: '', officeNameMalayalam: '', address: '', addressMalayalam: '', 
-            phoneNo: '', email: '', districtOfficerStaffId: '', districtOfficer: '', 
+            phoneNo: '', email: '', districtOfficerStaffId: '', districtOfficer: '', districtOfficerPhotoUrl: '',
             gstNo: '', panNo: '', otherDetails: '',
         },
     });
 
     useEffect(() => {
-        form.reset(initialData || { officeName: '', officeNameMalayalam: '', address: '', addressMalayalam: '', phoneNo: '', email: '', districtOfficerStaffId: '', districtOfficer: '', gstNo: '', panNo: '', otherDetails: '' });
+        form.reset(initialData || { officeName: '', officeNameMalayalam: '', address: '', addressMalayalam: '', phoneNo: '', email: '', districtOfficerStaffId: '', districtOfficer: '', districtOfficerPhotoUrl: '', gstNo: '', panNo: '', otherDetails: '' });
     }, [initialData, form]);
 
     const handleOfficerChange = (staffId: string) => {
         const selectedStaff = officerList.find(s => s.id === staffId);
         form.setValue('districtOfficerStaffId', staffId);
         form.setValue('districtOfficer', selectedStaff?.name || '');
+        form.setValue('districtOfficerPhotoUrl', selectedStaff?.photoUrl || '');
     };
 
   return (
