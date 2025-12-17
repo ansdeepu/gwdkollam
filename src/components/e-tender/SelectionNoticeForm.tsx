@@ -1,3 +1,4 @@
+
 // src/components/e-tender/SelectionNoticeForm.tsx
 
 import React, { useEffect, useMemo, useCallback } from 'react';
@@ -168,7 +169,7 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
                         </div>
                     </ScrollArea>
                 </div>
-                <DialogFooter className="p-6 pt-4 shrink-0">
+                <DialogFooter className="p-6 pt-4 shrink-0 mt-auto">
                     <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
                         <X className="mr-2 h-4 w-4" /> Cancel
                     </Button>
@@ -180,3 +181,5 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
         </FormProvider>
     );
 }
+
+    
