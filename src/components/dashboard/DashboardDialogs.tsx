@@ -13,7 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import type { DataEntryFormData } from '@/lib/schemas';
 
 const FileDown = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 18v-6"/><path d="m15 15-3 3-3-3"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 18v-6"/><path d="m15 15-3 3-3-3"/></svg>
 );
 
 interface DetailDialogColumn {
@@ -127,41 +127,31 @@ export default function DashboardDialogs({ dialogState, setDialogState, allFileE
             Showing {data.length} records. {financeDates?.start && financeDates?.end ? `from ${format(financeDates.start, "dd/MM/yyyy")} to ${format(financeDates.end, "dd/MM/yyyy")}` : ""}.
           </DialogDescription>
         </DialogHeader>
-        <div className="flex-1 min-h-0 relative px-6 py-4">
-          <Table>
-            <TableHeader className="sticky top-0 bg-background z-10">
-              <TableRow>
-                {getColumnsForType(type, title).map(col => 
-                  <TableHead key={col.key} className={cn(col.isNumeric && 'text-right')}>{col.label}</TableHead>
-                )}
-              </TableRow>
-            </TableHeader>
-          </Table>
-          <ScrollArea className="h-full pr-4 -mx-6 px-6">
-            {data.length > 0 ? (
-              <Table>
-                {/* Dummy header to keep column width consistent */}
-                <TableHeader className="invisible">
-                  <TableRow>
-                    {getColumnsForType(type, title).map(col => 
-                      <TableHead key={col.key}>{col.label}</TableHead>
-                    )}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {data.map((row, rowIndex) => (
-                    <TableRow key={rowIndex}>
+        <div className="flex-1 min-h-0 px-6 py-4">
+            <ScrollArea className="h-full pr-4 -mr-4">
+              {data.length > 0 ? (
+                <Table>
+                  <TableHeader className="sticky top-0 bg-background z-10">
+                    <TableRow>
                       {getColumnsForType(type, title).map(col => 
-                        <TableCell key={col.key} className={cn('text-xs', col.isNumeric && 'text-right font-mono')}>{row[col.key]}</TableCell>
+                        <TableHead key={col.key} className={cn(col.isNumeric && 'text-right')}>{col.label}</TableHead>
                       )}
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">No details found for the selected criteria.</p>
-            )}
-          </ScrollArea>
+                  </TableHeader>
+                  <TableBody>
+                    {data.map((row, rowIndex) => (
+                      <TableRow key={rowIndex}>
+                        {getColumnsForType(type, title).map(col => 
+                          <TableCell key={col.key} className={cn('text-xs', col.isNumeric && 'text-right font-mono')}>{row[col.key]}</TableCell>
+                        )}
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No details found for the selected criteria.</p>
+              )}
+            </ScrollArea>
         </div>
         <DialogFooter className="p-6 pt-4 border-t shrink-0">
           <Button variant="outline" onClick={exportDialogDataToExcel} disabled={data.length === 0}><FileDown className="mr-2 h-4 w-4" /> Export Excel</Button>

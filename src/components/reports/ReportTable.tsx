@@ -1,4 +1,3 @@
-
 // src/components/reports/ReportTable.tsx
 "use client";
 
