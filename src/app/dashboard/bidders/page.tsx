@@ -57,7 +57,7 @@ export default function BiddersListPage() {
     const [isNewBidderDialogOpen, setIsNewBidderDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     
-    const [bidderToEdit, setBidderToEdit] = useState<Partial<BidderType> | null>(null);
+    const [bidderToEdit, setBidderToEdit] = useState<BidderType | null>(null);
     const [bidderToDelete, setBidderToDelete] = useState<BidderType | null>(null);
     const [bidderToReorder, setBidderToReorder] = useState<BidderType | null>(null);
     
@@ -230,18 +230,7 @@ export default function BiddersListPage() {
                         onSubmit={handleAddOrEditBidderSubmit}
                         onCancel={() => { setIsNewBidderDialogOpen(false); setBidderToEdit(null); }}
                         isSubmitting={isSubmitting}
-                        initialData={
-                            bidderToEdit
-                              ? {
-                                  id: bidderToEdit.id ?? "",
-                                  name: bidderToEdit.name ?? "",
-                                  address: bidderToEdit.address ?? "",
-                                  phoneNo: bidderToEdit.phoneNo ?? "",
-                                  secondaryPhoneNo: bidderToEdit.secondaryPhoneNo ?? "",
-                                  email: bidderToEdit.email ?? "",
-                                }
-                              : null
-                          }
+                        initialData={bidderToEdit}
                     />
                 </DialogContent>
             </Dialog>

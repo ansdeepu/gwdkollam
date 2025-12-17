@@ -12,17 +12,7 @@ import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/co
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Save, X, UserPlus } from 'lucide-react';
 import { z } from 'zod';
-
-const NewBidderSchema = z.object({
-  name: z.string().min(1, "Bidder Name is required."),
-  address: z.string().optional(),
-  phoneNo: z.string().optional(),
-  secondaryPhoneNo: z.string().optional(),
-  email: z.string().email({ message: "Please enter a valid email." }).optional().or(z.literal('')),
-  order: z.number().optional(),
-});
-export type NewBidderFormData = z.infer<typeof NewBidderSchema>;
-export type Bidder = z.infer<typeof NewBidderSchema> & { id: string };
+import { type Bidder, NewBidderSchema, type NewBidderFormData } from '@/lib/schemas/eTenderSchema';
 
 
 const createDefaultBidder = (): NewBidderFormData => ({

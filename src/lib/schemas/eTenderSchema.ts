@@ -76,18 +76,34 @@ export const CorrigendumSchema = z.object({
 export type Corrigendum = z.infer<typeof CorrigendumSchema>;
 
 
-export const BidderSchema = z.object({
-  id: z.string(),
-  name: z.string().optional(),
+export const NewBidderSchema = z.object({
+  name: z.string().min(1, "Bidder Name is required."),
   address: z.string().optional(),
   phoneNo: z.string().optional(),
   secondaryPhoneNo: z.string().optional(),
-  email: z.string().email().optional().or(z.literal('')),
+  email: z.string().email({ message: "Please enter a valid email." }).optional().or(z.literal('')),
+  order: z.number().optional(),
+});
+export type NewBidderFormData = z.infer<typeof NewBidderSchema>;
+export type Bidder = z.infer<typeof NewBidderSchema> & {
+    id: string,
+    quotedAmount?: number,
+    quotedPercentage?: number,
+    aboveBelow?: 'Above' | 'Below',
+    status?: 'Accepted' | 'Rejected',
+    securityDepositType?: string,
+    securityDepositAmount?: number,
+    agreementAmount?: number,
+    additionalSecurityDeposit?: number,
+    dateSelectionNotice?: any,
+};
+
+export const BidderSchema = NewBidderSchema.extend({
+  id: z.string(),
   quotedAmount: optionalNumberSchema,
   quotedPercentage: optionalNumberSchema,
   aboveBelow: z.enum(['Above', 'Below']).optional(),
   status: z.enum(['Accepted', 'Rejected']).optional(),
-  order: z.number().optional(),
   // Deprecated fields - keep for compatibility if needed
   securityDepositType: z.string().optional(),
   securityDepositAmount: optionalNumberSchema,
@@ -95,7 +111,6 @@ export const BidderSchema = z.object({
   additionalSecurityDeposit: optionalNumberSchema,
   dateSelectionNotice: z.any().optional().nullable(),
 });
-export type Bidder = z.infer<typeof BidderSchema>;
 
 export const committeeMemberDesignations: Designation[] = [
     "Assistant Executive Engineer",
