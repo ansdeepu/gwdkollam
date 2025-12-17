@@ -1,7 +1,7 @@
 // src/components/e-tender/TenderDataContext.tsx
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect, useMemo } from 'react';
 import type { E_tender } from '@/hooks/useE_tenders';
 
 interface TenderDataContextType {

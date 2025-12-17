@@ -42,9 +42,9 @@ type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 
 
 const SELECTION_NOTICE_CLEAR_DATA: Partial<E_tenderFormData> = {
   selectionNoticeDate: null,
-  performanceGuaranteeAmount: null,
-  additionalPerformanceGuaranteeAmount: null,
-  stampPaperAmount: null,
+  performanceGuaranteeAmount: undefined,
+  additionalPerformanceGuaranteeAmount: undefined,
+  stampPaperAmount: undefined,
   performanceGuaranteeDescription: null,
   additionalPerformanceGuaranteeDescription: null,
   stampPaperDescription: null,
@@ -53,18 +53,18 @@ const SELECTION_NOTICE_CLEAR_DATA: Partial<E_tenderFormData> = {
 const OPENING_DETAILS_CLEAR_DATA: Partial<E_tenderFormData> = {
   dateOfOpeningBid: null,
   dateOfTechnicalAndFinancialBidOpening: null,
-  technicalCommitteeMember1: null,
-  technicalCommitteeMember2: null,
-  technicalCommitteeMember3: null,
+  technicalCommitteeMember1: undefined,
+  technicalCommitteeMember2: undefined,
+  technicalCommitteeMember3: undefined,
 };
 
 const WORK_ORDER_CLEAR_DATA: Partial<E_tenderFormData> = {
     agreementDate: null,
     dateWorkOrder: null,
-    nameOfAssistantEngineer: null,
-    supervisor1Id: null, supervisor1Name: null, supervisor1Phone: null,
-    supervisor2Id: null, supervisor2Name: null, supervisor2Phone: null,
-    supervisor3Id: null, supervisor3Name: null, supervisor3Phone: null,
+    nameOfAssistantEngineer: undefined,
+    supervisor1Id: undefined, supervisor1Name: undefined, supervisor1Phone: undefined,
+    supervisor2Id: undefined, supervisor2Name: undefined, supervisor2Phone: undefined,
+    supervisor3Id: undefined, supervisor3Name: undefined, supervisor3Phone: undefined,
 };
 
 
@@ -755,3 +755,5 @@ export default function TenderDetails() {
     );
 }
 
+
+    

@@ -52,8 +52,8 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
     const form = useForm<TenderOpeningDetailsFormData>({
         resolver: zodResolver(TenderOpeningDetailsSchema),
         defaultValues: {
-            dateOfOpeningBid: formatDateForInput(initialData?.dateOfOpeningBid),
-            dateOfTechnicalAndFinancialBidOpening: formatDateForInput(initialData?.dateOfTechnicalAndFinancialBidOpening),
+            dateOfOpeningBid: initialData?.dateOfOpeningBid,
+            dateOfTechnicalAndFinancialBidOpening: initialData?.dateOfTechnicalAndFinancialBidOpening,
             technicalCommitteeMember1: initialData?.technicalCommitteeMember1,
             technicalCommitteeMember2: initialData?.technicalCommitteeMember2,
             technicalCommitteeMember3: initialData?.technicalCommitteeMember3,
@@ -62,8 +62,8 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
 
      useEffect(() => {
         form.reset({
-            dateOfOpeningBid: formatDateForInput(initialData?.dateOfOpeningBid),
-            dateOfTechnicalAndFinancialBidOpening: formatDateForInput(initialData?.dateOfTechnicalAndFinancialBidOpening),
+            dateOfOpeningBid: initialData?.dateOfOpeningBid,
+            dateOfTechnicalAndFinancialBidOpening: initialData?.dateOfTechnicalAndFinancialBidOpening,
             technicalCommitteeMember1: initialData?.technicalCommitteeMember1,
             technicalCommitteeMember2: initialData?.technicalCommitteeMember2,
             technicalCommitteeMember3: initialData?.technicalCommitteeMember3,

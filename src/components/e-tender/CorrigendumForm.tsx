@@ -34,24 +34,14 @@ const createDefaultCorrigendum = (): Corrigendum => ({
 export default function CorrigendumForm({ onSubmit, onCancel, isSubmitting, initialData }: CorrigendumFormProps) {
     const form = useForm<Corrigendum>({
         resolver: zodResolver(CorrigendumSchema),
-        defaultValues: initialData ? {
-            ...initialData,
-            corrigendumDate: formatDateForInput(initialData.corrigendumDate),
-            lastDateOfReceipt: formatDateForInput(initialData.lastDateOfReceipt, true),
-            dateOfOpeningTender: formatDateForInput(initialData.dateOfOpeningTender, true),
-        } : createDefaultCorrigendum(),
+        defaultValues: initialData || createDefaultCorrigendum(),
     });
 
     const watchedType = form.watch("corrigendumType");
 
     useEffect(() => {
         if (initialData) {
-            form.reset({
-                ...initialData,
-                corrigendumDate: formatDateForInput(initialData.corrigendumDate),
-                lastDateOfReceipt: formatDateForInput(initialData.lastDateOfReceipt, true),
-                dateOfOpeningTender: formatDateForInput(initialData.dateOfOpeningTender, true),
-            });
+            form.reset(initialData);
         } else {
             form.reset(createDefaultCorrigendum());
         }
@@ -79,16 +69,16 @@ export default function CorrigendumForm({ onSubmit, onCancel, isSubmitting, init
                                     </FormItem>
                                 )}/>
                                 <FormField name="corrigendumDate" control={form.control} render={({ field }) => (
-                                    <FormItem><FormLabel>Date</FormLabel><FormControl><Input type="date" {...field} value={field.value as string ?? ''} /></FormControl><FormMessage /></FormItem>
+                                    <FormItem><FormLabel>Date</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value) ?? ''} /></FormControl><FormMessage /></FormItem>
                                 )}/>
                             </div>
                             {watchedType === 'Date Extension' && (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <FormField name="lastDateOfReceipt" control={form.control} render={({ field }) => (
-                                        <FormItem><FormLabel>New Last Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} value={field.value as string ?? ''} /></FormControl><FormMessage /></FormItem>
+                                        <FormItem><FormLabel>New Last Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} value={formatDateForInput(field.value, true) ?? ''} /></FormControl><FormMessage /></FormItem>
                                     )}/>
                                     <FormField name="dateOfOpeningTender" control={form.control} render={({ field }) => (
-                                        <FormItem><FormLabel>New Opening Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} value={field.value as string ?? ''} /></FormControl><FormMessage /></FormItem>
+                                        <FormItem><FormLabel>New Opening Date & Time</FormLabel><FormControl><Input type="datetime-local" {...field} value={formatDateForInput(field.value, true) ?? ''} /></FormControl><FormMessage /></FormItem>
                                     )}/>
                                 </div>
                             )}
