@@ -1,3 +1,4 @@
+
 // src/hooks/useStaffMembers.ts
 "use client";
 
@@ -63,11 +64,13 @@ export function useStaffMembers(): StaffMembersState {
     if (!user || user.role !== 'editor') throw new Error("User does not have permission.");
     const staffDocRef = doc(db, STAFF_MEMBERS_COLLECTION, id);
     const existingMember = allStaffMembers.find(s => s.id === id);
+
+    // If the photo URL is being cleared and the old one was a Firebase Storage URL, delete the old photo.
     if (staffData.photoUrl === "" && existingMember?.photoUrl && existingMember.photoUrl.includes("firebasestorage.googleapis.com")) { 
       try { await deleteObject(storageRef(storage, existingMember.photoUrl)); } catch (e) { console.warn("Failed to delete old photo:", e); }
     }
     const payload = { ...sanitizeStaffMemberForFirestore(staffData), updatedAt: serverTimestamp() };
-    delete payload.createdAt;
+    delete payload.createdAt; // Prevent createdAt from being overwritten on update
     await updateDoc(staffDocRef, payload);
     refetchStaffMembers();
   }, [user, allStaffMembers, refetchStaffMembers]);
