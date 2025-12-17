@@ -1,3 +1,4 @@
+
 // src/lib/schemas.ts
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
@@ -6,48 +7,49 @@ export * from './schemas/DataEntrySchema';
 export * from './schemas/eTenderSchema';
 
 const toDateOrNull = (value: any): Date | null => {
-  if (value === null || value === undefined || value === '') return null;
-  if (value instanceof Date && !isNaN(value.getTime())) return value;
-  if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
-    try {
-      const ms = value.seconds * 1000 + (value.nanoseconds ? Math.round(value.nanoseconds / 1e6) : 0);
-      const d = new Date(ms);
-      if (!isNaN(d.getTime())) return d;
-    } catch { /* fallthrough */ }
-  }
-  if (typeof value === 'number' && isFinite(value)) {
-    const ms = value < 1e12 ? value * 1000 : value;
-    const d = new Date(ms);
-    if (!isNaN(d.getTime())) return d;
-  }
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (trimmed === '') return null;
-    const iso = Date.parse(trimmed);
-    if (!isNaN(iso)) return new Date(iso);
-    const ymd = /^(\d{4})-(\d{2})-(\d{2})$/;
-    const ymdMatch = trimmed.match(ymd);
-    if (ymdMatch) {
-      const [_, y, m, d] = ymdMatch;
-      const dt = new Date(Number(y), Number(m) - 1, Number(d));
-      if (!isNaN(dt.getTime())) return dt;
+    if (value === null || value === undefined || value === '') return null;
+    if (value instanceof Date && !isNaN(value.getTime())) return value;
+    if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
+        try {
+            const ms = value.seconds * 1000 + (value.nanoseconds ? Math.round(value.nanoseconds / 1e6) : 0);
+            const d = new Date(ms);
+            if (!isNaN(d.getTime())) return d;
+        } catch { /* fallthrough */ }
     }
-    const dmy = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-    const dmyMatch = trimmed.match(dmy);
-    if (dmyMatch) {
-      const [_, dd, mm, yyyy] = dmyMatch;
-      const dt = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
-      if (!isNaN(dt.getTime())) return dt;
+    if (typeof value === 'number' && isFinite(value)) {
+        const ms = value < 1e12 ? value * 1000 : value;
+        const d = new Date(ms);
+        if (!isNaN(d.getTime())) return d;
     }
-    try {
-      const fallback = new Date(trimmed);
-      if (!isNaN(fallback.getTime())) return fallback;
-    } catch { /* ignore */ }
-  }
-  return null;
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (trimmed === '') return null;
+        // Attempt to parse various common date formats
+        const formats = [
+            "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", // ISO with milliseconds
+            "yyyy-MM-dd'T'HH:mm:ss'Z'",     // ISO without milliseconds
+            "yyyy-MM-dd'T'HH:mm",           // Datetime-local input
+            "yyyy-MM-dd",                   // Date input
+            'dd/MM/yyyy',                   // Common display format
+        ];
+        for (const fmt of formats) {
+            try {
+                const parsedDate = parse(trimmed, fmt, new Date());
+                if (isValid(parsedDate)) return parsedDate;
+            } catch (e) {
+                // continue
+            }
+        }
+        // Final fallback for other string formats Date constructor might handle
+        try {
+            const fallback = new Date(trimmed);
+            if (!isNaN(fallback.getTime())) return fallback;
+        } catch { /* ignore */ }
+    }
+    return null;
 };
 
-const optionalDateSchema = z.preprocess((val) => (val ? toDateOrNull(val) : null), z.date().nullable().optional());
+export const optionalDateSchema = z.preprocess((val) => (val ? toDateOrNull(val) : null), z.date().nullable().optional());
 
 export const LoginSchema = z.object({
   email: z.string().email({ message: 'Invalid email address.' }),
@@ -623,3 +625,4 @@ export const RigCompressorSchema = z.object({
     remarks: z.string().optional(),
 });
 export type RigCompressor = z.infer<typeof RigCompressorSchema>;
+

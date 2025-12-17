@@ -20,16 +20,16 @@ import { useDataStore } from "@/hooks/use-data-store";
 export const dynamic = 'force-dynamic';
 
 const toDateOrNull = (value: any): Date | null => {
-    if (!value) return null;
+    if (value === null || value === undefined || value === '') return null;
     if (value instanceof Date && isValid(value)) return value;
     if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
         const d = new Date(value.seconds * 1000 + (value.nanoseconds || 0) / 1e6);
         if (isValid(d)) return d;
     }
     if (typeof value === 'string') {
-        let d = parseISO(value); // Handles yyyy-MM-dd and ISO strings
+        let d = parseISO(value); // Handles yyyy-MM-dd and ISO strings from new Date()
         if (isValid(d)) return d;
-        d = parse(value, 'dd/MM/yyyy', new Date()); // Handles dd/MM/yyyy
+        d = parse(value, 'dd/MM/yyyy', new Date()); // Handles dd/MM/yyyy from user input
         if (isValid(d)) return d;
     }
     return null;
@@ -345,3 +345,4 @@ export default function DataEntryPage() {
     </div>
   );
 }
+

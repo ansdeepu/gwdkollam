@@ -122,16 +122,16 @@ const createDefaultRig = (): RigRegistrationType => ({
 });
 
 const toDateOrNull = (value: any): Date | null => {
-    if (!value) return null;
+    if (value === null || value === undefined || value === '') return null;
     if (value instanceof Date && isValid(value)) return value;
     if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
         const d = new Date(value.seconds * 1000 + (value.nanoseconds || 0) / 1e6);
         if (isValid(d)) return d;
     }
     if (typeof value === 'string') {
-        let d = parseISO(value); // Handles yyyy-MM-dd and ISO strings
+        let d = parseISO(value); // Handles yyyy-MM-dd and ISO strings from new Date()
         if (isValid(d)) return d;
-        d = parse(value, 'dd/MM/yyyy', new Date()); // Handles dd/MM/yyyy
+        d = parse(value, 'dd/MM/yyyy', new Date()); // Handles dd/MM/yyyy from user input
         if (isValid(d)) return d;
     }
     return null;
@@ -415,7 +415,7 @@ const RigAccordionItem = ({
              <dl className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-4">
                 <div className="md:col-span-2"><DetailRow label="Rig Reg. No." value={field.rigRegistrationNo} /></div>
                 <div className="md:col-span-1"><DetailRow label="Type of Rig" value={field.typeOfRig} /></div>
-                <div className="md:col-span-2"><DetailRow label="Last Reg/Renewal Date" value={field.registrationDate} /></div>
+                <div className="md:col-span-2"><DetailRow label="Last Reg/Renewal Date" value={formatDateSafe(field.registrationDate)} /></div>
                 <div className="md:col-span-1"><DetailRow label="Validity Upto" value={validityDate} /></div>
                 
                 <div className="col-span-full border-t pt-4 mt-2"></div>
@@ -2173,3 +2173,4 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
     
+

@@ -31,7 +31,7 @@ const FileSignature = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 
-const DetailRow = ({ label, value, isCurrency }: { label: string; value: any; isCurrency?: boolean; }) => {
+const DetailRow = ({ label, value, isCurrency = false }: { label: string; value: any; isCurrency?: boolean; }) => {
     if (value === null || value === undefined || value === '') return null;
     let displayValue = String(value);
     if (label.toLowerCase().includes('date')) {
@@ -219,3 +219,4 @@ export default function ETenderNoticeBoard() {
     </Card>
   );
 }
+
