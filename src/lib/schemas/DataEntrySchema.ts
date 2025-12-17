@@ -71,11 +71,8 @@ export type RemittedAccount = typeof remittedAccountOptions[number];
 
 export const RemittanceDetailSchema = z.object({
   amountRemitted: optionalNumber("Amount Remitted must be a valid number."),
-  dateOfRemittance: z.preprocess(
-    (val) => (val === "" || val === null ? undefined : val),
-    z.string().min(1, "Date of remittance is required.")
-  ),
-  remittedAccount: z.enum(remittedAccountOptions, { required_error: "Account is required." }),
+  dateOfRemittance: z.string().optional(),
+  remittedAccount: z.enum(remittedAccountOptions),
   remittanceRemarks: z.string().optional(),
 }).superRefine((data, ctx) => {
     // If an amount or account is present, date is strictly required.
@@ -109,11 +106,8 @@ export const paymentAccountOptions = [
 export type PaymentAccount = typeof paymentAccountOptions[number];
 
 export const PaymentDetailSchema = z.object({
-  dateOfPayment: z.preprocess(
-    (val) => (val === "" || val === null ? undefined : val),
-    z.string().min(1, "Date of payment is required.")
-  ),
-  paymentAccount: z.enum(paymentAccountOptions, { required_error: "Payment Account is required."}),
+  dateOfPayment: z.string().optional(),
+  paymentAccount: z.enum(paymentAccountOptions),
   revenueHead: optionalNumber("Revenue Head must be a valid number."),
   contractorsPayment: optionalNumber("Contractor's Payment must be a valid number."),
   gst: optionalNumber("GST must be a valid number."),
@@ -364,5 +358,3 @@ export const DataEntrySchema = z.object({
     }
 });
 export type DataEntryFormData = z.infer<typeof DataEntrySchema>;
-
-    
