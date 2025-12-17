@@ -152,25 +152,7 @@ export default function PdfReportDialogs() {
     
     const handleDirectDownload = () => {
         if (!tender.detailedEstimateUrl) return;
-        try {
-            const url = new URL(tender.detailedEstimateUrl);
-            const pathParts = url.pathname.split('/');
-            const fileId = pathParts.find(part => part.length > 20); // Heuristic to find the file ID
-            
-            if (!fileId) {
-                throw new Error("Could not extract file ID from the Google Drive URL.");
-            }
-            
-            const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-            window.open(downloadUrl, '_blank');
-        } catch (error) {
-            toast({
-                title: "Invalid URL",
-                description: "The provided URL is not a valid Google Drive link. Opening directly.",
-                variant: 'destructive',
-            });
-            window.open(tender.detailedEstimateUrl, '_blank');
-        }
+        window.open(tender.detailedEstimateUrl, '_blank');
     };
 
     const isTenderSaved = tender.id !== 'new';
