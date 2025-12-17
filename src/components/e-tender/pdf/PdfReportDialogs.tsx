@@ -47,7 +47,7 @@ const ReportButton = ({
   tooltipContent,
 }: {
   label: string;
-  onClick?: () => Promise<void>;
+  onClick?: () => Promise<void> | void; // Allow non-async onClick
   disabled?: boolean;
   href?: string;
   tooltipContent?: React.ReactNode;
@@ -150,6 +150,29 @@ export default function PdfReportDialogs() {
         }
     };
     
+    const handleDirectDownload = () => {
+        if (!tender.detailedEstimateUrl) return;
+        try {
+            const url = new URL(tender.detailedEstimateUrl);
+            const pathParts = url.pathname.split('/');
+            const fileId = pathParts.find(part => part.length > 20); // Heuristic to find the file ID
+            
+            if (!fileId) {
+                throw new Error("Could not extract file ID from the Google Drive URL.");
+            }
+            
+            const downloadUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+            window.open(downloadUrl, '_blank');
+        } catch (error) {
+            toast({
+                title: "Invalid URL",
+                description: "The provided URL is not a valid Google Drive link. Opening directly.",
+                variant: 'destructive',
+            });
+            window.open(tender.detailedEstimateUrl, '_blank');
+        }
+    };
+
     const isTenderSaved = tender.id !== 'new';
     const hasOpeningDetails = !!tender.dateOfOpeningBid;
     const hasBidders = (tender.bidders || []).length > 0;
@@ -176,7 +199,7 @@ export default function PdfReportDialogs() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                          <ReportButton 
                             label="Detailed Estimate"
-                            href={tender.detailedEstimateUrl || '#'}
+                            onClick={handleDirectDownload}
                             disabled={!isTenderSaved || !hasDetailedEstimate}
                             tooltipContent={!isTenderSaved ? "Save the tender first." : "Add a Detailed Estimate URL in Basic Details."}
                         />
