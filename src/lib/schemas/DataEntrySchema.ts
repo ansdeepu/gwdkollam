@@ -86,13 +86,6 @@ export const RemittanceDetailSchema = z.object({
                 path: ["dateOfRemittance"],
             });
         }
-        if (!data.remittedAccount) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "is required when any other remittance detail is entered.",
-                path: ["remittedAccount"],
-            });
-        }
     }
 });
 export type RemittanceDetailFormData = z.infer<typeof RemittanceDetailSchema>;
@@ -235,7 +228,6 @@ export const SiteDetailSchema = z.object({
   siteConditions: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteConditionsOptions).optional()),
   accessibleRig: z.string().optional(),
   tsAmount: optionalNumber("TS Amount must be a valid number."),
-  additionalAS: z.enum(['Yes', 'No']).optional().nullable().default('No'),
   tenderNo: z.string().optional(),
   diameter: z.preprocess((val) => (val === "" || val === null ? undefined : val), z.enum(siteDiameterOptions).optional()),
   pilotDrillingDepth: z.string().optional().nullable(),
@@ -262,7 +254,7 @@ export const SiteDetailSchema = z.object({
   supervisorName: z.string().optional().nullable(),
   supervisorDesignation: z.string().optional().nullable(),
   totalExpenditure: optionalNumber("Total Expenditure must be a valid number."),
-  workStatus: z.enum(siteWorkStatusOptions, { required_error: "Work Status is required." }).optional(),
+  workStatus: z.enum(siteWorkStatusOptions).optional(),
   implementationRemarks: z.string().optional().nullable().default(""),
   workRemarks: z.string().optional().nullable().default(""),
 
