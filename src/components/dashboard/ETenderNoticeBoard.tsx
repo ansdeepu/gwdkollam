@@ -1,4 +1,3 @@
-
 // src/components/dashboard/ETenderNoticeBoard.tsx
 "use client";
 
@@ -50,6 +49,7 @@ const DetailRow = ({ label, value }: { label: string; value: any }) => {
 export default function ETenderNoticeBoard() {
   const { tenders = [], isLoading } = useE_tenders();
   const [selectedTender, setSelectedTender] = useState<E_tender | null>(null);
+  const [activeTab, setActiveTab] = useState('review');
 
   const categorizedTenders = useMemo(() => {
     const now = new Date();
@@ -154,7 +154,7 @@ export default function ETenderNoticeBoard() {
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0 p-4 pt-0">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
-          <Tabs defaultValue="review" className="flex flex-col flex-1 min-h-0">
+          <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
             <TabsList className="grid grid-cols-2 gap-2 h-auto">
               {categories.map((cat) => {
                 const Icon = cat.icon;

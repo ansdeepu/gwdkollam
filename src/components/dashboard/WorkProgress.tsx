@@ -49,7 +49,7 @@ const safeParseDate = (dateValue: any): Date | null => {
   if (typeof dateValue === 'object' && dateValue !== null && typeof (dateValue as any).seconds === 'number') {
     return new Date((dateValue as any).seconds * 1000);
   }
-  if (typeof dateValue === 'string' || typeof dateValue === 'number') {
+  if (typeof dateValue === 'string') {
     const parsed = new Date(dateValue);
     if (!isNaN(parsed.getTime())) return parsed;
   }

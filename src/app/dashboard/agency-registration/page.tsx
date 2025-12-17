@@ -121,33 +121,34 @@ const createDefaultRig = (): RigRegistrationType => ({
 });
 
 const toDateOrNull = (value: any): Date | null => {
-  if (!value) return null;
-  if (value instanceof Date && isValid(value)) return value;
-
-  if (typeof value.seconds === 'number') {
-    const d = new Date(value.seconds * 1000);
-    if (isValid(d)) return d;
-  }
+    if (!value) return null;
+    if (value instanceof Date && isValid(value)) return value;
   
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-    if (trimmed === '') return null;
-
-    // First, try to parse dd/MM/yyyy format, which is common in manual entries.
-    let parsedDate = parse(trimmed, 'dd/MM/yyyy', new Date());
-    if (isValid(parsedDate)) return parsedDate;
-
-    // Then, try yyyy-MM-dd format from date pickers.
-    parsedDate = parse(trimmed, 'yyyy-MM-dd', new Date());
-    if (isValid(parsedDate)) return parsedDate;
+    // Handle Firestore Timestamp objects
+    if (value && typeof value.seconds === 'number') {
+      const d = new Date(value.seconds * 1000);
+      if (isValid(d)) return d;
+    }
     
-    // Finally, try the more general ISO / RFC parsable format.
-    parsedDate = parseISO(trimmed);
-    if (isValid(parsedDate)) return parsedDate;
-  }
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (trimmed === '') return null;
   
-  return null;
-};
+      // First, try to parse dd/MM/yyyy format, which is common in manual entries.
+      let parsedDate = parse(trimmed, 'dd/MM/yyyy', new Date());
+      if (isValid(parsedDate)) return parsedDate;
+  
+      // Then, try yyyy-MM-dd format from date pickers.
+      parsedDate = parse(trimmed, 'yyyy-MM-dd', new Date());
+      if (isValid(parsedDate)) return parsedDate;
+      
+      // Finally, try the more general ISO / RFC parsable format.
+      parsedDate = parseISO(trimmed);
+      if (isValid(parsedDate)) return parsedDate;
+    }
+    
+    return null;
+  };
 
 
 const formatDateForInput = (d: Date | null | string | undefined) => {
@@ -367,7 +368,7 @@ const RigAccordionItem = ({
   openDialog: (type: 'renew' | 'cancel' | 'activate' | 'deleteRig' | 'editRigDetails', data: any) => void;
   onDeleteRenewal: (rigIndex: number, renewalId: string) => void;
   onEditRenewal: (rigIndex: number, renewal: RigRenewalFormData) => void;
-  form: UseFormReturn<any>;
+  form: UseFormReturn<AgencyApplication>;
 }) => {
   const rigTypeValue = field.typeOfRig || 'Unspecified Type';
   const registrationDate = field.registrationDate ? toDateOrNull(field.registrationDate) : null;
@@ -389,9 +390,9 @@ const RigAccordionItem = ({
     
   const isExpired = validityDate ? new Date() > validityDate : false;
   
-  const cancellationDateValue = form.watch(`rigs.${index}.cancellationDate`);
-  const formattedCancellationDate = cancellationDateValue && isValid(new Date(cancellationDateValue))
-    ? format(new Date(cancellationDateValue), 'dd/MM/yyyy')
+  const cancellationDateValue = useWatch({ control: form.control, name: `rigs.${index}.cancellationDate`});
+  const formattedCancellationDate = cancellationDateValue && isValid(new Date(cancellationDateValue as string))
+    ? format(new Date(cancellationDateValue as string), 'dd/MM/yyyy')
     : 'N/A';
     
   return (
@@ -2176,6 +2177,7 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
       
+
 
 
 

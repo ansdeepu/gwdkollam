@@ -22,8 +22,10 @@ export function TenderDataProvider({ initialTender, children }: { initialTender:
         setTender(prevTender => ({ ...prevTender, ...updatedData }));
     }, []);
 
+    const value = useMemo(() => ({ tender, updateTender }), [tender, updateTender]);
+
     return (
-        <TenderDataContext.Provider value={{ tender, updateTender }}>
+        <TenderDataContext.Provider value={value}>
             {children}
         </TenderDataContext.Provider>
     );
