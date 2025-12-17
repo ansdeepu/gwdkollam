@@ -88,8 +88,8 @@ function ExpiryAlertDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-4xl h-[80vh] flex flex-col p-0">
-                <DialogHeader className="p-6 pb-4">
+            <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-4xl h-[80vh] flex flex-col p-0">
+                <DialogHeader className="p-6 pb-4 shrink-0">
                     <DialogTitle className="flex items-center gap-2"><AlertTriangle className="h-6 w-6 text-destructive"/>Vehicle Expiry Alerts</DialogTitle>
                     <DialogDescription>Review certificates that have expired or are expiring within the next 30 days for {alertType} Vehicles.</DialogDescription>
                 </DialogHeader>
@@ -134,7 +134,7 @@ function ExpiryAlertDialog({
                        </div>
                     </ScrollArea>
                 </div>
-                <DialogFooter className="p-6 pt-4 border-t">
+                <DialogFooter className="p-6 pt-4 border-t shrink-0">
                     <Button onClick={onClose}>Close</Button>
                 </DialogFooter>
             </DialogContent>
@@ -514,5 +514,7 @@ export default function VehiclesPage() {
     );
 }
 
+
+    
 
     
