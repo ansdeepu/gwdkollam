@@ -1,3 +1,4 @@
+
 // src/app/dashboard/data-entry/page.tsx
 "use client";
 import DataEntryFormComponent from "@/components/shared/DataEntryForm";
@@ -19,23 +20,19 @@ import { useDataStore } from "@/hooks/use-data-store";
 export const dynamic = 'force-dynamic';
 
 const toDateOrNull = (value: any): Date | null => {
-  if (!value) return null;
-  if (value instanceof Date && isValid(value)) return value;
-  // Handle Firestore Timestamp objects
-  if (value && typeof value.seconds === 'number' && typeof value.nanoseconds === 'number') {
-    const date = new Date(value.seconds * 1000 + value.nanoseconds / 1000000);
-    return isValid(date) ? date : null;
-  }
-  if (typeof value === 'string') {
-    // Try ISO format first, as it's a common machine-readable format
-    let parsedDate = parseISO(value);
-    if (isValid(parsedDate)) return parsedDate;
-
-    // Then handle 'dd/MM/yyyy' for manual entries
-    parsedDate = parse(value, 'dd/MM/yyyy', new Date());
-    if (isValid(parsedDate)) return parsedDate;
-  }
-  return null;
+    if (!value) return null;
+    if (value instanceof Date && isValid(value)) return value;
+    if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
+        const d = new Date(value.seconds * 1000 + (value.nanoseconds || 0) / 1e6);
+        if (isValid(d)) return d;
+    }
+    if (typeof value === 'string') {
+        let d = parseISO(value); // Handles yyyy-MM-dd and ISO strings
+        if (isValid(d)) return d;
+        d = parse(value, 'dd/MM/yyyy', new Date()); // Handles dd/MM/yyyy
+        if (isValid(d)) return d;
+    }
+    return null;
 };
 
 // This function now recursively processes the data and formats dates to 'yyyy-MM-dd' or ""
@@ -48,6 +45,11 @@ const processDataForForm = (data: any): any => {
     }
 
     if (typeof obj === 'object') {
+      const maybeDate = toDateOrNull(obj);
+      if (maybeDate) {
+        return format(maybeDate, 'yyyy-MM-dd');
+      }
+
       const newObj: { [key: string]: any } = {};
       for (const key in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -116,11 +118,11 @@ export default function DataEntryPage() {
   
   const returnPath = useMemo(() => {
     let base = '/dashboard/file-room';
-    if (workType === 'private') base = '/dashboard/private-deposit-works';
+    if (workTypeContext === 'private') base = '/dashboard/private-deposit-works';
     if (isApprovingUpdate) base = '/dashboard/pending-updates';
     
     return pageToReturnTo ? `${base}?page=${pageToReturnTo}` : base;
-  }, [workType, isApprovingUpdate, pageToReturnTo]);
+  }, [workTypeContext, isApprovingUpdate, pageToReturnTo]);
 
   useEffect(() => {
     const loadAllData = async () => {
@@ -343,3 +345,5 @@ export default function DataEntryPage() {
     </div>
   );
 }
+
+    

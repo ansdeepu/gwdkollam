@@ -124,32 +124,18 @@ const createDefaultRig = (): RigRegistrationType => ({
 const toDateOrNull = (value: any): Date | null => {
     if (!value) return null;
     if (value instanceof Date && isValid(value)) return value;
-  
-    // Handle Firestore Timestamp objects
-    if (value && typeof value.seconds === 'number') {
-      const d = new Date(value.seconds * 1000);
-      if (isValid(d)) return d;
+    if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
+        const d = new Date(value.seconds * 1000 + (value.nanoseconds || 0) / 1e6);
+        if (isValid(d)) return d;
     }
-    
     if (typeof value === 'string') {
-      const trimmed = value.trim();
-      if (trimmed === '') return null;
-  
-      // First, try to parse dd/MM/yyyy format, which is common in manual entries.
-      let parsedDate = parse(trimmed, 'dd/MM/yyyy', new Date());
-      if (isValid(parsedDate)) return parsedDate;
-  
-      // Then, try yyyy-MM-dd format from date pickers.
-      parsedDate = parse(trimmed, 'yyyy-MM-dd', new Date());
-      if (isValid(parsedDate)) return parsedDate;
-      
-      // Finally, try the more general ISO / RFC parsable format.
-      parsedDate = parseISO(trimmed);
-      if (isValid(parsedDate)) return parsedDate;
+        let d = parseISO(value); // Handles yyyy-MM-dd and ISO strings
+        if (isValid(d)) return d;
+        d = parse(value, 'dd/MM/yyyy', new Date()); // Handles dd/MM/yyyy
+        if (isValid(d)) return d;
     }
-    
     return null;
-  };
+};
 
 
 const formatDateForInput = (d: Date | null | string | undefined) => {
@@ -2183,5 +2169,7 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
 
+
+    
 
     
