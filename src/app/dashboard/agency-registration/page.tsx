@@ -1479,13 +1479,16 @@ export default function AgencyRegistrationPage() {
                     {!isReadOnly && (
                       <CardFooter className="flex justify-end gap-2">
                           <Button type="button" variant="outline" onClick={handleCancelForm} disabled={isSubmitting}><X className="mr-2 h-4 w-4"/> Cancel</Button>
-                          <Button type="submit" disabled={isSubmitting}><Save className="mr-2 h-4 w-4"/> {isSubmitting ? "Saving..." : (selectedApplicationId === 'new' ? 'Save Registration' : 'Save Changes')}</Button>
+                          <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Save className="mr-2 h-4 w-4"/>}
+                            {selectedApplicationId === 'new' ? 'Save Registration' : 'Save Changes'}
+                          </Button>
                       </CardFooter>
                     )}
                 </Card>
             </form>
             <Dialog open={dialogState.type === 'editAgencyReg'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-3xl">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-3xl h-[90vh] flex flex-col p-0">
                   <AgencyRegistrationDialogContent
                       initialData={dialogState.data?.regData}
                       onConfirm={handleConfirmAgencyReg}
@@ -1494,7 +1497,7 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
              <Dialog open={dialogState.type === 'renew' || dialogState.type === 'editRenewal'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="p-0">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="flex flex-col p-0">
                   <DialogHeader className="p-6 pb-0">
                         <DialogTitle>{dialogState.type === 'editRenewal' ? 'Edit Renewal' : 'Renew Rig Registration'}</DialogTitle>
                         <DialogDescription>Enter renewal details for the rig.</DialogDescription>
@@ -1509,7 +1512,7 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
             <Dialog open={dialogState.type === 'editFee' || dialogState.type === 'addFee'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-xl">
+                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-xl flex flex-col p-0">
                     <ApplicationFeeDialogContent
                         initialData={dialogState.type === 'editFee' ? dialogState.data?.fee : createDefaultFee()}
                         onConfirm={handleConfirmFeeChange}
@@ -1744,7 +1747,7 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
     });
 
     return (
-        <div className="flex flex-col h-full">
+        <>
             <DialogHeader className="p-6 pb-4 shrink-0">
                 <DialogTitle>Add Agency Registration</DialogTitle>
             </DialogHeader>
@@ -1802,7 +1805,7 @@ function AgencyRegistrationDialogContent({ initialData, onConfirm, onCancel }: {
                 <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
                 <Button type="button" onClick={() => onConfirm(data)}>Save Changes</Button>
             </DialogFooter>
-        </div>
+        </>
     );
 }
 
@@ -1822,11 +1825,11 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
     };
 
     return (
-        <div className="p-6">
-            <DialogHeader className="pb-4">
+        <>
+            <DialogHeader className="p-6 pb-4">
                 <DialogTitle>{initialData?.id ? 'Edit Application Fee' : 'Add Application Fee'}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 p-6 py-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label>Type of Application</Label>
@@ -1851,11 +1854,11 @@ function ApplicationFeeDialogContent({ initialData, onConfirm, onCancel }: { ini
                     </div>
                 </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="p-6 pt-4">
                 <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
                 <Button type="button" onClick={handleConfirm}>Confirm</Button>
             </DialogFooter>
-        </div>
+        </>
     );
 }
 

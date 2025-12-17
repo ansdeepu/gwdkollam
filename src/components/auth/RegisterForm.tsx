@@ -132,7 +132,7 @@ export default function RegisterForm() {
           disabled={form.formState.isSubmitting}
         >
           {form.formState.isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
-          Create User Account
+          {form.formState.isSubmitting ? 'Creating...' : 'Create User Account'}
         </Button>
         <div className="pt-2">
             <p className="text-xs text-muted-foreground text-center">
