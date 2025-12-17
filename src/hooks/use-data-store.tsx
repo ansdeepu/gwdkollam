@@ -55,7 +55,9 @@ export const defaultRateDescriptions: Record<RateDescriptionId, string> = {
 export interface OfficeAddress {
   id: string;
   officeName?: string;
+  officeNameMalayalam?: string;
   address?: string;
+  addressMalayalam?: string;
   phoneNo?: string;
   email?: string;
   districtOfficerStaffId?: string;
@@ -102,6 +104,7 @@ interface DataStoreContextType {
     addRigCompressor: (data: RigCompressor) => Promise<void>;
     updateRigCompressor: (data: RigCompressor) => Promise<void>;
     deleteRigCompressor: (id: string, name: string) => Promise<void>;
+    refetchOfficeAddress: () => void;
 }
 
 const DataStoreContext = createContext<DataStoreContextType | undefined>(undefined);
@@ -144,6 +147,7 @@ export function DataStoreProvider({ children, user }: { children: ReactNode, use
         departmentVehicles: 0,
         hiredVehicles: 0,
         rigCompressors: 0,
+        officeAddress: 0,
     });
 
     const refetchFileEntries = useCallback(() => setRefetchCounters(c => ({...c, files: c.files + 1})), []);
@@ -156,6 +160,8 @@ export function DataStoreProvider({ children, user }: { children: ReactNode, use
     const refetchDepartmentVehicles = useCallback(() => setRefetchCounters(c => ({...c, departmentVehicles: c.departmentVehicles + 1})), []);
     const refetchHiredVehicles = useCallback(() => setRefetchCounters(c => ({...c, hiredVehicles: c.hiredVehicles + 1})), []);
     const refetchRigCompressors = useCallback(() => setRefetchCounters(c => ({...c, rigCompressors: c.rigCompressors + 1})), []);
+    const refetchOfficeAddress = useCallback(() => setRefetchCounters(c => ({...c, officeAddress: c.officeAddress + 1})), []);
+
 
      const deleteArsEntry = useCallback(async (id: string) => {
         if (!user || user.role !== 'editor') {
@@ -399,6 +405,7 @@ export function DataStoreProvider({ children, user }: { children: ReactNode, use
             addRigCompressor,
             updateRigCompressor,
             deleteRigCompressor,
+            refetchOfficeAddress,
         }}>
             {children}
         </DataStoreContext.Provider>

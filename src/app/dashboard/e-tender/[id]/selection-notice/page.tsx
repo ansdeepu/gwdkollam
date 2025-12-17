@@ -1,3 +1,4 @@
+
 // src/app/dashboard/e-tender/[id]/selection-notice/page.tsx
 "use client";
 
@@ -93,8 +94,8 @@ export default function SelectionNoticePrintPage() {
                       <p>ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
                   </div>
                   <div className="text-right">
-                      <p className="whitespace-pre-wrap">{officeAddress?.officeNameMalayalam || 'ജില്ലാ ഓഫീസറുടെ കാര്യാലയം ഭൂജലവകുപ്പ്'}</p>
-                      <p className="whitespace-pre-wrap">{officeAddress?.addressMalayalam || 'ഹൈസ്കൂൾ ജംഗ്ഷൻ\nതേവള്ളി പി. ഓ.\nകൊല്ലം - 691009'}</p>
+                      <p className="whitespace-pre-wrap">{officeAddress?.officeNameMalayalam || 'ജില്ലാ ഓഫീസറുടെ കാര്യാലയം, ഭൂജലവകുപ്പ്'}</p>
+                      <p className="whitespace-pre-wrap">{officeAddress?.addressMalayalam || 'ഹൈസ്കൂൾ ജംഗ്ഷൻ, തേവള്ളി പി. ഓ., കൊല്ലം - 691009'}</p>
                       <p>ഫോൺനമ്പർ: {officeAddress?.phoneNo || '0474 - 2790313'}</p>
                       <p>ഇമെയിൽ: {officeAddress?.email || 'gwdklm@gmail.com'}</p>
                       <p>തീയതി: {formatDateSafe(tender.selectionNoticeDate) || '__________'}</p>

@@ -10,8 +10,8 @@ export default {
   theme: {
     fontFamily: {
         sans: ["var(--font-sans)", ...fontFamily.sans],
-        serif: ['"Times New Roman"', 'Times', 'serif', ...fontFamily.serif],
-        mono: ['"Times New Roman"', 'Times', 'serif', ...fontFamily.mono],
+        serif: ["Times New Roman", "Times", "serif", ...fontFamily.serif],
+        mono: ["Courier New", "monospace", ...fontFamily.mono],
     },
   	extend: {
       colors: {
