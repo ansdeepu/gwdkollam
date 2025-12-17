@@ -1,3 +1,4 @@
+
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
@@ -391,9 +392,8 @@ const RigAccordionItem = ({
   const isExpired = validityDate ? new Date() > validityDate : false;
   
   const cancellationDateValue = useWatch({ control: form.control, name: `rigs.${index}.cancellationDate`});
-  const formattedCancellationDate = cancellationDateValue && isValid(new Date(cancellationDateValue as string))
-    ? format(new Date(cancellationDateValue as string), 'dd/MM/yyyy')
-    : 'N/A';
+  const cancellationDate = toDateOrNull(cancellationDateValue);
+  const formattedCancellationDate = cancellationDate ? format(cancellationDate, 'dd/MM/yyyy') : 'N/A';
     
   return (
     <AccordionItem value={`rig-${field.id}`} className="border bg-background rounded-lg shadow-sm">
@@ -2182,3 +2182,6 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
 
 
 
+
+
+    
