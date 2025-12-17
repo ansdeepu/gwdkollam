@@ -52,24 +52,35 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
     const form = useForm<TenderOpeningDetailsFormData>({
         resolver: zodResolver(TenderOpeningDetailsSchema),
         defaultValues: {
-            dateOfOpeningBid: initialData?.dateOfOpeningBid,
-            dateOfTechnicalAndFinancialBidOpening: initialData?.dateOfTechnicalAndFinancialBidOpening,
-            technicalCommitteeMember1: initialData?.technicalCommitteeMember1,
-            technicalCommitteeMember2: initialData?.technicalCommitteeMember2,
-            technicalCommitteeMember3: initialData?.technicalCommitteeMember3,
+            dateOfOpeningBid: null,
+            dateOfTechnicalAndFinancialBidOpening: null,
+            technicalCommitteeMember1: undefined,
+            technicalCommitteeMember2: undefined,
+            technicalCommitteeMember3: undefined,
+            ...(initialData ? {
+                ...initialData,
+                dateOfOpeningBid: formatDateForInput(initialData?.dateOfOpeningBid),
+                dateOfTechnicalAndFinancialBidOpening: formatDateForInput(initialData?.dateOfTechnicalAndFinancialBidOpening),
+            } : {})
         },
     });
 
      useEffect(() => {
-        form.reset({
-            dateOfOpeningBid: initialData?.dateOfOpeningBid,
-            dateOfTechnicalAndFinancialBidOpening: initialData?.dateOfTechnicalAndFinancialBidOpening,
-            technicalCommitteeMember1: initialData?.technicalCommitteeMember1,
-            technicalCommitteeMember2: initialData?.technicalCommitteeMember2,
-            technicalCommitteeMember3: initialData?.technicalCommitteeMember3,
-        });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialData]);
+        const defaultValues = {
+            dateOfOpeningBid: null,
+            dateOfTechnicalAndFinancialBidOpening: null,
+            technicalCommitteeMember1: undefined,
+            technicalCommitteeMember2: undefined,
+            technicalCommitteeMember3: undefined,
+        };
+        const valuesToSet = {
+            ...defaultValues,
+            ...(initialData || {}),
+            dateOfOpeningBid: formatDateForInput(initialData?.dateOfOpeningBid),
+            dateOfTechnicalAndFinancialBidOpening: formatDateForInput(initialData?.dateOfTechnicalAndFinancialBidOpening),
+        };
+        form.reset(valuesToSet);
+    }, [initialData, form]);
 
     const handleFormSubmit = async (data: TenderOpeningDetailsFormData) => {
         await onSubmit(data);

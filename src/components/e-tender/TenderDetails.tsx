@@ -45,9 +45,9 @@ const SELECTION_NOTICE_CLEAR_DATA: Partial<E_tenderFormData> = {
   performanceGuaranteeAmount: undefined,
   additionalPerformanceGuaranteeAmount: undefined,
   stampPaperAmount: undefined,
-  performanceGuaranteeDescription: null,
-  additionalPerformanceGuaranteeDescription: null,
-  stampPaperDescription: null,
+  performanceGuaranteeDescription: undefined,
+  additionalPerformanceGuaranteeDescription: undefined,
+  stampPaperDescription: undefined,
 };
 
 const OPENING_DETAILS_CLEAR_DATA: Partial<E_tenderFormData> = {
@@ -62,9 +62,15 @@ const WORK_ORDER_CLEAR_DATA: Partial<E_tenderFormData> = {
     agreementDate: null,
     dateWorkOrder: null,
     nameOfAssistantEngineer: undefined,
-    supervisor1Id: undefined, supervisor1Name: undefined, supervisor1Phone: undefined,
-    supervisor2Id: undefined, supervisor2Name: undefined, supervisor2Phone: undefined,
-    supervisor3Id: undefined, supervisor3Name: undefined, supervisor3Phone: undefined,
+    supervisor1Id: undefined,
+    supervisor1Name: undefined,
+    supervisor1Phone: undefined,
+    supervisor2Id: undefined,
+    supervisor2Name: undefined,
+    supervisor2Phone: undefined,
+    supervisor3Id: undefined,
+    supervisor3Name: undefined,
+    supervisor3Phone: undefined,
 };
 
 

@@ -50,6 +50,8 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
         resolver: zodResolver(WorkOrderDetailsSchema),
         defaultValues: {
             ...initialData,
+             agreementDate: formatDateForInput(initialData?.agreementDate),
+            dateWorkOrder: formatDateForInput(initialData?.dateWorkOrder),
         }
     });
     
@@ -57,7 +59,9 @@ export default function WorkOrderDetailsForm({ initialData, onSubmit, onCancel, 
 
     useEffect(() => {
         reset({
-             ...initialData,
+            ...initialData,
+             agreementDate: formatDateForInput(initialData?.agreementDate),
+            dateWorkOrder: formatDateForInput(initialData?.dateWorkOrder),
         });
     }, [initialData, reset]);
 

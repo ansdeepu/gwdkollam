@@ -1,4 +1,3 @@
-
 // src/components/e-tender/SelectionNoticeForm.tsx
 
 import React, { useEffect, useMemo, useCallback } from 'react';
@@ -109,7 +108,7 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
         const stamp = calculateStampPaperValue(l1Amount);
         const additionalPg = calculateAdditionalPG(tender?.estimateAmount, l1Amount);
 
-        setValue('selectionNoticeDate', formatDateForInput(tender?.selectionNoticeDate));
+        setValue('selectionNoticeDate', formatDateForInput(tender?.selectionNoticeDate) || '');
         setValue('performanceGuaranteeAmount', pg, { shouldValidate: true });
         setValue('additionalPerformanceGuaranteeAmount', additionalPg, { shouldValidate: true });
         setValue('stampPaperAmount', stamp, { shouldValidate: true });

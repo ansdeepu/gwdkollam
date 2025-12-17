@@ -29,22 +29,27 @@ const createDefaultCorrigendum = (): Corrigendum => ({
     reason: '',
     lastDateOfReceipt: null,
     dateOfOpeningTender: null,
+    corrigendumType: undefined,
 });
 
 export default function CorrigendumForm({ onSubmit, onCancel, isSubmitting, initialData }: CorrigendumFormProps) {
     const form = useForm<Corrigendum>({
         resolver: zodResolver(CorrigendumSchema),
-        defaultValues: initialData || createDefaultCorrigendum(),
+        defaultValues: createDefaultCorrigendum(),
     });
 
     const watchedType = form.watch("corrigendumType");
 
     useEffect(() => {
-        if (initialData) {
-            form.reset(initialData);
-        } else {
-            form.reset(createDefaultCorrigendum());
-        }
+        const defaultValues = createDefaultCorrigendum();
+        const valuesToSet = {
+            ...defaultValues,
+            ...(initialData || {}),
+            corrigendumDate: formatDateForInput(initialData?.corrigendumDate),
+            lastDateOfReceipt: formatDateForInput(initialData?.lastDateOfReceipt, true),
+            dateOfOpeningTender: formatDateForInput(initialData?.dateOfOpeningTender, true),
+        };
+        form.reset(valuesToSet);
     }, [initialData, form]);
 
     return (

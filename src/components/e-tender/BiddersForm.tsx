@@ -16,11 +16,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useDataStore } from '@/hooks/use-data-store';
 import { v4 as uuidv4 } from 'uuid';
 
-interface BidderFormProps {
+interface BiddersFormProps {
     onSubmit: (bidders: Bidder[]) => void;
     onCancel: () => void;
     isSubmitting: boolean;
-    initialBidders: Bidder[];
+    initialBidders?: Bidder[] | null;
     tenderAmount?: number;
 }
 
@@ -34,7 +34,7 @@ const createDefaultBidder = (): Bidder => ({
     status: undefined,
 });
 
-export default function BiddersForm({ onSubmit, onCancel, isSubmitting, initialBidders, tenderAmount }: BidderFormProps) {
+export default function BiddersForm({ onSubmit, onCancel, isSubmitting, initialBidders, tenderAmount }: BiddersFormProps) {
     const { allBidders } = useDataStore();
 
     const form = useForm<{ bidders: Bidder[] }>({
