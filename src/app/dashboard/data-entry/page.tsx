@@ -118,11 +118,11 @@ export default function DataEntryPage() {
   
   const returnPath = useMemo(() => {
     let base = '/dashboard/file-room';
-    if (workTypeContext === 'private') base = '/dashboard/private-deposit-works';
+    if (workType === 'private') base = '/dashboard/private-deposit-works';
     if (isApprovingUpdate) base = '/dashboard/pending-updates';
     
     return pageToReturnTo ? `${base}?page=${pageToReturnTo}` : base;
-  }, [workTypeContext, isApprovingUpdate, pageToReturnTo]);
+  }, [workType, isApprovingUpdate, pageToReturnTo]);
 
   useEffect(() => {
     const loadAllData = async () => {
@@ -345,5 +345,3 @@ export default function DataEntryPage() {
     </div>
   );
 }
-
-    
