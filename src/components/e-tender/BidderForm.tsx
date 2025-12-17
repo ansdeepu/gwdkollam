@@ -24,7 +24,7 @@ interface BidderFormProps {
     tenderAmount?: number;
 }
 
-const createDefaultBidder = (): Partial<Bidder> => ({
+const createDefaultBidder = (): Bidder => ({
     id: uuidv4(), // Assign a temporary client-side ID
     name: '',
     address: '',
@@ -39,7 +39,7 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
     
     const form = useForm<Bidder>({
         resolver: zodResolver(BidderSchema),
-        defaultValues: initialData || createDefaultBidder(),
+        defaultValues: initialData ?? createDefaultBidder(),
     });
 
     const { control, setValue, watch, reset } = form;
@@ -47,11 +47,7 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
 
 
     useEffect(() => {
-        if (initialData) {
-            reset(initialData);
-        } else {
-            reset(createDefaultBidder());
-        }
+        reset(initialData ?? createDefaultBidder());
     }, [initialData, reset]);
 
     useEffect(() => {
