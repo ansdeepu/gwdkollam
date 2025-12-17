@@ -12,6 +12,9 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import NewUserForm from "@/components/admin/NewUserForm";
 import RegisterForm from "@/components/auth/RegisterForm";
@@ -185,7 +188,13 @@ export default function UserManagementPage() {
       
       <Dialog open={isGuestFormOpen} onOpenChange={setIsGuestFormOpen}>
         <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
-            <div className="pt-4">
+            <DialogHeader>
+                <DialogTitle>Add Guest User</DialogTitle>
+                <DialogDescription>
+                    Create a new user account. Guests will have the 'viewer' role by default and require manual approval.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="p-6 pt-4">
               <RegisterForm />
             </div>
         </DialogContent>
