@@ -56,6 +56,7 @@ export const BasicDetailsSchema = z.object({
     dateTimeOfReceipt: z.any().optional().nullable(),
     dateTimeOfOpening: z.any().optional().nullable(),
     tenderType: z.enum(['Work', 'Purchase']).optional(),
+    detailedEstimateUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
     // Descriptions for historical context
     tenderFeeDescription: z.string().optional(),
     emdDescription: z.string().optional(),
@@ -166,6 +167,7 @@ export const E_tenderSchema = z.object({
     dateTimeOfReceipt: z.any().optional().nullable(),
     dateTimeOfOpening: z.any().optional().nullable(),
     tenderType: z.enum(['Work', 'Purchase']).optional(),
+    detailedEstimateUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
     
     corrigendums: z.array(CorrigendumSchema).optional(),
     bidders: z.array(BidderSchema).optional(),

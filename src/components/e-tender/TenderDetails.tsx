@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Loader2, Save, Edit, PlusCircle, Trash2, FileText, Building, GitBranch, FolderOpen, ScrollText, Download, Users, Bell, ArrowLeft } from 'lucide-react';
+import { Loader2, Save, Edit, PlusCircle, Trash2, FileText, Building, GitBranch, FolderOpen, ScrollText, Download, Users, Bell, ArrowLeft, Link as LinkIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { toDateOrNull, formatDateSafe, getStatusBadgeClass } from './utils';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -74,7 +74,7 @@ const WORK_ORDER_CLEAR_DATA: Partial<E_tenderFormData> = {
 };
 
 
-const DetailRow = ({ label, value, subValue, isCurrency = false, align = 'left' }: { label: string; value: any; subValue?: string; isCurrency?: boolean, align?: 'left' | 'center' | 'right' }) => {
+const DetailRow = ({ label, value, subValue, isCurrency = false, align = 'left', isLink = false }: { label: string; value: any; subValue?: string; isCurrency?: boolean, align?: 'left' | 'center' | 'right', isLink?: boolean }) => {
     if (value === null || value === undefined || value === '' || (typeof value === 'number' && isNaN(value))) {
         return null;
     }
@@ -112,8 +112,17 @@ const DetailRow = ({ label, value, subValue, isCurrency = false, align = 'left' 
                 "text-sm font-semibold",
                 label.toLowerCase().includes('malayalam') && "text-xs",
             )}>
-              {displayValue}
-              {subValue && <span className="text-xs text-muted-foreground ml-1">({subValue})</span>}
+              {isLink ? (
+                <a href={displayValue} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:underline">
+                    <LinkIcon className="h-3 w-3"/>
+                    <span>Open Link</span>
+                </a>
+              ) : (
+                <>
+                    {displayValue}
+                    {subValue && <span className="text-xs text-muted-foreground ml-1">({subValue})</span>}
+                </>
+              )}
             </dd>
         </div>
     );
@@ -423,6 +432,14 @@ export default function TenderDetails() {
                                                     <DetailRow label="Date & Time of Opening" value={watch('dateTimeOfOpening')} />
                                                 </div>
                                             </div>
+                                            {watch('detailedEstimateUrl') && (
+                                                <div className="space-y-2">
+                                                    <h4 className="text-sm font-medium text-muted-foreground">Attachments</h4>
+                                                    <div className="p-4 border rounded-md bg-slate-50">
+                                                        <DetailRow label="Detailed Estimate PDF" value={watch('detailedEstimateUrl')} isLink />
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </CardContent>
                                 ) : (

@@ -155,6 +155,7 @@ export default function PdfReportDialogs() {
     const hasBidders = (tender.bidders || []).length > 0;
     const hasSelectionNotice = !!tender.selectionNoticeDate;
     const hasWorkOrder = !!tender.agreementDate;
+    const hasDetailedEstimate = !!tender.detailedEstimateUrl;
 
     const workOrderButtonLabel = tender.tenderType === 'Work'
         ? 'Work Order'
@@ -173,6 +174,12 @@ export default function PdfReportDialogs() {
             <CardContent>
                 <TooltipProvider>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                         <ReportButton 
+                            label="Detailed Estimate"
+                            href={tender.detailedEstimateUrl || '#'}
+                            disabled={!isTenderSaved || !hasDetailedEstimate}
+                            tooltipContent={!isTenderSaved ? "Save the tender first." : "Add a Detailed Estimate URL in Basic Details."}
+                        />
                         <ReportButton 
                             label="Notice Inviting Tender (NIT)"
                             onClick={() => handleGeneratePdf(generateNIT, `aNIT${formattedTenderNo}.pdf`, 'Your Notice Inviting Tender has been downloaded.')}

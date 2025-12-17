@@ -149,6 +149,14 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                                 <FormField name="dateTimeOfReceipt" control={control} render={({ field }) => ( <FormItem><FormLabel>Last Date & Time of Receipt</FormLabel><FormControl><Input type="datetime-local" {...field} value={formatDateForInput(field.value, true)} onChange={(e) => field.onChange(e.target.value || null)}/></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField name="dateTimeOfOpening" control={control} render={({ field }) => ( <FormItem><FormLabel>Date & Time of Opening</FormLabel><FormControl><Input type="datetime-local" {...field} value={formatDateForInput(field.value, true)} onChange={(e) => field.onChange(e.target.value || null)}/></FormControl><FormMessage /></FormItem> )}/>
                             </div>
+                            <FormField name="detailedEstimateUrl" control={control} render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Detailed Estimate PDF Link</FormLabel>
+                                    <FormControl><Input {...field} placeholder="https://docs.google.com/..." /></FormControl>
+                                    <FormDescription className="text-xs">Enter a public Google Drive link for the estimate PDF.</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}/>
                         </div>
                     </ScrollArea>
                 </div>
