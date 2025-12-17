@@ -213,7 +213,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
 
     return (
       <div className="flex flex-col h-auto">
-        <DialogHeader className="p-6 pb-4">
+        <DialogHeader>
           <DialogTitle>Application Details</DialogTitle>
         </DialogHeader>
         <div className="p-6 pt-0 space-y-4 flex-1">
@@ -244,7 +244,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
                 </div>
             </div>
         </div>
-        <DialogFooter className="p-6 pt-4"><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={handleSave}>Save</Button></DialogFooter>
+        <DialogFooter><Button variant="outline" onClick={onCancel}>Cancel</Button><Button onClick={handleSave}>Save</Button></DialogFooter>
       </div>
     );
 };
@@ -273,7 +273,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
             form.handleSubmit(handleConfirmSubmit)(e);
           }}
         >
-            <DialogHeader className="p-6 pb-4">
+            <DialogHeader>
                 <DialogTitle>Remittance Details</DialogTitle>
             </DialogHeader>
             <div className="p-6 pt-0 space-y-4">
@@ -284,7 +284,7 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
                 </div>
                 <FormField name="remittanceRemarks" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Remittance Remarks</FormLabel><FormControl><Textarea {...field} placeholder="Add any remarks for this remittance entry..." /></FormControl><FormMessage /></FormItem> )}/>
             </div>
-            <DialogFooter className="p-6 pt-4">
+            <DialogFooter>
                 <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
                 <Button type="submit">Save</Button>
             </DialogFooter>
@@ -315,8 +315,9 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
                 e.preventDefault();
                 form.handleSubmit(handleConfirmSubmit)(e);
               }}
+               className="flex flex-col h-full"
             >
-                <DialogHeader className="p-6 pb-4">
+                <DialogHeader className="p-6 pb-4 shrink-0">
                     <DialogTitle>Payment Details</DialogTitle>
                 </DialogHeader>
                 <div className="flex-1 min-h-0">
@@ -340,7 +341,7 @@ const PaymentDialogContent = ({ initialData, onConfirm, onCancel }: { initialDat
                       </div>
                   </ScrollArea>
                 </div>
-                <DialogFooter className="p-6 pt-4">
+                <DialogFooter className="p-6 pt-4 shrink-0">
                     <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
                     <Button type="submit">Save</Button>
                 </DialogFooter>
@@ -436,7 +437,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
 
     return (
         <div className="flex flex-col h-full overflow-hidden">
-            <DialogHeader className="p-6 pb-4">
+            <DialogHeader className="p-6 pb-4 shrink-0">
                 <DialogTitle>{initialData?.nameOfSite ? `Edit Site: ${initialData.nameOfSite}` : "Add New Site"}</DialogTitle>
             </DialogHeader>
             <div className="flex-1 min-h-0">
@@ -611,7 +612,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                     </Form>
                 </ScrollArea>
             </div>
-            <DialogFooter className="p-6 pt-4">
+            <DialogFooter className="p-6 pt-4 shrink-0">
                 <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
                 <Button type="submit" form="site-dialog-form">Save</Button>
             </DialogFooter>
@@ -677,13 +678,13 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData | null, o
     };
     
     return (
-        <DialogContent className="max-w-4xl h-[90vh] flex flex-col">
-            <DialogHeader className="p-6 pb-4">
+        <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+            <DialogHeader className="p-6 pb-4 shrink-0">
                 <DialogTitle>View Site: {site.nameOfSite}</DialogTitle>
                 <DialogDescription>A read-only summary of all available details for this site.</DialogDescription>
             </DialogHeader>
             <div className="flex-1 min-h-0">
-                <ScrollArea className="h-full pr-4 px-6 py-4">
+                <ScrollArea className="h-full px-6 py-4">
                     <div className="space-y-6">
                         {Object.entries(allDetails).map(([sectionTitle, details]) => {
                             if (!details || Object.values(details).every(v => v === null || v === undefined || v === '')) return null;
@@ -704,7 +705,7 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData | null, o
                     </div>
                 </ScrollArea>
             </div>
-            <DialogFooter className="p-6 pt-4">
+            <DialogFooter className="p-6 pt-4 shrink-0">
                 <Button variant="outline" type="button" onClick={onCancel}>Close</Button>
             </DialogFooter>
         </DialogContent>
@@ -1120,10 +1121,10 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-3xl"><RemittanceDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} /></DialogContent>
         </Dialog>
          <Dialog open={dialogState.type === 'site'} onOpenChange={closeDialog}>
-            <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-6xl h-[90vh] flex flex-col"><SiteDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} supervisorList={supervisorList} isReadOnly={false} isSupervisor={isSupervisor} allLsgConstituencyMaps={allLsgConstituencyMaps}/></DialogContent>
+            <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-6xl h-[90vh] flex flex-col p-0"><SiteDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} supervisorList={supervisorList} isReadOnly={false} isSupervisor={isSupervisor} allLsgConstituencyMaps={allLsgConstituencyMaps}/></DialogContent>
         </Dialog>
          <Dialog open={dialogState.type === 'payment'} onOpenChange={closeDialog}>
-            <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-4xl"><PaymentDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} /></DialogContent>
+            <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-4xl flex flex-col p-0"><PaymentDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} /></DialogContent>
         </Dialog>
         {dialogState.type === 'reorderSite' && dialogState.data && (
             <Dialog open={true} onOpenChange={closeDialog}>

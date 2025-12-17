@@ -57,7 +57,7 @@ export default function NewUserForm({ staffMembers, staffLoading, onSubmit, isSu
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
-        <DialogHeader className="p-6 pb-4">
+        <DialogHeader className="p-6 pb-4 shrink-0">
             <DialogTitle>Create New User (from Staff)</DialogTitle>
             <DialogDescription>
                 Select a staff member and provide their login details. They will be assigned the 'viewer' role and will need to be approved manually.
@@ -158,7 +158,7 @@ export default function NewUserForm({ staffMembers, staffLoading, onSubmit, isSu
             </div>
           </ScrollArea>
         </div>
-        <DialogFooter className="p-6 pt-4">
+        <DialogFooter className="p-6 pt-4 shrink-0">
           <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             <X className="mr-2 h-4 w-4" /> Cancel
           </Button>

@@ -133,12 +133,12 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
     return (
         <FormProvider {...form}>
             <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
-                <DialogHeader>
+                <DialogHeader className="p-6 pb-4 shrink-0">
                     <DialogTitle>Selection Notice Details</DialogTitle>
                     <DialogDescription>Enter details related to the selection notice.</DialogDescription>
                 </DialogHeader>
                 <div className="flex-1 min-h-0">
-                    <ScrollArea className="h-full p-6 -mx-6">
+                    <ScrollArea className="h-full px-6 py-4">
                         <div className="space-y-4">
                             <FormField name="selectionNoticeDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Selection Notice Date</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} /></FormControl><FormMessage /></FormItem> )}/>
                             <FormField name="performanceGuaranteeAmount" control={form.control} render={({ field }) => ( 
@@ -168,7 +168,7 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
                         </div>
                     </ScrollArea>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="p-6 pt-4 shrink-0">
                     <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
                         <X className="mr-2 h-4 w-4" /> Cancel
                     </Button>
