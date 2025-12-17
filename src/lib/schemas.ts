@@ -1,4 +1,3 @@
-
 // src/lib/schemas.ts
 import { z } from 'zod';
 import { format, parse, isValid } from 'date-fns';
@@ -284,6 +283,15 @@ export const reportableFields: Array<{ id: string; label: string; accessor: (ent
   { id: 'siteLatitude', label: 'Latitude', accessor: (entry) => (entry as any).latitude, arsApplicable: true },
   { id: 'siteLongitude', label: 'Longitude', accessor: (entry) => (entry as any).longitude, arsApplicable: true },
 
+  // --- ARS Fields ---
+  { id: 'arsSchemeType', label: 'Type of Scheme', accessor: (entry) => (entry as ArsEntryFormData).arsTypeOfScheme, arsApplicable: true, arsOnly: true },
+  { id: 'arsBlock', label: 'Block', accessor: (entry) => (entry as ArsEntryFormData).arsBlock, arsApplicable: true, arsOnly: true },
+  { id: 'arsStructures', label: 'ARS # Structures', accessor: (entry) => (entry as any).arsNumberOfStructures, arsOnly: true },
+  { id: 'arsStorage', label: 'ARS Storage (m³)', accessor: (entry) => (entry as any).arsStorageCapacity, arsOnly: true },
+  { id: 'arsFillings', label: 'ARS # Fillings', accessor: (entry) => (entry as any).arsNumberOfFillings, arsOnly: true },
+  { id: 'arsEstimateAmount', label: 'Estimate Amount (₹)', accessor: (entry) => (entry as ArsEntryFormData).estimateAmount, arsOnly: true },
+  { id: 'arsExpenditure', label: 'Expenditure (₹)', accessor: (entry) => (entry as ArsEntryFormData).totalExpenditure, arsOnly: true },
+
   // --- Work Implementation Fields ---
   { id: 'siteEstimateAmount', label: 'Site Estimate (₹)', accessor: (entry) => (entry as any).estimateAmount, arsApplicable: true },
   { id: 'siteRemittedAmount', label: 'Site Remitted (₹)', accessor: (entry) => (entry as any).remittedAmount, arsApplicable: false },
@@ -322,15 +330,6 @@ export const reportableFields: Array<{ id: string; label: string; accessor: (ent
   { id: 'schemeTankCapacity', label: 'Tank Capacity (L)', accessor: (entry) => (entry as any).waterTankCapacity, purpose: ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'] },
   { id: 'schemeTapConnections', label: '# Taps', accessor: (entry) => (entry as any).noOfTapConnections, purpose: ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'] },
   { id: 'schemeBeneficiaries', label: '# Beneficiaries', accessor: (entry) => (entry as any).noOfBeneficiary, arsApplicable: true },
-  
-  // --- ARS Fields ---
-  { id: 'arsSchemeType', label: 'Type of Scheme', accessor: (entry) => (entry as ArsEntryFormData).arsTypeOfScheme, arsApplicable: true, arsOnly: true },
-  { id: 'arsBlock', label: 'Block', accessor: (entry) => (entry as ArsEntryFormData).arsBlock, arsApplicable: true, arsOnly: true },
-  { id: 'arsStructures', label: 'ARS # Structures', accessor: (entry) => (entry as any).arsNumberOfStructures, arsOnly: true },
-  { id: 'arsStorage', label: 'ARS Storage (m³)', accessor: (entry) => (entry as any).arsStorageCapacity, arsOnly: true },
-  { id: 'arsFillings', label: 'ARS # Fillings', accessor: (entry) => (entry as any).arsNumberOfFillings, arsOnly: true },
-  { id: 'arsEstimateAmount', label: 'Estimate Amount (₹)', accessor: (entry) => (entry as ArsEntryFormData).estimateAmount, arsOnly: true },
-  { id: 'arsExpenditure', label: 'Expenditure (₹)', accessor: (entry) => (entry as ArsEntryFormData).totalExpenditure, arsOnly: true },
   
   // --- Work Status ---
   { id: 'siteWorkStatus', label: 'Work Status', accessor: (entry) => (entry as any).workStatus || (entry as any).arsStatus, arsApplicable: true },
