@@ -85,18 +85,7 @@ export const NewBidderSchema = z.object({
   order: z.number().optional(),
 });
 export type NewBidderFormData = z.infer<typeof NewBidderSchema>;
-export type Bidder = z.infer<typeof NewBidderSchema> & {
-    id: string,
-    quotedAmount?: number,
-    quotedPercentage?: number,
-    aboveBelow?: 'Above' | 'Below',
-    status?: 'Accepted' | 'Rejected',
-    securityDepositType?: string,
-    securityDepositAmount?: number,
-    agreementAmount?: number,
-    additionalSecurityDeposit?: number,
-    dateSelectionNotice?: any,
-};
+
 
 export const BidderSchema = NewBidderSchema.extend({
   id: z.string(),
@@ -111,6 +100,7 @@ export const BidderSchema = NewBidderSchema.extend({
   additionalSecurityDeposit: optionalNumberSchema,
   dateSelectionNotice: z.any().optional().nullable(),
 });
+export type Bidder = z.infer<typeof BidderSchema>;
 
 export const committeeMemberDesignations: Designation[] = [
     "Assistant Executive Engineer",
