@@ -432,14 +432,6 @@ export default function TenderDetails() {
                                                     <DetailRow label="Date & Time of Opening" value={watch('dateTimeOfOpening')} />
                                                 </div>
                                             </div>
-                                            {watch('detailedEstimateUrl') && (
-                                                <div className="space-y-2">
-                                                    <h4 className="text-sm font-medium text-muted-foreground">Attachments</h4>
-                                                    <div className="p-4 border rounded-md bg-slate-50">
-                                                        <DetailRow label="Detailed Estimate PDF" value={watch('detailedEstimateUrl')} isLink />
-                                                    </div>
-                                                </div>
-                                            )}
                                         </div>
                                     </CardContent>
                                 ) : (
