@@ -262,7 +262,7 @@ export const SiteDetailSchema = z.object({
   supervisorName: z.string().optional().nullable(),
   supervisorDesignation: z.string().optional().nullable(),
   totalExpenditure: optionalNumber("Total Expenditure must be a valid number."),
-  workStatus: z.enum(siteWorkStatusOptions, { required_error: "Work Status is required." }),
+  workStatus: z.enum(siteWorkStatusOptions, { required_error: "Work Status is required." }).optional(),
   implementationRemarks: z.string().optional().nullable().default(""),
   workRemarks: z.string().optional().nullable().default(""),
 
