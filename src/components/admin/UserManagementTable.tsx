@@ -1,4 +1,3 @@
-
 // src/components/admin/UserManagementTable.tsx
 "use client";
 
@@ -248,7 +247,7 @@ export default function UserManagementTable({
 
 
               return (
-              <TableRow key={userRow.uid} className={cn(isUserInRowAdmin && "bg-primary/10 hover:bg-primary/20")}>
+              <TableRow key={userRow.uid} className={cn("hover:bg-primary/5", isUserInRowAdmin && "bg-primary/10 hover:bg-primary/20")}>
                 <TableCell className="px-3 py-2 font-medium text-center">{index + 1}</TableCell>
                 <TableCell className="px-3 py-2">
                   <Avatar className="h-9 w-9 mx-auto">
@@ -352,7 +351,7 @@ export default function UserManagementTable({
 
       {userToDelete && (
         <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
-          <AlertDialogContent>
+          <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
             <AlertDialogHeader>
               <AlertDialogTitle>Confirm User Removal</AlertDialogTitle>
               <AlertDialogDescription>

@@ -1,4 +1,3 @@
-
 // src/components/database/FileDatabaseTable.tsx
 "use client";
 
@@ -273,7 +272,7 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
            )}
           <div className="max-h-[70vh] overflow-auto">
             <Table>
-              <TableHeader className="sticky top-0 bg-background z-10">
+              <TableHeader className="sticky top-0 bg-secondary z-10">
                 <TableRow>
                   <TableHead className="w-[5%] px-2 py-3 text-sm">Sl. No.</TableHead>
                   <TableHead className="w-[10%] px-2 py-3 text-sm">File No.</TableHead>
@@ -395,7 +394,7 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
         <AlertDialog open={!!deleteItem} onOpenChange={() => setDeleteItem(null)}>
             <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                 <AlertDialogDescription>
                 This action will delete the file entry for
                 <strong> {deleteItem?.fileNo || deleteItem?.id}</strong>. This cannot be undone.
