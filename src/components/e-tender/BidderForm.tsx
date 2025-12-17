@@ -59,9 +59,12 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
             } else {
                 calculatedAmount = tenderAmount * (1 - percentage);
             }
-            setValue('quotedAmount', Math.round(calculatedAmount * 100) / 100);
+            const roundedAmount = Math.round(calculatedAmount * 100) / 100;
+            if (watch('quotedAmount') !== roundedAmount) {
+              setValue('quotedAmount', roundedAmount);
+            }
         }
-    }, [tenderAmount, quotedPercentage, aboveBelow, setValue]);
+    }, [tenderAmount, quotedPercentage, aboveBelow, setValue, watch]);
     
     const handleBidderSelect = (bidderName: string) => {
         const selected = allBidders.find(b => b.name === bidderName);

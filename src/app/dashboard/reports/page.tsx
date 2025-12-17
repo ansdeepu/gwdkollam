@@ -1,4 +1,3 @@
-
 // src/app/dashboard/reports/page.tsx
 "use client";
 
@@ -519,7 +518,7 @@ export default function ReportsPage() {
       <Card className="shadow-lg no-print">
         <CardContent className="p-4 space-y-4">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <Select value={applicationTypeFilter} onValueChange={setApplicationTypeFilter}>
+                <Select value={applicationTypeFilter} onValueChange={setSelectedAppType}>
                     <SelectTrigger><SelectValue placeholder="Filter by Application Type" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Application Types</SelectItem>
@@ -706,12 +705,12 @@ export default function ReportsPage() {
                                 {renderDetail("Actual TD (m)", site.totalDepth)}
                                 {purpose === 'BWC' && renderDetail("Actual OB (m)", site.surveyOB)}
                                 {renderDetail("Actual Casing Pipe (m)", site.casingPipeUsed)}
-                                {purpose === 'BWC' && renderDetail("Actual Inner Casing Pipe (m)", site.innerCasingPipe)}
-                                {purpose === 'BWC' && renderDetail("Actual Outer Casing Pipe (m)", site.outerCasingPipe)}
-                                {purpose === 'TWC' && renderDetail("Actual Plain Pipe (m)", site.surveyPlainPipe)}
-                                {purpose === 'TWC' && renderDetail("Actual Slotted Pipe (m)", site.surveySlottedPipe)}
-                                {purpose === 'TWC' && renderDetail("Actual MS Casing Pipe (m)", site.outerCasingPipe)}
-                                {renderDetail("Yield Discharge (LPH)", site.yieldDischarge)}
+                                {purpose === 'BWC' && renderDetail("Outer Casing (m)", site.outerCasingPipe)}
+                                {purpose === 'BWC' && renderDetail("Inner Casing (m)", site.innerCasingPipe)}
+                                {purpose === 'TWC' && renderDetail("Plain Pipe (m)", site.surveyPlainPipe)}
+                                {purpose === 'TWC' && renderDetail("Slotted Pipe (m)", site.surveySlottedPipe)}
+                                {purpose === 'TWC' && renderDetail("MS Casing Pipe (m)", site.outerCasingPipe)}
+                                {renderDetail("Yield (LPH)", site.yieldDischarge)}
                                 {renderDetail("Zone Details (m)", site.zoneDetails)}
                                 {renderDetail("Static Water Level (m)", site.waterLevel)}
                                 {renderDetail("Type of Rig Used", site.typeOfRig)}
@@ -733,8 +732,8 @@ export default function ReportsPage() {
                                 {renderDetail("Pumping Line (m)", site.pumpingLineLength)}
                                 {renderDetail("Delivery Line (m)", site.deliveryLineLength)}
                                 {renderDetail("Water Tank Capacity (L)", site.waterTankCapacity)}
-                                {renderDetail("No. of Tap Connections", site.noOfTapConnections)}
-                                {renderDetail("No. of Beneficiaries", site.noOfBeneficiary)}
+                                {renderDetail("# Taps", site.noOfTapConnections)}
+                                {renderDetail("# Beneficiaries", site.noOfBeneficiary)}
                               </>}
 
                               {isHPSPurpose && <>

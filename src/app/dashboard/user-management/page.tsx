@@ -12,9 +12,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import NewUserForm from "@/components/admin/NewUserForm";
 import RegisterForm from "@/components/auth/RegisterForm";
@@ -175,14 +172,7 @@ export default function UserManagementPage() {
       </Card>
 
       <Dialog open={isStaffFormOpen} onOpenChange={setIsStaffFormOpen}>
-        <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
-            <DialogHeader>
-                <DialogTitle>Create New User (from Staff)</DialogTitle>
-                <DialogDescription>
-                    Select a staff member and provide their login details. They will be assigned the 'viewer' role and will need to be approved manually.
-                </DialogDescription>
-            </DialogHeader>
-            <div className="pt-4">
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-2xl flex flex-col p-0 h-auto">
               <NewUserForm
                   staffMembers={staffMembers}
                   staffLoading={staffLoading}
@@ -190,18 +180,11 @@ export default function UserManagementPage() {
                   isSubmitting={isSubmitting}
                   onCancel={() => setIsStaffFormOpen(false)}
               />
-            </div>
         </DialogContent>
       </Dialog>
       
       <Dialog open={isGuestFormOpen} onOpenChange={setIsGuestFormOpen}>
         <DialogContent onPointerDownOutside={(e) => e.preventDefault()}>
-            <DialogHeader>
-                <DialogTitle>Create Guest User Account</DialogTitle>
-                <DialogDescription>
-                    Provide a name, email, and password. The guest user will not be linked to the establishment list. They will need to be approved manually.
-                </DialogDescription>
-            </DialogHeader>
             <div className="pt-4">
               <RegisterForm />
             </div>

@@ -1,4 +1,3 @@
-
 // src/app/dashboard/settings/page.tsx
 "use client";
 
@@ -140,59 +139,62 @@ const OfficeAddressDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="sm:max-w-3xl">
-        <DialogHeader className="p-6 pb-4">
-          <DialogTitle>{initialData ? 'Edit Office Address' : 'Add New Office Address'}</DialogTitle>
-          <DialogDescription>Fill in the details for the office location.</DialogDescription>
-        </DialogHeader>
-        <div className="px-6 pb-6">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField name="officeName" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Office Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                  <FormField name="officeNameMalayalam" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Office Name (In Malayalam)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                  <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[40px]"/></FormControl><FormMessage /></FormItem> )}/>
-                  <FormField name="addressMalayalam" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address (In Malayalam)</FormLabel><FormControl><Textarea {...field} className="min-h-[40px]"/></FormControl><FormMessage /></FormItem> )}/>
-              </div>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <FormField
-                      name="districtOfficerStaffId"
-                      control={form.control}
-                      render={({ field }) => (
-                      <FormItem>
-                          <FormLabel>Name of District Officer</FormLabel>
-                          <Select onValueChange={(value) => handleOfficerChange(value)} value={field.value}>
-                              <FormControl><SelectTrigger><SelectValue placeholder="Select an Officer" /></SelectTrigger></FormControl>
-                              <SelectContent>
-                                  {officerList.map(officer => <SelectItem key={officer.id} value={officer.id}>{officer.name} ({officer.designation})</SelectItem>)}
-                              </SelectContent>
-                          </Select>
-                          <FormMessage />
-                      </FormItem>
-                      )}
-                  />
-                    <div className="grid grid-cols-1 gap-4">
-                        <FormField name="phoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                    </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <FormField name="email" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                  <FormField name="gstNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>GST No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                  <FormField name="panNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>PAN No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-              </div>
+      <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="sm:max-w-3xl flex flex-col p-0">
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
+                <DialogHeader className="p-6 pb-4">
+                  <DialogTitle>{initialData ? 'Edit Office Address' : 'Add New Office Address'}</DialogTitle>
+                  <DialogDescription>Fill in the details for the office location.</DialogDescription>
+                </DialogHeader>
+                <div className="flex-1 min-h-0">
+                    <ScrollArea className="h-full px-6 py-4">
+                        <div className="space-y-4">
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField name="officeName" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Office Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                              <FormField name="officeNameMalayalam" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Office Name (In Malayalam)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                              <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[40px]"/></FormControl><FormMessage /></FormItem> )}/>
+                              <FormField name="addressMalayalam" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address (In Malayalam)</FormLabel><FormControl><Textarea {...field} className="min-h-[40px]"/></FormControl><FormMessage /></FormItem> )}/>
+                          </div>
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField
+                                  name="districtOfficerStaffId"
+                                  control={form.control}
+                                  render={({ field }) => (
+                                  <FormItem>
+                                      <FormLabel>Name of District Officer</FormLabel>
+                                      <Select onValueChange={(value) => handleOfficerChange(value)} value={field.value}>
+                                          <FormControl><SelectTrigger><SelectValue placeholder="Select an Officer" /></SelectTrigger></FormControl>
+                                          <SelectContent>
+                                              {officerList.map(officer => <SelectItem key={officer.id} value={officer.id}>{officer.name} ({officer.designation})</SelectItem>)}
+                                          </SelectContent>
+                                      </Select>
+                                      <FormMessage />
+                                  </FormItem>
+                                  )}
+                              />
+                                <div className="grid grid-cols-1 gap-4">
+                                    <FormField name="phoneNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Phone No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                </div>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <FormField name="email" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                              <FormField name="gstNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>GST No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                              <FormField name="panNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>PAN No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                          </div>
 
-              <FormField name="otherDetails" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Other Details</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
-              
-              <DialogFooter className="pt-4">
-                <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Save
-                </Button>
-              </DialogFooter>
+                          <FormField name="otherDetails" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Other Details</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                        </div>
+                    </ScrollArea>
+                </div>
+                <DialogFooter className="p-6 pt-4">
+                    <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>Cancel</Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                      Save
+                    </Button>
+                </DialogFooter>
             </form>
           </Form>
-        </div>
       </DialogContent>
     </Dialog>
   );
@@ -537,13 +539,13 @@ export default function SettingsPage() {
       </AlertDialog>
 
       <Dialog open={isListDialogOpen} onOpenChange={setIsListDialogOpen}>
-        <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="sm:max-w-md">
-          <DialogHeader className="p-6 pb-0">
+        <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="sm:max-w-md p-0 flex flex-col h-[70vh]">
+          <DialogHeader className="p-6 pb-4 border-b">
             <DialogTitle>{listDialogContent.title}</DialogTitle>
             <DialogDescription>Total count: {listDialogContent.items.length}</DialogDescription>
           </DialogHeader>
-          <div className="p-6 pt-2">
-            <ScrollArea className="h-96 pr-4">
+          <div className="flex-1 min-h-0">
+            <ScrollArea className="h-full px-6 py-4">
                 <Table>
                     <TableHeader>
                       <TableRow>

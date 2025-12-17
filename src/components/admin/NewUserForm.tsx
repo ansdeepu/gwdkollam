@@ -17,6 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { NewUserByAdminSchema, type NewUserByAdminFormData, designationOptions, type StaffMember, type Designation } from "@/lib/schemas";
 import { Loader2, UserPlus, X } from "lucide-react";
 import { useState, useMemo } from "react";
+import { ScrollArea } from "../ui/scroll-area";
+import { DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../ui/dialog";
 
 interface NewUserFormProps {
   staffMembers: StaffMember[];
@@ -54,97 +56,109 @@ export default function NewUserForm({ staffMembers, staffLoading, onSubmit, isSu
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="designation"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Designation</FormLabel>
-              <Select
-                onValueChange={(value: Designation) => {
-                  field.onChange(value);
-                  setSelectedDesignation(value);
-                  form.resetField("staffId");
-                }}
-                value={field.value}
-                disabled={isSubmitting || staffLoading}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a designation" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {designationOptions.map(option => (
-                    <SelectItem key={option} value={option}>{option}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        
-        <FormField
-          control={form.control}
-          name="staffId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name of Staff</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                value={field.value}
-                disabled={isSubmitting || staffLoading || !selectedDesignation || filteredStaff.length === 0}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={
-                        staffLoading ? "Loading staff..." :
-                        !selectedDesignation ? "Select designation first" :
-                        filteredStaff.length === 0 ? "No active staff found for designation" :
-                        "Select a staff member"
-                    } />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {filteredStaff.map(staff => (
-                    <SelectItem key={staff.id} value={staff.id}>{staff.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
+        <DialogHeader className="p-6 pb-4">
+            <DialogTitle>Create New User (from Staff)</DialogTitle>
+            <DialogDescription>
+                Select a staff member and provide their login details. They will be assigned the 'viewer' role and will need to be approved manually.
+            </DialogDescription>
+        </DialogHeader>
+        <div className="flex-1 min-h-0">
+          <ScrollArea className="h-full px-6 py-4">
+            <div className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="designation"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Designation</FormLabel>
+                      <Select
+                        onValueChange={(value: Designation) => {
+                          field.onChange(value);
+                          setSelectedDesignation(value);
+                          form.resetField("staffId");
+                        }}
+                        value={field.value}
+                        disabled={isSubmitting || staffLoading}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a designation" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {designationOptions.map(option => (
+                            <SelectItem key={option} value={option}>{option}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="staffId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name of Staff</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={isSubmitting || staffLoading || !selectedDesignation || filteredStaff.length === 0}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder={
+                                staffLoading ? "Loading staff..." :
+                                !selectedDesignation ? "Select designation first" :
+                                filteredStaff.length === 0 ? "No active staff found for designation" :
+                                "Select a staff member"
+                            } />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {filteredStaff.map(staff => (
+                            <SelectItem key={staff.id} value={staff.id}>{staff.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email Address</FormLabel>
-              <FormControl>
-                <Input type="email" placeholder="user@example.com" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="Create a temporary password" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="flex justify-end space-x-3 pt-2">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <Input type="email" placeholder="user@example.com" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Password</FormLabel>
+                      <FormControl>
+                        <Input type="password" placeholder="Create a temporary password" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+            </div>
+          </ScrollArea>
+        </div>
+        <DialogFooter className="p-6 pt-4">
           <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             <X className="mr-2 h-4 w-4" /> Cancel
           </Button>
@@ -156,7 +170,7 @@ export default function NewUserForm({ staffMembers, staffLoading, onSubmit, isSu
             )}
             {isSubmitting ? "Creating..." : "Create User"}
           </Button>
-        </div>
+        </DialogFooter>
       </form>
     </Form>
   );
