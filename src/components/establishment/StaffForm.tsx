@@ -1,4 +1,3 @@
-
 // src/components/establishment/StaffForm.tsx
 "use client";
 
@@ -307,10 +306,7 @@ export default function StaffForm({ onSubmit, initialData, isSubmitting, onCance
                                 </button>
                               </DialogTrigger>
                                {canExpandImage && imagePreview && (
-                                <DialogContent className="sm:max-w-[600px] p-2">
-                                  <DialogHeader>
-                                    <DialogTitle className="text-sm">{form.getValues("name") || "Staff Photo"}</DialogTitle>
-                                  </DialogHeader>
+                                <DialogContent className="p-2">
                                   <div className="flex justify-center items-center max-h-[80vh] overflow-hidden">
                                     <img src={imagePreview} alt="Staff photo enlarged" className="max-w-full max-h-[75vh] object-contain rounded-md"/>
                                   </div>

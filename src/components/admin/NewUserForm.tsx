@@ -54,7 +54,7 @@ export default function NewUserForm({ staffMembers, staffLoading, onSubmit, isSu
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6 pt-4">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
         <FormField
           control={form.control}
           name="designation"

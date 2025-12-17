@@ -90,12 +90,12 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
     return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
-                <DialogHeader className="p-6 pb-4">
+                <DialogHeader>
                     <DialogTitle>Tender Opening Details</DialogTitle>
                     <DialogDescription>Manage dates and committee members for the tender opening process.</DialogDescription>
                 </DialogHeader>
                 <div className="flex-1 min-h-0">
-                    <ScrollArea className="h-full px-6 py-4">
+                    <ScrollArea className="h-full p-6 -mx-6">
                         <div className="space-y-4">
                             <FormField name="dateOfOpeningBid" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date of Opening Bid</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || null)} /></FormControl><FormMessage /></FormItem> )}/>
                             <FormField name="dateOfTechnicalAndFinancialBidOpening" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date of Technical and Financial Bid Opening</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || null)} /></FormControl><FormMessage /></FormItem> )}/>
@@ -122,7 +122,7 @@ export default function TenderOpeningDetailsForm({ initialData, onSubmit, onCanc
                         </div>
                     </ScrollArea>
                 </div>
-                <DialogFooter className="p-6 pt-4 flex justify-end">
+                <DialogFooter>
                     <div className="flex gap-2">
                         <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
                             <X className="mr-2 h-4 w-4" /> Cancel

@@ -82,12 +82,12 @@ export default function BiddersForm({ onSubmit, onCancel, isSubmitting, initialB
     return (
         <FormProvider {...form}>
             <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col h-full">
-                <DialogHeader className="p-6 pb-4">
+                <DialogHeader>
                     <DialogTitle>Manage Bidders</DialogTitle>
                     <DialogDescription>Add, edit, or remove bidders for this tender.</DialogDescription>
                 </DialogHeader>
                 <div className="flex-1 min-h-0">
-                    <ScrollArea className="h-full px-6 py-4">
+                    <ScrollArea className="h-full p-6 -mx-6">
                         <div className="flex justify-end mb-4">
                             <Button type="button" variant="outline" size="sm" onClick={() => append(createDefaultBidder())}>
                                 <PlusCircle className="h-4 w-4 mr-2"/> Add New Bidder
@@ -131,7 +131,7 @@ export default function BiddersForm({ onSubmit, onCancel, isSubmitting, initialB
                         </div>
                     </ScrollArea>
                 </div>
-                <DialogFooter className="p-6 pt-4">
+                <DialogFooter>
                     <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
                         <X className="mr-2 h-4 w-4" /> Cancel
                     </Button>

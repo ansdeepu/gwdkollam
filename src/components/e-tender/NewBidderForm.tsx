@@ -58,12 +58,12 @@ export default function NewBidderForm({ onSubmit, onCancel, isSubmitting, initia
     return (
         <FormProvider {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col h-full">
-                <DialogHeader className="p-6 pb-4">
+                <DialogHeader>
                     <DialogTitle>{initialData ? 'Edit Bidder Details' : 'Add New Bidder'}</DialogTitle>
                     <DialogDescription>Enter the contact information for the bidder.</DialogDescription>
                 </DialogHeader>
                 <div className="flex-1 min-h-0">
-                    <ScrollArea className="h-full px-6 py-4">
+                    <ScrollArea className="h-full p-6 -mx-6">
                         <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField name="name" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Bidder Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
@@ -77,7 +77,7 @@ export default function NewBidderForm({ onSubmit, onCancel, isSubmitting, initia
                         </div>
                     </ScrollArea>
                 </div>
-                <DialogFooter className="p-6 pt-4">
+                <DialogFooter>
                     <Button variant="outline" type="button" onClick={onCancel} disabled={isSubmitting}>
                         <X className="mr-2 h-4 w-4" /> Cancel
                     </Button>
