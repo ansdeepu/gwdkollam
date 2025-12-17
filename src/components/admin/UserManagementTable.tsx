@@ -1,3 +1,4 @@
+
 // src/components/admin/UserManagementTable.tsx
 "use client";
 
@@ -351,7 +352,7 @@ export default function UserManagementTable({
 
       {userToDelete && (
         <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
-          <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
+          <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Confirm User Removal</AlertDialogTitle>
               <AlertDialogDescription>
