@@ -239,14 +239,19 @@ export default function CustomReportBuilder() {
   return (
     <div className="space-y-6">
         <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Filter className="h-5 w-5 text-primary"/>Report Filters</CardTitle>
+                <CardDescription>Select a data source and apply filters to generate your custom report.</CardDescription>
+            </CardHeader>
             <CardContent className="space-y-4 pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="space-y-2"><Label>Data Source</Label><Select value={selectedPage} onValueChange={(v) => setSelectedPage(v as ReportSource)}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="deposit">Deposit Works</SelectItem><SelectItem value="private">Private Deposit Works</SelectItem><SelectItem value="ars">ARS</SelectItem></SelectContent></Select></div>
                     <div className="space-y-2"><Label>From Date</Label><Input type="date" value={startDate ? format(startDate, 'yyyy-MM-dd') : ''} onChange={(e) => setStartDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)} /></div>
                     <div className="space-y-2"><Label>To Date</Label><Input type="date" value={endDate ? format(endDate, 'yyyy-MM-dd') : ''} onChange={(e) => setEndDate(e.target.value ? parse(e.target.value, 'yyyy-MM-dd', new Date()) : undefined)} /></div>
+                    <div className="space-y-2"><Label>Type of Application</Label><Select value={selectedAppType} onValueChange={setSelectedAppType} disabled={selectedPage === 'ars'}><SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger><SelectContent position="popper"><SelectItem value="all">All Types</SelectItem>{applicationTypeOptions.map(t => <SelectItem key={t} value={t}>{applicationTypeDisplayMap[t]}</SelectItem>)}</SelectContent></Select></div>
                     <div className="space-y-2"><Label>Purpose</Label><Select value={selectedPurpose} onValueChange={setSelectedPurpose} disabled={selectedPage === 'ars'}><SelectTrigger><SelectValue placeholder="Select Purpose"/></SelectTrigger><SelectContent><SelectItem value="all">All Purposes</SelectItem>{sitePurposeOptions.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select></div>
                     <div className="space-y-2"><Label>Type of Scheme (ARS)</Label><Select value={selectedSchemeType} onValueChange={setSelectedSchemeType} disabled={selectedPage !== 'ars'}><SelectTrigger><SelectValue placeholder="Select Scheme"/></SelectTrigger><SelectContent><SelectItem value="all">All Scheme Types</SelectItem>{arsTypeOfSchemeOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent></Select></div>
-                    <div className="space-y-2"><Label>Type of Application</Label><Select value={selectedAppType} onValueChange={setSelectedAppType} disabled={selectedPage === 'ars'}><SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger><SelectContent position="popper"><SelectItem value="all">All Types</SelectItem>{applicationTypeOptions.map(t => <SelectItem key={t} value={t}>{applicationTypeDisplayMap[t]}</SelectItem>)}</SelectContent></Select></div>
+                     {selectedPage === 'ars' && <div className="space-y-2"><Label>Block</Label><Input placeholder="Filter by Block..." onChange={(e) => { /* Logic to be implemented if needed */ }} /></div>}
                     <div className="space-y-2"><Label>Local Self Govt.</Label><Select value={selectedLsg} onValueChange={setSelectedLsg}><SelectTrigger><SelectValue placeholder="Select LSG"/></SelectTrigger><SelectContent className="max-h-80"><SelectItem value="all">All LSGs</SelectItem>{lsgOptions.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}</SelectContent></Select></div>
                     <div className="space-y-2"><Label>Constituency (LAC)</Label><Select value={selectedConstituency} onValueChange={setSelectedConstituency}><SelectTrigger><SelectValue placeholder="Select Constituency"/></SelectTrigger><SelectContent position="popper"><SelectItem value="all">All Constituencies</SelectItem>{[...constituencyOptions].sort().map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
                 </div>
@@ -258,8 +263,8 @@ export default function CustomReportBuilder() {
                 <CardHeader>
                     <div className="flex justify-between items-center">
                       <div>
-                        <h3 className="text-base font-semibold text-primary">Select Report Fields</h3>
-                         <p className="text-sm text-muted-foreground">Choose columns for your report. {selectedPage !== 'ars' && selectedPurpose === 'all' && 'Some fields are available only after selecting a specific purpose.'}</p>
+                        <CardTitle className="flex items-center gap-2"><Database className="h-5 w-5 text-primary"/>Select Report Fields</CardTitle>
+                         <CardDescription>Choose columns for your report. {selectedPage !== 'ars' && selectedPurpose === 'all' && 'Some fields are available only after selecting a specific purpose.'}</CardDescription>
                       </div>
                       <Button variant="link" onClick={handleSelectAllFields} disabled={availableFields.length === 0} className="p-0 h-auto">
                         {selectedFields.length === availableFields.length ? 'Deselect All' : 'Select All'}
@@ -316,4 +321,3 @@ export default function CustomReportBuilder() {
 
 // Add a new type to handle both entry types
 type ReportableEntry = (DataEntryFormData | ArsEntryFormData) & { [key: string]: any };
-
