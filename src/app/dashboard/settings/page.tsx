@@ -15,8 +15,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { getFirestore, collection, addDoc, deleteDoc, onSnapshot, query, orderBy, doc, writeBatch, updateDoc, getDocs, setDoc } from "firebase/firestore";
 import { app } from "@/lib/firebase";
-import NewBidderForm, { type NewBidderFormData } from '@/components/e-tender/NewBidderForm';
-import type { Bidder as BidderType } from '@/lib/schemas/eTenderSchema';
+import NewBidderForm from '@/components/e-tender/NewBidderForm';
+import type { Bidder as BidderType, NewBidderFormData } from '@/lib/schemas/eTenderSchema';
 import { useDataStore, type OfficeAddress } from '@/hooks/use-data-store';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAuth } from '@/hooks/useAuth';
