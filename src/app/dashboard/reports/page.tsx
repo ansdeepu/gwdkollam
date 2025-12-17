@@ -1,3 +1,4 @@
+
 // src/app/dashboard/reports/page.tsx
 "use client";
 
@@ -518,7 +519,7 @@ export default function ReportsPage() {
       <Card className="shadow-lg no-print">
         <CardContent className="p-4 space-y-4">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <Select value={applicationTypeFilter} onValueChange={setSelectedAppType}>
+                <Select value={applicationTypeFilter} onValueChange={setApplicationTypeFilter}>
                     <SelectTrigger><SelectValue placeholder="Filter by Application Type" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All Application Types</SelectItem>
@@ -759,6 +760,7 @@ export default function ReportsPage() {
                               {renderDetail("Tender No.", site.tenderNo)}
                               {renderDetail("Contractor Name", site.contractorName)}
                               {renderDetail("Assigned Supervisor", site.supervisorName)}
+                              {renderDetail("Supervisor Designation", site.supervisorDesignation)}
                               {renderDetail("Date of Completion", site.dateOfCompletion)}
                               {renderDetail("Total Expenditure (₹)", site.totalExpenditure)}
                               {renderDetail("Work Status", site.workStatus)}
