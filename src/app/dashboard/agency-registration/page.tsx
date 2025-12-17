@@ -1,4 +1,5 @@
 
+
 // src/app/dashboard/agency-registration/page.tsx
 "use client";
 
@@ -1493,7 +1494,7 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
              <Dialog open={dialogState.type === 'renew' || dialogState.type === 'editRenewal'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="p-0">
+                <DialogContent className="p-0">
                   <DialogHeader className="p-6 pb-0">
                         <DialogTitle>{dialogState.type === 'editRenewal' ? 'Edit Renewal' : 'Renew Rig Registration'}</DialogTitle>
                         <DialogDescription>Enter renewal details for the rig.</DialogDescription>
@@ -1517,7 +1518,7 @@ export default function AgencyRegistrationPage() {
                 </DialogContent>
             </Dialog>
             <Dialog open={dialogState.type === 'addPartner' || dialogState.type === 'editPartner'} onOpenChange={(isOpen) => !isOpen && closeDialog()}>
-                <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-xl flex flex-col p-0">
+                <DialogContent className="max-w-xl flex flex-col p-0">
                     <PartnerDialogContent
                         initialData={dialogState.type === 'editPartner' ? dialogState.data?.partner : createDefaultOwner()}
                         onConfirm={handleConfirmPartner}
@@ -2173,4 +2174,5 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
     
+
 

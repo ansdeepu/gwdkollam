@@ -1,6 +1,5 @@
 
 
-
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -1136,14 +1135,14 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
         </Dialog>
 
         <AlertDialog open={itemToDelete !== null} onOpenChange={() => setItemToDelete(null)}>
-            <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
+            <AlertDialogContent>
                 <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently remove the selected {itemToDelete?.type} entry from this file.</AlertDialogDescription></AlertDialogHeader>
                 <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={handleDeleteItem} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction></AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
 
         <AlertDialog open={siteToCopy !== null} onOpenChange={() => setSiteToCopy(null)}>
-          <AlertDialogContent onPointerDownOutside={(e) => e.preventDefault()}>
+          <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Confirm Copy</AlertDialogTitle>
               <AlertDialogDescription>
