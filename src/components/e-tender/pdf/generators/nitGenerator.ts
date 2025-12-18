@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/generators/nitGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
@@ -15,6 +16,10 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
+    
+    // Check if we are generating for a retender by seeing if the dates differ from the main tender.
+    // This is an indirect way, assuming the override only happens for retenders.
+    const isRetender = tender.dateTimeOfReceipt !== tender.retenders?.[tender.retenders.length - 1]?.lastDateOfReceipt;
 
     const tenderFee = tender.tenderFormFee || 0;
     const gst = tenderFee * 0.18;
@@ -24,7 +29,7 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
 
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
-        'e_tender_no_header': tender.eTenderNo,
+        'e_tender_no_header': `${tender.eTenderNo || ''}${isRetender ? ' (Re-Tender)' : ''}`,
         'tender_date_header': formatDateSafe(tender.tenderDate),
         'name_of_work': tender.nameOfWork,
         'pac': tender.estimateAmount ? `Rs. ${tender.estimateAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
@@ -55,3 +60,4 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     form.flatten();
     return await pdfDoc.save();
 }
+

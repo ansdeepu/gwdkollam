@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/generators/tenderFormGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
@@ -16,6 +17,8 @@ export async function generateTenderForm(tender: E_tender, allStaffMembers?: Sta
     const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
     
+    const isRetender = tender.dateTimeOfReceipt !== tender.retenders?.[tender.retenders.length - 1]?.lastDateOfReceipt;
+
     const tenderFee = tender.tenderFormFee || 0;
     const gst = tenderFee * 0.18;
     const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN')} + Rs. ${gst.toLocaleString('en-IN')} (GST)` : 'N/A';
@@ -27,7 +30,7 @@ export async function generateTenderForm(tender: E_tender, allStaffMembers?: Sta
 
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
-        'e_tender_no_header': tender.eTenderNo,
+        'e_tender_no_header': `${tender.eTenderNo || ''}${isRetender ? ' (Re-Tender)' : ''}`,
         'tender_date_header': formatDateSafe(tender.tenderDate),
         'file_no': `GKT/${tender.fileNo || ''}`,
         'e_tender_no': tender.eTenderNo,
