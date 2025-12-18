@@ -79,8 +79,9 @@ export default function ETenderNoticeBoard() {
     let pendingWorkOrder: E_tender[] = [];
     
     activeTenders.forEach(t => {
-      const receipt = toDateOrNull(t.dateTimeOfReceipt);
-      const opening = toDateOrNull(t.dateTimeOfOpening);
+      const latestRetender = t.retenders && t.retenders.length > 0 ? t.retenders[t.retenders.length - 1] : null;
+      const receipt = toDateOrNull(latestRetender ? latestRetender.lastDateOfReceipt : t.dateTimeOfReceipt);
+      const opening = toDateOrNull(latestRetender ? latestRetender.dateOfOpeningTender : t.dateTimeOfOpening);
       
       const hasOpeningDetails = !!(t.dateOfOpeningBid || t.dateOfTechnicalAndFinancialBidOpening || t.technicalCommitteeMember1 || t.technicalCommitteeMember2 || t.technicalCommitteeMember3);
       const hasSelectionDetails = !!(t.selectionNoticeDate || t.performanceGuaranteeAmount);
@@ -219,4 +220,3 @@ export default function ETenderNoticeBoard() {
     </Card>
   );
 }
-
