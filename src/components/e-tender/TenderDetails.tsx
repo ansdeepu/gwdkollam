@@ -1,3 +1,4 @@
+
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -140,6 +141,7 @@ export default function TenderDetails() {
     const [isClearOpeningDetailsConfirmOpen, setIsClearOpeningDetailsConfirmOpen] = useState(false);
     const [isClearSelectionNoticeConfirmOpen, setIsClearSelectionNoticeConfirmOpen] = useState(false);
     const [isClearWorkOrderConfirmOpen, setIsClearWorkOrderConfirmOpen] = useState(false);
+    const [retenderToDelete, setRetenderToDelete] = useState<{ id: string; index: number } | null>(null);
 
     const isReadOnly = user?.role === 'viewer';
 
@@ -258,6 +260,14 @@ export default function TenderDetails() {
         handleSave({ retenders: getValues('retenders') });
         setActiveModal(null);
         setModalData(null);
+    };
+    
+    const confirmDeleteRetender = () => {
+        if (!retenderToDelete) return;
+        removeRetender(retenderToDelete.index);
+        handleSave({ retenders: getValues('retenders') });
+        setRetenderToDelete(null);
+        toast({ title: "Retender Deleted", description: "The retender entry has been removed." });
     };
 
     const handleEditCorrigendumClick = (corrigendum: Corrigendum, index: number) => {
@@ -519,13 +529,13 @@ export default function TenderDetails() {
                                                     <div key={retender.id} className="p-4 border rounded-md bg-secondary/30 relative group">
                                                         <div className="absolute top-2 right-2 flex items-center gap-1">
                                                             {!isReadOnly && <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditRetenderClick(retender, index)}><Edit className="h-4 w-4"/></Button>}
-                                                            {!isReadOnly && <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeRetender(index)}><Trash2 className="h-4 w-4"/></Button>}
+                                                            {!isReadOnly && <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => setRetenderToDelete({ id: retender.id, index })}><Trash2 className="h-4 w-4"/></Button>}
                                                         </div>
                                                         <h4 className="text-sm font-semibold text-primary mb-2">Retender No. {index + 1}</h4>
                                                         <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 mt-1">
                                                             <DetailRow label="Retender Date" value={retender.retenderDate} />
-                                                            <DetailRow label="New Last Date &amp; Time" value={retender.lastDateOfReceipt} isReceiptFormat={true} />
-                                                            <DetailRow label="New Opening Date &amp; Time" value={retender.dateOfOpeningTender} isOpeningFormat={true}/>
+                                                            <DetailRow label="New Last Date & Time" value={retender.lastDateOfReceipt} isReceiptFormat={true} />
+                                                            <DetailRow label="New Opening Date & Time" value={retender.dateOfOpeningTender} isOpeningFormat={true}/>
                                                         </dl>
                                                     </div>
                                                 ))}
@@ -837,10 +847,20 @@ export default function TenderDetails() {
                     </AlertDialogContent>
                 </AlertDialog>
 
+                <AlertDialog open={!!retenderToDelete} onOpenChange={() => setRetenderToDelete(null)}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+                            <AlertDialogDescription>Are you sure you want to delete this retender entry? This action cannot be undone.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={confirmDeleteRetender} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
             </div>
         </FormProvider>
     );
 }
-
-
-    
