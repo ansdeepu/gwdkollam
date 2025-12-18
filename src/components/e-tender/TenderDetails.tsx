@@ -1,4 +1,3 @@
-
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -408,7 +407,7 @@ export default function TenderDetails() {
             <div className="space-y-6">
                 <Card>
                     <CardHeader className="p-4 flex flex-row justify-end">
-                        <Button variant="destructive" onClick={() => router.back()}>
+                        <Button variant="outline" onClick={() => router.back()}>
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             Back
                         </Button>
@@ -527,8 +526,8 @@ export default function TenderDetails() {
                                                         <h4 className="text-sm font-semibold text-primary mb-2">Retender No. {index + 1}</h4>
                                                         <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 mt-1">
                                                             <DetailRow label="Retender Date" value={retender.retenderDate} />
-                                                            <DetailRow label="New Last Date & Time" value={retender.lastDateOfReceipt} />
-                                                            <DetailRow label="New Opening Date & Time" value={retender.dateOfOpeningTender} />
+                                                            <DetailRow label="New Last Date & Time" value={retender.lastDateOfReceipt} isReceiptFormat={true} />
+                                                            <DetailRow label="New Opening Date & Time" value={retender.dateOfOpeningTender} isOpeningFormat={true}/>
                                                         </dl>
                                                     </div>
                                                 ))}
@@ -732,7 +731,7 @@ export default function TenderDetails() {
                             </CardContent>
                         </Card>
                         
-                         <div className="mt-6 flex flex-col items-center gap-6">
+                        <div className="mt-6 flex flex-col items-center gap-6">
                             {!isReadOnly && 
                               <div className="flex items-center gap-2">
                                 <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
@@ -845,7 +844,5 @@ export default function TenderDetails() {
     );
 }
 
-
-    
 
     
