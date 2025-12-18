@@ -2,7 +2,7 @@
 // src/app/dashboard/e-tender/[id]/selection-notice/page.tsx
 "use client";
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useTenderData } from '@/components/e-tender/TenderDataContext';
 import { formatDateSafe, formatTenderNoForFilename } from '@/components/e-tender/utils';
 import { useDataStore } from '@/hooks/use-data-store';
@@ -10,14 +10,18 @@ import { useDataStore } from '@/hooks/use-data-store';
 export default function SelectionNoticePrintPage() {
     const { tender } = useTenderData();
     const { officeAddress } = useDataStore();
+    const printTriggered = useRef(false);
 
     useEffect(() => {
-        const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
-        document.title = `dSelectionNotice${formattedTenderNo}`;
-        // Automatically trigger print dialog
-        setTimeout(() => window.print(), 500);
+        if (tender && !printTriggered.current) {
+            const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
+            document.title = `dSelectionNotice${formattedTenderNo}`;
+            // Automatically trigger print dialog once
+            setTimeout(() => window.print(), 500);
+            printTriggered.current = true;
+        }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [tender]);
     
     const l1Bidder = useMemo(() => {
         if (!tender.bidders || tender.bidders.length === 0) return null;

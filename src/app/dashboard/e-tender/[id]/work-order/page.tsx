@@ -1,7 +1,8 @@
+
 // src/app/dashboard/e-tender/[id]/work-order/page.tsx
 "use client";
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { useTenderData } from '@/components/e-tender/TenderDataContext';
 import { formatDateSafe, formatTenderNoForFilename } from '@/components/e-tender/utils';
 import { useDataStore } from '@/hooks/use-data-store';
@@ -11,13 +12,17 @@ import { numberToWords } from '@/components/e-tender/pdf/generators/utils';
 export default function WorkOrderPrintPage() {
     const { tender } = useTenderData();
     const { officeAddress, allStaffMembers } = useDataStore();
+    const printTriggered = useRef(false);
 
     useEffect(() => {
-        const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
-        document.title = `eWorkOrder${formattedTenderNo}`;
-        setTimeout(() => window.print(), 500); // Automatically trigger print
+        if (tender && !printTriggered.current) {
+            const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
+            document.title = `eWorkOrder${formattedTenderNo}`;
+            setTimeout(() => window.print(), 500); // Automatically trigger print
+            printTriggered.current = true;
+        }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [tender]);
 
     const l1Bidder = useMemo(() => {
         if (!tender.bidders || tender.bidders.length === 0) return null;
