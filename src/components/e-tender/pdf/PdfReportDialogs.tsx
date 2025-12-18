@@ -95,11 +95,60 @@ const ReportButton = ({
   return renderButton();
 };
 
+const CorrigendumReportButton = ({ corrigendum, index }: { corrigendum: Corrigendum, index: number }) => {
+    const { tender } = useTenderData();
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleGenerate = async () => {
+        setIsLoading(true);
+        try {
+            let pdfBytes: Uint8Array;
+            let fileNamePrefix: string = '';
+
+            switch (corrigendum.corrigendumType) {
+                case 'Retender':
+                    pdfBytes = await generateRetenderCorrigendum(tender, corrigendum);
+                    fileNamePrefix = 'RetenderCorrigendum';
+                    break;
+                case 'Date Extension':
+                    pdfBytes = await generateDateExtensionCorrigendum(tender, corrigendum);
+                    fileNamePrefix = 'DateCorrigendum';
+                    break;
+                case 'Cancel':
+                    pdfBytes = await generateCancelCorrigendum(tender, corrigendum);
+                    fileNamePrefix = 'CancelCorrigendum';
+                    break;
+                default:
+                    toast({ title: "Generation Not Supported", description: `PDF generation for type '${corrigendum.corrigendumType}' is not implemented.`, variant: 'destructive' });
+                    setIsLoading(false);
+                    return;
+            }
+
+            const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
+            const fileName = `${fileNamePrefix}_${index + 1}${formattedTenderNo}.pdf`;
+            download(pdfBytes, fileName, 'application/pdf');
+            toast({ title: "PDF Generated", description: "Corrigendum report has been downloaded." });
+
+        } catch (error: any) {
+            console.error("Corrigendum PDF Generation Error:", error);
+            toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive' });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <Button variant="outline" className="justify-start w-full" onClick={handleGenerate} disabled={isLoading || !corrigendum.corrigendumType}>
+            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+            Corrigendum No. {index + 1} ({corrigendum.corrigendumType})
+        </Button>
+    );
+};
+
 
 export default function PdfReportDialogs() {
     const { tender } = useTenderData();
     const { allStaffMembers } = useDataStore();
-    const [isLoading, setIsLoading] = useState(false);
 
     const handleGeneratePdf = useCallback(async (
         generator: (tender: E_tender, staff?: StaffMember[]) => Promise<Uint8Array>,
@@ -117,44 +166,6 @@ export default function PdfReportDialogs() {
             toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive', duration: 9000 });
         }
     }, [tender, allStaffMembers]);
-
-    const handleCorrigendumGenerate = async (corrigendum: Corrigendum) => {
-        setIsLoading(true);
-        try {
-          let pdfBytes: Uint8Array;
-          let fileNamePrefix: string = '';
-          
-          switch (corrigendum.corrigendumType) {
-            case 'Retender':
-              pdfBytes = await generateRetenderCorrigendum(tender, corrigendum);
-              fileNamePrefix = 'RetenderCorrigendum';
-              break;
-            case 'Date Extension':
-              pdfBytes = await generateDateExtensionCorrigendum(tender, corrigendum);
-              fileNamePrefix = 'DateCorrigendum';
-              break;
-            case 'Cancel':
-              pdfBytes = await generateCancelCorrigendum(tender, corrigendum);
-              fileNamePrefix = 'CancelCorrigendum';
-              break;
-            default:
-              toast({ title: "Generation Not Supported", description: `PDF generation for type '${corrigendum.corrigendumType}' is not implemented.`, variant: 'destructive' });
-              setIsLoading(false);
-              return;
-          }
-          
-          const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
-          const fileName = `${fileNamePrefix}${formattedTenderNo}.pdf`;
-          download(pdfBytes, fileName, 'application/pdf');
-          toast({ title: "PDF Generated", description: "Corrigendum report has been downloaded." });
-    
-        } catch (error: any) {
-          console.error("Corrigendum PDF Generation Error:", error);
-          toast({ title: "PDF Generation Failed", description: error.message, variant: 'destructive' });
-        } finally {
-          setIsLoading(false);
-        }
-    };
     
     const handleDirectDownload = () => {
         if (!tender.detailedEstimateUrl) return;
@@ -185,47 +196,41 @@ export default function PdfReportDialogs() {
             </CardHeader>
             <CardContent className="space-y-4">
                 <TooltipProvider>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <ReportButton 
-                            label="Detailed Estimate"
-                            onClick={handleDirectDownload}
-                            disabled={!isTenderSaved || !hasDetailedEstimate}
-                            tooltipContent={!isTenderSaved ? "Save the tender first." : "Add a Detailed Estimate URL in Basic Details."}
-                        />
-                        <ReportButton 
-                            label="Notice Inviting Tender (NIT)"
-                            onClick={() => handleGeneratePdf(generateNIT, `aNIT${formattedTenderNo}.pdf`, 'Your Notice Inviting Tender has been downloaded.')}
-                            disabled={!isTenderSaved}
-                            tooltipContent="Save the Basic Details first to enable."
-                        />
-                        <ReportButton 
-                            label="Tender Form"
-                            onClick={() => handleGeneratePdf(generateTenderForm, `bTenderForm${formattedTenderNo}.pdf`, 'Your Tender Form has been downloaded.')}
-                            disabled={!isTenderSaved}
-                            tooltipContent="Save the Basic Details first to enable."
-                        />
-                        <DropdownMenu>
-                            <Tooltip>
-                                <TooltipTrigger asChild>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="justify-start w-full" disabled={(tender.corrigendums?.length || 0) === 0}>
-                                            <Download className="mr-2 h-4 w-4" />
-                                            Corrigendum ({tender.corrigendums?.length || 0})
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                </TooltipTrigger>
-                                {(tender.corrigendums?.length || 0) === 0 && (
-                                    <TooltipContent><p>Add a corrigendum to enable.</p></TooltipContent>
-                                )}
-                            </Tooltip>
-                            <DropdownMenuContent>
-                                {(tender.corrigendums || []).map((corrigendum, index) => (
-                                    <DropdownMenuItem key={corrigendum.id} onSelect={() => handleCorrigendumGenerate(corrigendum)}>
-                                        Corrigendum No. {index + 1}
-                                    </DropdownMenuItem>
-                                ))}
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                    <div className="pt-4 mt-4 border-t">
+                        <h4 className="text-sm font-semibold mb-2 text-primary">Tender PDF Section</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <ReportButton 
+                                label="Detailed Estimate"
+                                onClick={handleDirectDownload}
+                                disabled={!isTenderSaved || !hasDetailedEstimate}
+                                tooltipContent={!isTenderSaved ? "Save the tender first." : "Add a Detailed Estimate URL in Basic Details."}
+                            />
+                            <ReportButton 
+                                label="Notice Inviting Tender (NIT)"
+                                onClick={() => handleGeneratePdf(generateNIT, `aNIT${formattedTenderNo}.pdf`, 'Your Notice Inviting Tender has been downloaded.')}
+                                disabled={!isTenderSaved}
+                                tooltipContent="Save the Basic Details first to enable."
+                            />
+                            <ReportButton 
+                                label="Tender Form"
+                                onClick={() => handleGeneratePdf(generateTenderForm, `bTenderForm${formattedTenderNo}.pdf`, 'Your Tender Form has been downloaded.')}
+                                disabled={!isTenderSaved}
+                                tooltipContent="Save the Basic Details first to enable."
+                            />
+                        </div>
+                    </div>
+                    
+                    <div className="pt-4 mt-4 border-t">
+                         <h4 className="text-sm font-semibold mb-2 text-primary">Corrigendum PDF Section</h4>
+                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {(tender.corrigendums?.length || 0) > 0 ? (
+                                tender.corrigendums?.map((corr, index) => (
+                                    <CorrigendumReportButton key={corr.id} corrigendum={corr} index={index} />
+                                ))
+                            ) : (
+                                <p className="text-xs text-muted-foreground italic col-span-full">No corrigendums created for this tender.</p>
+                            )}
+                         </div>
                     </div>
 
                     {hasRetenders && (
@@ -264,7 +269,7 @@ export default function PdfReportDialogs() {
                     )}
                     
                     <div className="pt-4 mt-4 border-t">
-                        <h4 className="text-sm font-semibold mb-2 text-primary">Bid Opening PDF Reports</h4>
+                        <h4 className="text-sm font-semibold mb-2 text-primary">Bid Opening PDF Section</h4>
                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <ReportButton 
                                 label="Bid Opening Summary"
