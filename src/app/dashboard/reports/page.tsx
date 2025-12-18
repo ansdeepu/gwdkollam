@@ -173,7 +173,7 @@ export default function ReportsPage() {
     let currentEntries = [...fileEntries];
     const lowerSearchTerm = searchTerm.toLowerCase();
 
-    const reportType = searchParams.get("reportType");
+    const reportType = searchParams?.get("reportType");
     const fileStatusesForPendingReport: FileStatus[] = ["File Under Process"];
     const siteWorkStatusesForPendingReport: SiteWorkStatus[] = [
       "Addl. AS Awaited", "To be Refunded", "To be Tendered", "TS Pending",
@@ -360,25 +360,18 @@ export default function ReportsPage() {
   ]);
 
   useEffect(() => {
-    if (entriesLoading || authIsLoading) return;
-    const statusFromQuery = searchParams.get("status");
-    const workCategoryFromQuery = searchParams.get("workCategory");
-    const serviceTypeFromQuery = searchParams.get("serviceType");
-    
-    setStatusFilter(statusFromQuery && fileStatusOptions.includes(statusFromQuery as any) ? statusFromQuery : "all");
-    setWorkCategoryFilter(workCategoryFromQuery && siteWorkStatusOptions.includes(workCategoryFromQuery as any) ? workCategoryFromQuery : "all");
-    setServiceTypeFilter(serviceTypeFromQuery && (sitePurposeOptions.includes(serviceTypeFromQuery as any) || serviceTypeFromQuery === 'all') ? serviceTypeFromQuery : "all");
+    if (!entriesLoading && !authIsLoading) {
+      const statusFromQuery = searchParams?.get("status");
+      const workCategoryFromQuery = searchParams?.get("workCategory");
+      const serviceTypeFromQuery = searchParams?.get("serviceType");
 
-  }, [searchParams, entriesLoading, authIsLoading]);
-
-
-  useEffect(() => {
-    if (!entriesLoading && !authIsLoading) applyFilters();
-  }, [
-    searchTerm, statusFilter, serviceTypeFilter, workCategoryFilter, 
-    dateFilterType, startDate, endDate, entriesLoading, fileEntries, applyFilters,
-    applicationTypeFilter, typeOfRigFilter, constituencyFilter, searchParams, authIsLoading, user
-  ]);
+      setStatusFilter(statusFromQuery && fileStatusOptions.includes(statusFromQuery as any) ? statusFromQuery : "all");
+      setWorkCategoryFilter(workCategoryFromQuery && siteWorkStatusOptions.includes(workCategoryFromQuery as any) ? workCategoryFromQuery : "all");
+      setServiceTypeFilter(serviceTypeFromQuery && (sitePurposeOptions.includes(serviceTypeFromQuery as any) || serviceTypeFromQuery === 'all') ? serviceTypeFromQuery : "all");
+      
+      applyFilters();
+    }
+  }, [searchParams, entriesLoading, authIsLoading, applyFilters]);
   
   useEffect(() => {
     setCurrentPage(1);
@@ -393,7 +386,7 @@ export default function ReportsPage() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams?.toString());
     params.set('page', String(page));
     router.push(`/dashboard/reports?${params.toString()}`, { scroll: false });
   };
@@ -410,7 +403,7 @@ export default function ReportsPage() {
     setTypeOfRigFilter("all");
     setConstituencyFilter("all");
     
-    const currentParams = new URLSearchParams(searchParams.toString());
+    const currentParams = new URLSearchParams(searchParams?.toString());
     currentParams.delete("reportType");
     currentParams.delete("status"); 
     currentParams.delete("workCategory");

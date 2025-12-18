@@ -96,10 +96,10 @@ interface PageData {
 export default function DataEntryPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const fileIdToEdit = searchParams.get("id");
-  const approveUpdateId = searchParams.get("approveUpdateId");
-  const workType = searchParams.get("workType") as 'public' | 'private' | null;
-  const pageToReturnTo = searchParams.get('page');
+  const fileIdToEdit = searchParams?.get("id");
+  const approveUpdateId = searchParams?.get("approveUpdateId");
+  const workType = searchParams?.get("workType") as 'public' | 'private' | null;
+  const pageToReturnTo = searchParams?.get('page');
   
   const { user, isLoading: authIsLoading, fetchAllUsers } = useAuth();
   const { fetchEntryForEditing } = useFileEntries();
