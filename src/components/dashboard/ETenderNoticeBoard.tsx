@@ -158,6 +158,36 @@ export default function ETenderNoticeBoard() {
     { type: 'pendingWorkOrder', label: 'Pending Work Order', data: categorizedTenders.pendingWorkOrder, color: "text-emerald-800" },
   ];
 
+  const getSecondaryText = (type: string, tender: E_tender) => {
+      const latestRetender = tender.retenders && tender.retenders.length > 0 ? tender.retenders[tender.retenders.length - 1] : null;
+      const latestDateCorrigendum = tender.corrigendums?.filter(c => c.corrigendumType === 'Date Extension').sort((a,b) => (toDateOrNull(b.corrigendumDate)?.getTime() ?? 0) - (toDateOrNull(a.corrigendumDate)?.getTime() ?? 0))[0] || null;
+
+      let receiptDate: Date | null = null;
+      let openingDate: Date | null = null;
+
+      if (latestRetender) {
+          receiptDate = toDateOrNull(latestRetender.lastDateOfReceipt);
+          openingDate = toDateOrNull(latestRetender.dateOfOpeningTender);
+      } else if (latestDateCorrigendum) {
+          receiptDate = toDateOrNull(latestDateCorrigendum.lastDateOfReceipt);
+          openingDate = toDateOrNull(latestDateCorrigendum.dateOfOpeningTender);
+      } else {
+          receiptDate = toDateOrNull(tender.dateTimeOfReceipt);
+          openingDate = toDateOrNull(tender.dateTimeOfOpening);
+      }
+      
+      switch (type) {
+          case 'tenderProcess':
+              return `Receipt by: ${formatDateSafe(receiptDate, true, true)}`;
+          case 'bidsSubmitted':
+              return `Opens: ${formatDateSafe(openingDate, true, false, true)}`;
+          case 'toBeOpened':
+              return `Opening was at: ${formatDateSafe(openingDate, true, false, true)}`;
+          default:
+              return undefined;
+      }
+  };
+
   return (
     <Card className="shadow-lg h-[450px] flex flex-col">
       <CardHeader>
@@ -186,8 +216,7 @@ export default function ETenderNoticeBoard() {
                      {renderTenderList(
                           cat.data,
                           (t) => t.eTenderNo || 'N/A',
-                          cat.type === 'bidsSubmitted' ? (t) => `Opens: ${formatDateSafe(t.dateTimeOfOpening, true)}` :
-                          (t) => `Receipt by: ${formatDateSafe(t.dateTimeOfReceipt, true)}`
+                          (t) => getSecondaryText(cat.type, t)
                       )}
                   </ScrollArea>
                 </TabsContent>
