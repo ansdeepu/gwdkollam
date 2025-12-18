@@ -7,6 +7,7 @@ import { formatDateSafe, formatTenderNoForFilename } from '@/components/e-tender
 import { useDataStore } from '@/hooks/use-data-store';
 import type { StaffMember } from '@/lib/schemas';
 import { numberToWords } from '@/components/e-tender/pdf/generators/utils';
+import { Button } from '@/components/ui/button';
 
 export default function WorkOrderPrintPage() {
     const { tender } = useTenderData();
@@ -15,10 +16,13 @@ export default function WorkOrderPrintPage() {
 
     useEffect(() => {
         if (tender && !printTriggered.current) {
-            printTriggered.current = true; // Set flag immediately
+            printTriggered.current = true;
             const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
             document.title = `eWorkOrder${formattedTenderNo}`;
-            // Use a short timeout to allow the page to render fully before printing
+            const handleAfterPrint = () => {
+                window.removeEventListener('afterprint', handleAfterPrint);
+            };
+            window.addEventListener('afterprint', handleAfterPrint);
             setTimeout(() => window.print(), 500);
         }
     }, [tender]);
@@ -151,6 +155,9 @@ export default function WorkOrderPrintPage() {
                       <li>ഫയൽ</li>
                   </ol>
               </div>
+          </div>
+          <div className="fixed bottom-4 right-4 no-print">
+            <Button onClick={() => window.print()}>Print</Button>
           </div>
         </div>
     );

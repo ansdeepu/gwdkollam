@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { useTenderData } from '@/components/e-tender/TenderDataContext';
 import { formatDateSafe, formatTenderNoForFilename } from '@/components/e-tender/utils';
 import { useDataStore } from '@/hooks/use-data-store';
+import { Button } from '@/components/ui/button';
 
 export default function SelectionNoticePrintPage() {
     const { tender } = useTenderData();
@@ -13,10 +14,14 @@ export default function SelectionNoticePrintPage() {
 
     useEffect(() => {
         if (tender && !printTriggered.current) {
-            printTriggered.current = true; // Set flag immediately
+            printTriggered.current = true;
             const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
             document.title = `dSelectionNotice${formattedTenderNo}`;
-            // Use a short timeout to allow the page to render fully before printing
+            const handleAfterPrint = () => {
+                // This is a good place to add any logic you need after printing
+                window.removeEventListener('afterprint', handleAfterPrint);
+            };
+            window.addEventListener('afterprint', handleAfterPrint);
             setTimeout(() => window.print(), 500);
         }
     }, [tender]);
@@ -142,6 +147,9 @@ export default function SelectionNoticePrintPage() {
                   <p className="font-semibold">ജില്ലാ ആഫീസർ</p>
               </div>
           </div>
+            <div className="fixed bottom-4 right-4 no-print">
+                <Button onClick={() => window.print()}>Print</Button>
+            </div>
         </div>
     );
 }
