@@ -11,16 +11,6 @@ import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { useDataStore } from '@/hooks/use-data-store';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
-  DropdownMenuPortal,
-} from '@/components/ui/dropdown-menu';
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -237,33 +227,18 @@ export default function PdfReportDialogs() {
                         <div className="pt-4 mt-4 border-t">
                             <h4 className="text-sm font-semibold mb-2 text-primary">Retender PDF Reports</h4>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="justify-start w-full">
-                                            <Download className="mr-2 h-4 w-4" />
-                                            Retender Documents
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                        {(tender.retenders || []).map((retender, index) => (
-                                            <DropdownMenuSub key={retender.id}>
-                                                <DropdownMenuSubTrigger>
-                                                    <span>Retender No. {index + 1}</span>
-                                                </DropdownMenuSubTrigger>
-                                                <DropdownMenuPortal>
-                                                    <DropdownMenuSubContent>
-                                                        <DropdownMenuItem onSelect={() => handleGeneratePdf(generateNIT, `Retender_NIT_${index+1}${formattedTenderNo}.pdf`, 'Retender NIT downloaded.', { dateTimeOfReceipt: retender.lastDateOfReceipt, dateTimeOfOpening: retender.dateOfOpeningTender })}>
-                                                            Notice Inviting Tender
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onSelect={() => handleGeneratePdf(generateTenderForm, `Retender_Form_${index+1}${formattedTenderNo}.pdf`, 'Retender Form downloaded.', { dateTimeOfReceipt: retender.lastDateOfReceipt, dateTimeOfOpening: retender.dateOfOpeningTender })}>
-                                                            Tender Form
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuSubContent>
-                                                </DropdownMenuPortal>
-                                            </DropdownMenuSub>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                {(tender.retenders || []).map((retender, index) => (
+                                    <React.Fragment key={retender.id}>
+                                        <ReportButton 
+                                            label={`Re-Tender ${index + 1} - NIT`}
+                                            onClick={() => handleGeneratePdf(generateNIT, `Retender_NIT_${index+1}${formattedTenderNo}.pdf`, 'Retender NIT downloaded.', { dateTimeOfReceipt: retender.lastDateOfReceipt, dateTimeOfOpening: retender.dateOfOpeningTender })}
+                                        />
+                                        <ReportButton 
+                                            label={`Re-Tender ${index + 1} - Form`}
+                                            onClick={() => handleGeneratePdf(generateTenderForm, `Retender_Form_${index+1}${formattedTenderNo}.pdf`, 'Retender Form downloaded.', { dateTimeOfReceipt: retender.lastDateOfReceipt, dateTimeOfOpening: retender.dateOfOpeningTender })}
+                                        />
+                                    </React.Fragment>
+                                ))}
                             </div>
                         </div>
                     )}
