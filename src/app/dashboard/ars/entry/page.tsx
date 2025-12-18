@@ -143,9 +143,9 @@ export default function ArsEntryPage() {
     const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
     const { allLsgConstituencyMaps } = useDataStore();
     
-    const entryIdToEdit = searchParams.get('id');
-    const approveUpdateId = searchParams.get("approveUpdateId");
-    const pageToReturnTo = searchParams.get('page');
+    const entryIdToEdit = searchParams?.get('id');
+    const approveUpdateId = searchParams?.get("approveUpdateId");
+    const pageToReturnTo = searchParams?.get('page');
     
     const { isLoading: entriesLoading, getArsEntryById, updateArsEntry, addArsEntry } = useArsEntries();
     const { createArsPendingUpdate, getPendingUpdateById, hasPendingUpdateForFile } = usePendingUpdates();
