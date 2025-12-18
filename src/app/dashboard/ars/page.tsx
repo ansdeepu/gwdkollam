@@ -151,7 +151,7 @@ export default function ArsPage() {
   
   const [currentPage, setCurrentPage] = useState(1);
   useEffect(() => {
-    const page = searchParams.get('page');
+    const page = searchParams?.get('page');
     if (page && !isNaN(parseInt(page))) {
       setCurrentPage(parseInt(page));
     }
@@ -258,7 +258,7 @@ export default function ArsPage() {
   }, [arsEntries, searchTerm, startDate, endDate, schemeTypeFilter, constituencyFilter, user]);
 
   useEffect(() => {
-    const pageFromUrl = searchParams.get('page');
+    const pageFromUrl = searchParams?.get('page');
     const pageNum = pageFromUrl ? parseInt(pageFromUrl, 10) : 1;
     if (!isNaN(pageNum) && pageNum > 0) {
       setCurrentPage(pageNum);
