@@ -1,3 +1,4 @@
+
 // src/components/dashboard/ETenderNoticeBoard.tsx
 "use client";
 
@@ -63,7 +64,7 @@ export default function ETenderNoticeBoard() {
     const now = new Date();
     const list = Array.isArray(tenders) ? tenders : [];
 
-    const activeTenders = list.filter(t => t.presentStatus !== "Tender Cancelled" && t.presentStatus !== "Retender");
+    const activeTenders = list.filter(t => t.presentStatus !== "Tender Cancelled" && t.presentStatus !== "Work Order Issued" && t.presentStatus !== "Supply Order Issued");
 
     const sortByTenderNoDesc = (a: E_tender, b: E_tender) => {
         const getTenderNumber = (tenderNo: string | undefined | null): number => {
@@ -83,7 +84,6 @@ export default function ETenderNoticeBoard() {
     let pendingWorkOrder: E_tender[] = [];
     
     activeTenders.forEach(t => {
-      // Prioritize formal retenders, then date extension corrigendums, then original dates
       const latestRetender = t.retenders && t.retenders.length > 0 ? t.retenders[t.retenders.length - 1] : null;
       const latestDateCorrigendum = t.corrigendums?.filter(c => c.corrigendumType === 'Date Extension').sort((a,b) => (toDateOrNull(b.corrigendumDate)?.getTime() ?? 0) - (toDateOrNull(a.corrigendumDate)?.getTime() ?? 0))[0] || null;
 
@@ -105,27 +105,22 @@ export default function ETenderNoticeBoard() {
       const hasSelectionDetails = !!(t.selectionNoticeDate || t.performanceGuaranteeAmount);
       const hasWorkOrderDetails = !!(t.agreementDate || t.dateWorkOrder);
     
-      // "Tender Process": Status is 'Tender Process' AND current time is before receipt date
       if (t.presentStatus === 'Tender Process' && receipt && isValid(receipt) && isBefore(now, receipt)) {
           tenderProcess.push(t);
           return;
       }
       
-      // "Bids Submitted": Current time is between receipt and opening
       if (receipt && opening && isValid(receipt) && isValid(opening) && isAfter(now, receipt) && isBefore(now, opening)) {
         bidsSubmitted.push(t);
         return; 
       }
       
-      // To Be Opened: After opening time, but no opening details recorded yet.
       if (opening && isValid(opening) && isAfter(now, opening) && !hasOpeningDetails) {
         toBeOpened.push(t);
       } 
-      // Pending Selection Notice: Has opening details, lacks selection notice details, and status is 'Bid Opened'
       else if (hasOpeningDetails && !hasSelectionDetails && t.presentStatus === 'Bid Opened') {
         pendingSelection.push(t);
       } 
-      // Pending Work Order: Has selection notice, lacks work order, and is in an appropriate status
       else if (hasSelectionDetails && !hasWorkOrderDetails) {
         const excludedStatuses = ["Tender Process", "Bid Opened", "Retender", "Tender Cancelled"];
         if (t.presentStatus && !excludedStatuses.includes(t.presentStatus)) {
@@ -170,7 +165,7 @@ export default function ETenderNoticeBoard() {
   );
   
   const categories = [
-    { type: 'tenderProcess', label: 'Tender Process', data: categorizedTenders.tenderProcess, icon: Send, color: "text-blue-800" },
+    { type: 'tenderProcess', label: 'Tender Process', data: categorizedTenders.tenderProcess, icon: null, color: "text-blue-800" },
     { type: 'bidsSubmitted', label: 'Bids Submitted', data: categorizedTenders.bidsSubmitted, icon: Clock, color: "text-amber-800" },
     { type: 'toBeOpened', label: 'To Be Opened', data: categorizedTenders.toBeOpened, icon: FolderOpen, color: "text-sky-800" },
     { type: 'pendingSelection', label: 'Pending Selection Notice', data: categorizedTenders.pendingSelection, icon: Bell, color: "text-indigo-800" },
@@ -193,7 +188,7 @@ export default function ETenderNoticeBoard() {
                 return (
                   <TabsTrigger key={cat.type} value={cat.type} className="h-auto p-1 flex flex-col items-center justify-center gap-0.5 data-[state=active]:shadow-md leading-tight whitespace-pre-wrap">
                     <div className={cn("flex items-center gap-1 font-semibold text-[10px] text-center", cat.color)}>
-                        <Icon className="h-3 w-3 shrink-0" />
+                        {Icon && <Icon className="h-3 w-3 shrink-0" />}
                         <span className="flex-1">{cat.label}</span>
                     </div>
                     <span className={cn("text-lg font-bold", cat.color)}>({cat.data.length})</span>
