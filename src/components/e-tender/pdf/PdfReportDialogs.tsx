@@ -187,7 +187,7 @@ export default function PdfReportDialogs() {
             <CardContent className="space-y-4">
                 <TooltipProvider>
                     <div className="pt-4 mt-4 border-t">
-                        <h4 className="text-sm font-semibold mb-2 text-primary">Tender PDF Section</h4>
+                        <h4 className="text-sm font-semibold mb-2 text-primary">Tender PDF Reports</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <ReportButton 
                                 label="Detailed Estimate"
@@ -211,7 +211,7 @@ export default function PdfReportDialogs() {
                     </div>
                     
                     <div className="pt-4 mt-4 border-t">
-                         <h4 className="text-sm font-semibold mb-2 text-primary">Corrigendum PDF Section</h4>
+                         <h4 className="text-sm font-semibold mb-2 text-primary">Corrigendum PDF Reports</h4>
                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             {(tender.corrigendums?.length || 0) > 0 ? (
                                 tender.corrigendums?.map((corr, index) => (
@@ -227,11 +227,11 @@ export default function PdfReportDialogs() {
                         <div className="pt-4 mt-4 border-t space-y-3">
                             <h4 className="text-sm font-semibold mb-2 text-primary">Retender PDF Reports</h4>
                             {(tender.retenders || []).map((retender, index) => (
-                                <div key={retender.id} className="flex items-center gap-4 p-2 border rounded-md bg-secondary/30">
+                                <div key={retender.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-2 border rounded-md bg-secondary/30">
                                     <h5 className="text-sm font-semibold shrink-0">Re-Tender No. {index + 1}</h5>
-                                    <div className="flex-1 grid grid-cols-2 gap-2">
+                                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
                                         <ReportButton 
-                                            label="NIT"
+                                            label="Notice Inviting Tender (NIT)"
                                             onClick={() => handleGeneratePdf(generateNIT, `Retender_NIT_${index+1}${formattedTenderNo}.pdf`, 'Retender NIT downloaded.', { dateTimeOfReceipt: retender.lastDateOfReceipt, dateTimeOfOpening: retender.dateOfOpeningTender })}
                                         />
                                         <ReportButton 
@@ -245,7 +245,7 @@ export default function PdfReportDialogs() {
                     )}
                     
                     <div className="pt-4 mt-4 border-t">
-                        <h4 className="text-sm font-semibold mb-2 text-primary">Bid Opening PDF Section</h4>
+                        <h4 className="text-sm font-semibold mb-2 text-primary">Bid Opening PDF Reports</h4>
                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <ReportButton 
                                 label="Bid Opening Summary"
