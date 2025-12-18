@@ -128,7 +128,7 @@ export default function ETenderNoticeBoard() {
     setSelectedTender(tender);
   };
 
-  const renderTenderList = (tenderList: E_tender[], primaryText: (t: E_tender) => string, secondaryText?: (t: E_tender) => string) => (
+  const renderTenderList = (tenderList: E_tender[], primaryText: (t: E_tender) => string, secondaryText?: (t: E_tender) => string | undefined) => (
     <div className="space-y-2 pt-2">
         {tenderList.length > 0 ? (
             tenderList.map(tender => (
@@ -178,11 +178,10 @@ export default function ETenderNoticeBoard() {
       
       switch (type) {
           case 'tenderProcess':
-              return `Receipt by: ${formatDateSafe(receiptDate, true, true)}`;
+              return `Receipt by: ${formatDateSafe(receiptDate, true, true, false)}`;
           case 'bidsSubmitted':
-              return `Opens: ${formatDateSafe(openingDate, true, false, true)}`;
           case 'toBeOpened':
-              return `Opening was at: ${formatDateSafe(openingDate, true, false, true)}`;
+              return `Opens: ${formatDateSafe(openingDate, true, false, true)}`;
           default:
               return undefined;
       }
