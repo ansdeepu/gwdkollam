@@ -189,6 +189,7 @@ export default function ETenderListPage() {
                 presentStatus: 'Tender Process',
                 bidders: [],
                 corrigendums: [],
+                retenders: [],
                 dateOfOpeningBid: null,
                 dateOfTechnicalAndFinancialBidOpening: null,
                 technicalCommitteeMember1: undefined,
@@ -320,6 +321,12 @@ export default function ETenderListPage() {
                                 <TableBody>
                                     {filteredTenders.length > 0 ? (
                                         filteredTenders.map((tender, index) => {
+                                            const hasRetenders = tender.retenders && tender.retenders.length > 0;
+                                            const latestRetender = hasRetenders ? tender.retenders![tender.retenders!.length - 1] : null;
+
+                                            const lastDateOfReceipt = latestRetender ? latestRetender.lastDateOfReceipt : tender.dateTimeOfReceipt;
+                                            const dateOfOpening = latestRetender ? latestRetender.dateOfOpeningTender : tender.dateTimeOfOpening;
+
                                             return (
                                                 <TableRow key={tender.id} className={getStatusRowClass(tender.presentStatus)}>
                                                     <TableCell className="align-top">{index + 1}</TableCell>
@@ -327,11 +334,12 @@ export default function ETenderListPage() {
                                                         <div className="flex flex-col">
                                                             <span className="whitespace-normal break-words">{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</span>
                                                             <span className="text-xs font-normal">Dated: {formatDateSafe(tender.tenderDate)}</span>
+                                                            {hasRetenders && <Badge variant="secondary" className="mt-1 w-fit bg-yellow-200 text-yellow-800">Re-tender</Badge>}
                                                         </div>
                                                     </TableCell>
                                                     <TableCell className="whitespace-normal break-words align-top">{tender.nameOfWork}</TableCell>
-                                                    <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfReceipt, true)}</TableCell>
-                                                    <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(tender.dateTimeOfOpening, true)}</TableCell>
+                                                    <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(lastDateOfReceipt, true)}</TableCell>
+                                                    <TableCell className="whitespace-normal break-words align-top">{formatDateSafe(dateOfOpening, true)}</TableCell>
                                                     <TableCell className="align-top">
                                                         {tender.presentStatus && <Badge className={cn(getStatusBadgeClass(tender.presentStatus))}>{tender.presentStatus}</Badge>}
                                                     </TableCell>

@@ -8,7 +8,7 @@ import { useE_tenders } from '@/hooks/useE_tenders';
 import { useRouter } from 'next/navigation';
 import { useForm, FormProvider, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { E_tenderSchema, type E_tenderFormData, type Bidder, type Corrigendum, eTenderStatusOptions } from '@/lib/schemas/eTenderSchema';
+import { E_tenderSchema, type E_tenderFormData, type Bidder, type Corrigendum, eTenderStatusOptions, type RetenderDetails } from '@/lib/schemas/eTenderSchema';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -32,13 +32,14 @@ import BidderForm from './BidderForm';
 import WorkOrderDetailsForm from './WorkOrderDetailsForm';
 import SelectionNoticeForm from './SelectionNoticeForm';
 import CorrigendumForm from './CorrigendumForm';
+import RetenderDetailsForm from './RetenderDetailsForm';
 import { useDataStore } from '@/hooks/use-data-store';
 import PdfReportDialogs from './pdf/PdfReportDialogs'; 
 import { Textarea } from '../ui/textarea';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 
-type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | 'addCorrigendum' | 'editCorrigendum' | null;
+type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 'workOrder' | 'selectionNotice' | 'addCorrigendum' | 'editCorrigendum' | 'addRetender' | 'editRetender' | null;
 
 const SELECTION_NOTICE_CLEAR_DATA: Partial<E_tenderFormData> = {
   selectionNoticeDate: null,
@@ -153,6 +154,8 @@ export default function TenderDetails() {
     const { control, getValues, setValue, handleSubmit: handleFormSubmit, watch } = form;
     const { fields: bidderFields, append: appendBidder, update: updateBidder, remove: removeBidder } = useFieldArray({ control, name: "bidders" });
     const { fields: corrigendumFields, append: appendCorrigendum, update: updateCorrigendum, remove: removeCorrigendum } = useFieldArray({ control, name: "corrigendums" });
+    const { fields: retenderFields, append: appendRetender, update: updateRetender, remove: removeRetender } = useFieldArray({ control, name: "retenders" });
+
 
     const handleFinalSave = async () => {
         setIsSubmitting(true);
@@ -188,6 +191,12 @@ export default function TenderDetails() {
                   corrigendumDate: toDateOrNull(c.corrigendumDate),
                   lastDateOfReceipt: toDateOrNull(c.lastDateOfReceipt),
                   dateOfOpeningTender: toDateOrNull(c.dateOfOpeningTender),
+              })),
+              retenders: (updatedData.retenders || []).map(r => ({
+                ...r,
+                retenderDate: toDateOrNull(r.retenderDate),
+                lastDateOfReceipt: toDateOrNull(r.lastDateOfReceipt),
+                dateOfOpeningTender: toDateOrNull(r.dateOfOpeningTender),
               }))
             };
 
@@ -243,9 +252,25 @@ export default function TenderDetails() {
         setModalData(null);
     };
 
+    const handleRetenderSave = (retenderData: RetenderDetails) => {
+        if (activeModal === 'addRetender') {
+            appendRetender(retenderData);
+        } else if (activeModal === 'editRetender' && modalData?.index !== undefined) {
+            updateRetender(modalData.index, retenderData);
+        }
+        handleSave({ retenders: getValues('retenders') });
+        setActiveModal(null);
+        setModalData(null);
+    };
+
     const handleEditCorrigendumClick = (corrigendum: Corrigendum, index: number) => {
         setModalData({ ...corrigendum, index });
         setActiveModal('editCorrigendum');
+    };
+
+    const handleEditRetenderClick = (retender: RetenderDetails, index: number) => {
+        setModalData({ ...retender, index });
+        setActiveModal('editRetender');
     };
     
     const handleClearOpeningDetails = async () => {
@@ -286,6 +311,10 @@ export default function TenderDetails() {
     }, [watchedBasicFields]);
 
     const hasAnyCorrigendumData = corrigendumFields.length > 0;
+    const hasAnyRetenderData = retenderFields.length > 0;
+    const hasRetenderCorrigendum = useMemo(() => {
+        return corrigendumFields.some(c => c.corrigendumType === 'Retender');
+    }, [corrigendumFields]);
     
     const committeeMemberNames = [
         watch('technicalCommitteeMember1'),
@@ -477,6 +506,42 @@ export default function TenderDetails() {
                                 )}
                             </Card>
                             
+                            {hasRetenderCorrigendum && (
+                                <Card className="border rounded-lg">
+                                    <CardHeader className="flex flex-row justify-between items-center p-4">
+                                        <div className="flex items-center gap-3">
+                                            <GitBranch className="h-5 w-5 text-primary"/>
+                                            <CardTitle className="text-lg font-semibold text-primary">Retender Details ({retenderFields.length})</CardTitle>
+                                        </div>
+                                        {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('addRetender')}><PlusCircle className="h-4 w-4 mr-2"/>Add Retender</Button>}
+                                    </CardHeader>
+                                    {hasAnyRetenderData ? (
+                                        <CardContent className="p-6 pt-0">
+                                            <div className="mt-4 pt-4 border-t space-y-2">
+                                                {retenderFields.map((retender, index) => (
+                                                    <div key={retender.id} className="p-4 border rounded-md bg-secondary/30 relative group">
+                                                        <div className="absolute top-2 right-2 flex items-center gap-1">
+                                                            {!isReadOnly && <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditRetenderClick(retender, index)}><Edit className="h-4 w-4"/></Button>}
+                                                            {!isReadOnly && <Button type="button" variant="ghost" size="icon" className="text-destructive h-7 w-7" onClick={() => removeRetender(index)}><Trash2 className="h-4 w-4"/></Button>}
+                                                        </div>
+                                                        <h4 className="text-sm font-semibold text-primary mb-2">Retender No. {index + 1}</h4>
+                                                        <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 mt-1">
+                                                            <DetailRow label="Retender Date" value={retender.retenderDate} />
+                                                            <DetailRow label="New Last Date & Time" value={retender.lastDateOfReceipt} />
+                                                            <DetailRow label="New Opening Date & Time" value={retender.dateOfOpeningTender} />
+                                                        </dl>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </CardContent>
+                                    ) : (
+                                        <CardContent>
+                                            <p className="text-sm text-muted-foreground text-center py-4">No retender details have been added.</p>
+                                        </CardContent>
+                                    )}
+                                </Card>
+                            )}
+
                             <Card className="border rounded-lg">
                                 <CardHeader className="flex flex-row justify-between items-center p-4">
                                     <div className="flex items-center gap-3">
@@ -718,6 +783,11 @@ export default function TenderDetails() {
                 <Dialog open={activeModal === 'addCorrigendum' || activeModal === 'editCorrigendum'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-3xl flex flex-col p-0">
                         <CorrigendumForm onSubmit={handleCorrigendumSave} onCancel={() => { setActiveModal(null); setModalData(null); }} isSubmitting={isSubmitting} initialData={modalData} />
+                    </DialogContent>
+                </Dialog>
+                <Dialog open={activeModal === 'addRetender' || activeModal === 'editRetender'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
+                    <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-3xl flex flex-col p-0">
+                        <RetenderDetailsForm onSubmit={handleRetenderSave} onCancel={() => { setActiveModal(null); setModalData(null); }} isSubmitting={isSubmitting} initialData={modalData} />
                     </DialogContent>
                 </Dialog>
                 <Dialog open={activeModal === 'selectionNotice'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>

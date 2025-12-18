@@ -76,6 +76,14 @@ export const CorrigendumSchema = z.object({
 });
 export type Corrigendum = z.infer<typeof CorrigendumSchema>;
 
+export const RetenderDetailsSchema = z.object({
+    id: z.string(),
+    retenderDate: z.any().optional().nullable(),
+    lastDateOfReceipt: z.any().optional().nullable(),
+    dateOfOpeningTender: z.any().optional().nullable(),
+});
+export type RetenderDetails = z.infer<typeof RetenderDetailsSchema>;
+
 
 export const NewBidderSchema = z.object({
   name: z.string().min(1, "Bidder Name is required."),
@@ -170,6 +178,7 @@ export const E_tenderSchema = z.object({
     detailedEstimateUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
     
     corrigendums: z.array(CorrigendumSchema).optional(),
+    retenders: z.array(RetenderDetailsSchema).optional(),
     bidders: z.array(BidderSchema).optional(),
     
     dateOfOpeningBid: z.any().optional().nullable(),
