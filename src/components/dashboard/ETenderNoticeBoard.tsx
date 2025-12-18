@@ -1,4 +1,3 @@
-
 // src/components/dashboard/ETenderNoticeBoard.tsx
 "use client";
 
@@ -29,6 +28,10 @@ const Bell = (props: React.SVGProps<SVGSVGElement>) => (
 const FileSignature = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M20 19.5v.5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"/><polyline points="14 2 14 8 20 8"/><path d="M16 18h2"/><path d="m22 14-4.5 4.5L16 17"/></svg>
 );
+const Send = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+);
+
 
 
 const DetailRow = ({ label, value, isCurrency = false }: { label: string; value: any; isCurrency?: boolean; }) => {
@@ -54,7 +57,7 @@ const DetailRow = ({ label, value, isCurrency = false }: { label: string; value:
 export default function ETenderNoticeBoard() {
   const { tenders = [], isLoading } = useE_tenders();
   const [selectedTender, setSelectedTender] = useState<E_tender | null>(null);
-  const [activeTab, setActiveTab] = useState('review');
+  const [activeTab, setActiveTab] = useState('tenderProcess');
 
   const categorizedTenders = useMemo(() => {
     const now = new Date();
@@ -73,7 +76,8 @@ export default function ETenderNoticeBoard() {
         return numB - numA;
     };
     
-    let review: E_tender[] = [];
+    let tenderProcess: E_tender[] = [];
+    let bidsSubmitted: E_tender[] = [];
     let toBeOpened: E_tender[] = [];
     let pendingSelection: E_tender[] = [];
     let pendingWorkOrder: E_tender[] = [];
@@ -96,15 +100,21 @@ export default function ETenderNoticeBoard() {
           receipt = toDateOrNull(t.dateTimeOfReceipt);
           opening = toDateOrNull(t.dateTimeOfOpening);
       }
-
+      
       const hasOpeningDetails = !!(t.dateOfOpeningBid || t.dateOfTechnicalAndFinancialBidOpening || t.technicalCommitteeMember1 || t.technicalCommitteeMember2 || t.technicalCommitteeMember3);
       const hasSelectionDetails = !!(t.selectionNoticeDate || t.performanceGuaranteeAmount);
       const hasWorkOrderDetails = !!(t.agreementDate || t.dateWorkOrder);
     
-      // Review: Current time is between receipt and opening
+      // "Tender Process": Status is 'Tender Process' AND current time is before receipt date
+      if (t.presentStatus === 'Tender Process' && receipt && isValid(receipt) && isBefore(now, receipt)) {
+          tenderProcess.push(t);
+          return;
+      }
+      
+      // "Bids Submitted": Current time is between receipt and opening
       if (receipt && opening && isValid(receipt) && isValid(opening) && isAfter(now, receipt) && isBefore(now, opening)) {
-        review.push(t);
-        return; // A tender in review cannot be in any other category
+        bidsSubmitted.push(t);
+        return; 
       }
       
       // To Be Opened: After opening time, but no opening details recorded yet.
@@ -124,12 +134,13 @@ export default function ETenderNoticeBoard() {
       }
     });
 
-    review.sort(sortByTenderNoDesc);
+    tenderProcess.sort(sortByTenderNoDesc);
+    bidsSubmitted.sort(sortByTenderNoDesc);
     toBeOpened.sort(sortByTenderNoDesc);
     pendingSelection.sort(sortByTenderNoDesc);
     pendingWorkOrder.sort(sortByTenderNoDesc);
 
-    return { review, toBeOpened, pendingSelection, pendingWorkOrder };
+    return { tenderProcess, bidsSubmitted, toBeOpened, pendingSelection, pendingWorkOrder };
   }, [tenders]);
 
   const handleTenderClick = (tender: E_tender) => {
@@ -159,7 +170,8 @@ export default function ETenderNoticeBoard() {
   );
   
   const categories = [
-    { type: 'review', label: 'Tender Status Review', data: categorizedTenders.review, icon: Clock, color: "text-amber-800" },
+    { type: 'tenderProcess', label: 'Tender Process', data: categorizedTenders.tenderProcess, icon: Send, color: "text-blue-800" },
+    { type: 'bidsSubmitted', label: 'Bids Submitted', data: categorizedTenders.bidsSubmitted, icon: Clock, color: "text-amber-800" },
     { type: 'toBeOpened', label: 'To Be Opened', data: categorizedTenders.toBeOpened, icon: FolderOpen, color: "text-sky-800" },
     { type: 'pendingSelection', label: 'Pending Selection Notice', data: categorizedTenders.pendingSelection, icon: Bell, color: "text-indigo-800" },
     { type: 'pendingWorkOrder', label: 'Pending Work Order', data: categorizedTenders.pendingWorkOrder, icon: FileSignature, color: "text-emerald-800" },
@@ -175,16 +187,16 @@ export default function ETenderNoticeBoard() {
       <CardContent className="flex-1 flex flex-col min-h-0 p-4 pt-0">
         <Dialog onOpenChange={(isOpen) => !isOpen && setSelectedTender(null)}>
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-            <TabsList className="grid grid-cols-2 gap-2 h-auto">
+            <TabsList className="grid grid-cols-5 gap-1 h-auto">
               {categories.map((cat) => {
                 const Icon = cat.icon;
                 return (
-                  <TabsTrigger key={cat.type} value={cat.type} className="h-auto p-2 flex flex-col items-center justify-center gap-1 data-[state=active]:shadow-md leading-tight whitespace-pre-wrap">
-                    <div className={cn("flex items-center gap-2 font-semibold text-xs text-center", cat.color)}>
-                        <Icon className="h-4 w-4 shrink-0" />
+                  <TabsTrigger key={cat.type} value={cat.type} className="h-auto p-1 flex flex-col items-center justify-center gap-0.5 data-[state=active]:shadow-md leading-tight whitespace-pre-wrap">
+                    <div className={cn("flex items-center gap-1 font-semibold text-[10px] text-center", cat.color)}>
+                        <Icon className="h-3 w-3 shrink-0" />
                         <span className="flex-1">{cat.label}</span>
                     </div>
-                    <span className={cn("text-xl font-bold", cat.color)}>({cat.data.length})</span>
+                    <span className={cn("text-lg font-bold", cat.color)}>({cat.data.length})</span>
                   </TabsTrigger>
                 );
               })}
@@ -196,7 +208,7 @@ export default function ETenderNoticeBoard() {
                      {renderTenderList(
                           cat.data,
                           (t) => t.eTenderNo || 'N/A',
-                          cat.type === 'review' ? (t) => `Opens: ${formatDateSafe(t.dateTimeOfOpening, true)}` :
+                          cat.type === 'bidsSubmitted' ? (t) => `Opens: ${formatDateSafe(t.dateTimeOfOpening, true)}` :
                           (t) => `Receipt by: ${formatDateSafe(t.dateTimeOfReceipt, true)}`
                       )}
                   </ScrollArea>
