@@ -570,8 +570,8 @@ export default function AgencyRegistrationPage() {
 
   const ITEMS_PER_PAGE = 50;
   const [currentPage, setCurrentPage] = useState(1);
-  const pageFromUrl = searchParams.get('page');
-  const idFromUrl = searchParams.get('id');
+  const pageFromUrl = searchParams?.get('page');
+  const idFromUrl = searchParams?.get('id');
 
   useEffect(() => {
     if (pageFromUrl) {
@@ -2183,3 +2183,6 @@ function PartnerDialogContent({ initialData, onConfirm, onCancel }: { initialDat
     
 
 
+
+
+    
