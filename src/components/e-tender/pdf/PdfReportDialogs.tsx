@@ -224,22 +224,23 @@ export default function PdfReportDialogs() {
                     </div>
 
                     {hasRetenders && (
-                        <div className="pt-4 mt-4 border-t">
+                        <div className="pt-4 mt-4 border-t space-y-3">
                             <h4 className="text-sm font-semibold mb-2 text-primary">Retender PDF Reports</h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {(tender.retenders || []).map((retender, index) => (
-                                    <React.Fragment key={retender.id}>
+                            {(tender.retenders || []).map((retender, index) => (
+                                <div key={retender.id} className="flex items-center gap-4 p-2 border rounded-md bg-secondary/30">
+                                    <h5 className="text-sm font-semibold shrink-0">Re-Tender No. {index + 1}</h5>
+                                    <div className="flex-1 grid grid-cols-2 gap-2">
                                         <ReportButton 
-                                            label={`Re-Tender ${index + 1} - NIT`}
+                                            label="NIT"
                                             onClick={() => handleGeneratePdf(generateNIT, `Retender_NIT_${index+1}${formattedTenderNo}.pdf`, 'Retender NIT downloaded.', { dateTimeOfReceipt: retender.lastDateOfReceipt, dateTimeOfOpening: retender.dateOfOpeningTender })}
                                         />
                                         <ReportButton 
-                                            label={`Re-Tender ${index + 1} - Form`}
+                                            label="Tender Form"
                                             onClick={() => handleGeneratePdf(generateTenderForm, `Retender_Form_${index+1}${formattedTenderNo}.pdf`, 'Retender Form downloaded.', { dateTimeOfReceipt: retender.lastDateOfReceipt, dateTimeOfOpening: retender.dateOfOpeningTender })}
                                         />
-                                    </React.Fragment>
-                                ))}
-                            </div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     )}
                     
