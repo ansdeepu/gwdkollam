@@ -1,4 +1,3 @@
-
 // src/app/dashboard/e-tender/[id]/work-order/page.tsx
 "use client";
 
@@ -16,12 +15,12 @@ export default function WorkOrderPrintPage() {
 
     useEffect(() => {
         if (tender && !printTriggered.current) {
+            printTriggered.current = true; // Set flag immediately
             const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
             document.title = `eWorkOrder${formattedTenderNo}`;
-            setTimeout(() => window.print(), 500); // Automatically trigger print
-            printTriggered.current = true;
+            // Use a short timeout to allow the page to render fully before printing
+            setTimeout(() => window.print(), 500);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tender]);
 
     const l1Bidder = useMemo(() => {

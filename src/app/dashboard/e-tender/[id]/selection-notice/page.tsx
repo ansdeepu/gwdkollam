@@ -1,4 +1,3 @@
-
 // src/app/dashboard/e-tender/[id]/selection-notice/page.tsx
 "use client";
 
@@ -14,13 +13,12 @@ export default function SelectionNoticePrintPage() {
 
     useEffect(() => {
         if (tender && !printTriggered.current) {
+            printTriggered.current = true; // Set flag immediately
             const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
             document.title = `dSelectionNotice${formattedTenderNo}`;
-            // Automatically trigger print dialog once
+            // Use a short timeout to allow the page to render fully before printing
             setTimeout(() => window.print(), 500);
-            printTriggered.current = true;
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [tender]);
     
     const l1Bidder = useMemo(() => {
@@ -34,7 +32,7 @@ export default function SelectionNoticePrintPage() {
     
     const apgThreshold = useMemo(() => {
         const description = tender.additionalPerformanceGuaranteeDescription || '';
-        const thresholdMatch = description.match(/between\s+([\d.]+)%\s+and\s+([\d.]+)%/);
+        const thresholdMatch = description.match(/between\s*([\d.]+)%\s+and\s*([\d.]+)%/);
         return thresholdMatch ? parseFloat(thresholdMatch[1]) / 100 : 0.15;
     }, [tender.additionalPerformanceGuaranteeDescription]);
     
