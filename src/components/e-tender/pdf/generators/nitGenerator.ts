@@ -17,9 +17,12 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
     
-    // Check if we are generating for a retender by seeing if the dates differ from the main tender.
-    // This is an indirect way, assuming the override only happens for retenders.
-    const isRetender = tender.dateTimeOfReceipt !== tender.retenders?.[tender.retenders.length - 1]?.lastDateOfReceipt;
+    // A simple way to check if this is for a retender is if the dates passed in `tender` (which may be from an override) don't match the original tender's main dates.
+    const originalTender = tender; // In this context, `tender` might already be the merged object.
+    const isRetender = tender.retenders && tender.retenders.some(
+        r => r.lastDateOfReceipt === tender.dateTimeOfReceipt && r.dateOfOpeningTender === tender.dateTimeOfOpening
+    );
+
 
     const tenderFee = tender.tenderFormFee || 0;
     const gst = tenderFee * 0.18;

@@ -17,7 +17,9 @@ export async function generateTenderForm(tender: E_tender, allStaffMembers?: Sta
     const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
     
-    const isRetender = tender.dateTimeOfReceipt !== tender.retenders?.[tender.retenders.length - 1]?.lastDateOfReceipt;
+    const isRetender = tender.retenders && tender.retenders.some(
+        r => r.lastDateOfReceipt === tender.dateTimeOfReceipt && r.dateOfOpeningTender === tender.dateTimeOfOpening
+    );
 
     const tenderFee = tender.tenderFormFee || 0;
     const gst = tenderFee * 0.18;
