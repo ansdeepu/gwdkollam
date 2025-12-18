@@ -1,7 +1,7 @@
 // src/app/dashboard/e-tender/[id]/supply-order/page.tsx
 "use client";
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useTenderData } from '@/components/e-tender/TenderDataContext';
 import { formatDateSafe, formatTenderNoForFilename } from '@/components/e-tender/utils';
 import { useDataStore } from '@/hooks/use-data-store';
@@ -12,18 +12,11 @@ import { Button } from '@/components/ui/button';
 export default function SupplyOrderPrintPage() {
     const { tender } = useTenderData();
     const { officeAddress, allStaffMembers } = useDataStore();
-    const printTriggered = useRef(false);
 
     useEffect(() => {
-        if (tender && !printTriggered.current) {
-            printTriggered.current = true;
+        if (tender) {
             const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
             document.title = `eSupplyOrder${formattedTenderNo}`;
-             const handleAfterPrint = () => {
-                window.removeEventListener('afterprint', handleAfterPrint);
-            };
-            window.addEventListener('afterprint', handleAfterPrint);
-            setTimeout(() => window.print(), 500);
         }
     }, [tender]);
 
