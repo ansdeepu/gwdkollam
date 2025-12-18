@@ -79,10 +79,24 @@ export default function ETenderNoticeBoard() {
     let pendingWorkOrder: E_tender[] = [];
     
     activeTenders.forEach(t => {
+      // Prioritize formal retenders, then date extension corrigendums, then original dates
       const latestRetender = t.retenders && t.retenders.length > 0 ? t.retenders[t.retenders.length - 1] : null;
-      const receipt = toDateOrNull(latestRetender ? latestRetender.lastDateOfReceipt : t.dateTimeOfReceipt);
-      const opening = toDateOrNull(latestRetender ? latestRetender.dateOfOpeningTender : t.dateTimeOfOpening);
+      const latestDateCorrigendum = t.corrigendums?.filter(c => c.corrigendumType === 'Date Extension').sort((a,b) => (toDateOrNull(b.corrigendumDate)?.getTime() ?? 0) - (toDateOrNull(a.corrigendumDate)?.getTime() ?? 0))[0] || null;
+
+      let receipt: Date | null = null;
+      let opening: Date | null = null;
       
+      if (latestRetender) {
+          receipt = toDateOrNull(latestRetender.lastDateOfReceipt);
+          opening = toDateOrNull(latestRetender.dateOfOpeningTender);
+      } else if (latestDateCorrigendum) {
+          receipt = toDateOrNull(latestDateCorrigendum.lastDateOfReceipt);
+          opening = toDateOrNull(latestDateCorrigendum.dateOfOpeningTender);
+      } else {
+          receipt = toDateOrNull(t.dateTimeOfReceipt);
+          opening = toDateOrNull(t.dateTimeOfOpening);
+      }
+
       const hasOpeningDetails = !!(t.dateOfOpeningBid || t.dateOfTechnicalAndFinancialBidOpening || t.technicalCommitteeMember1 || t.technicalCommitteeMember2 || t.technicalCommitteeMember3);
       const hasSelectionDetails = !!(t.selectionNoticeDate || t.performanceGuaranteeAmount);
       const hasWorkOrderDetails = !!(t.agreementDate || t.dateWorkOrder);
