@@ -74,7 +74,7 @@ const WORK_ORDER_CLEAR_DATA: Partial<E_tenderFormData> = {
 };
 
 
-const DetailRow = ({ label, value, subValue, isCurrency = false, align = 'left', isLink = false }: { label: string; value: any; subValue?: string; isCurrency?: boolean, align?: 'left' | 'center' | 'right', isLink?: boolean }) => {
+const DetailRow = ({ label, value, subValue, isCurrency = false, align = 'left', isLink = false, isReceiptFormat = false, isOpeningFormat = false }: { label: string; value: any; subValue?: string; isCurrency?: boolean, align?: 'left' | 'center' | 'right', isLink?: boolean, isReceiptFormat?: boolean, isOpeningFormat?: boolean }) => {
     if (value === null || value === undefined || value === '' || (typeof value === 'number' && isNaN(value))) {
         return null;
     }
@@ -82,13 +82,11 @@ const DetailRow = ({ label, value, subValue, isCurrency = false, align = 'left',
     let displayValue = String(value);
 
     // Custom formatting for specific labels
-    if (label.toLowerCase().includes('date')) {
-        const isTimeIncluded = label.toLowerCase().includes('time');
-        const isReceipt = label.toLowerCase().includes('receipt');
-        const isOpening = label.toLowerCase().includes('opening') && label !== 'Date of Opening Bid' && label !== 'Date of Tech/Fin Bid Opening';
+    if (label.toLowerCase().includes('date') || isReceiptFormat || isOpeningFormat) {
+        const isTimeIncluded = label.toLowerCase().includes('time') || isReceiptFormat || isOpeningFormat;
         
         // This combines all logic into one call
-        const formatted = formatDateSafe(value, isTimeIncluded || isOpening, isReceipt, isOpening);
+        const formatted = formatDateSafe(value, isTimeIncluded, isReceiptFormat, isOpeningFormat);
 
         if (formatted === 'N/A' && value) {
             displayValue = String(value);
@@ -491,8 +489,8 @@ export default function TenderDetails() {
                                                         <DetailRow label="Type" value={corrigendum.corrigendumType} />
                                                         <DetailRow label="Date" value={corrigendum.corrigendumDate} />
                                                         <DetailRow label="Reason" value={corrigendum.reason} />
-                                                        <DetailRow label="New Last Date & Time" value={corrigendum.lastDateOfReceipt} />
-                                                        <DetailRow label="New Opening Date & Time" value={corrigendum.dateOfOpeningTender} />
+                                                        <DetailRow label="New Last Date &amp; Time" value={corrigendum.lastDateOfReceipt} />
+                                                        <DetailRow label="New Opening Date &amp; Time" value={corrigendum.dateOfOpeningTender} />
                                                     </dl>
                                                 </div>
                                             ))}
@@ -526,8 +524,8 @@ export default function TenderDetails() {
                                                         <h4 className="text-sm font-semibold text-primary mb-2">Retender No. {index + 1}</h4>
                                                         <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 mt-1">
                                                             <DetailRow label="Retender Date" value={retender.retenderDate} />
-                                                            <DetailRow label="New Last Date & Time" value={retender.lastDateOfReceipt} isReceiptFormat={true} />
-                                                            <DetailRow label="New Opening Date & Time" value={retender.dateOfOpeningTender} isOpeningFormat={true}/>
+                                                            <DetailRow label="New Last Date &amp; Time" value={retender.lastDateOfReceipt} isReceiptFormat={true} />
+                                                            <DetailRow label="New Opening Date &amp; Time" value={retender.dateOfOpeningTender} isOpeningFormat={true}/>
                                                         </dl>
                                                     </div>
                                                 ))}
