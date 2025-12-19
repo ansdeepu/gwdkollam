@@ -31,7 +31,7 @@ import { Button } from '@/components/ui/button';
 export const dynamic = 'force-dynamic';
 
 const Loader2 = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
 );
 const ArrowUp = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
@@ -117,33 +117,30 @@ export default function DashboardPage() {
 
   const dashboardData = useMemo(() => {
     if (filteredEntriesLoading || isReportLoading || staffLoading || !currentUser) return null;
-    
-    // For supervisors, filteredFileEntries is already scoped down. For others, use allFileEntries.
+
     const relevantEntries = currentUser.role === 'supervisor' ? filteredFileEntries : allFileEntries;
-    
-    // The supervisor's view is now correctly pre-filtered by the hook, so no extra filtering is needed here.
-    const nonArsEntries = relevantEntries
-        .map(entry => ({
-            ...entry,
-            siteDetails: entry.siteDetails?.filter(site => site.purpose !== 'ARS' && !site.isArsImport)
-        }))
-        .filter(entry => entry.siteDetails && entry.siteDetails.length > 0);
+
+    const nonArsEntries = (relevantEntries || [])
+        .map(entry => {
+            if (!entry || !entry.siteDetails) return { ...entry, siteDetails: [] };
+            return {
+                ...entry,
+                siteDetails: entry.siteDetails.filter(site => site && site.purpose !== 'ARS' && !site.isArsImport)
+            };
+        })
+        .filter(entry => entry && entry.siteDetails && entry.siteDetails.length > 0);
 
     return {
         nonArsEntries: nonArsEntries,
-        // allFileEntriesForSupervisor is now just filteredFileEntries, which is already correctly scoped
-        allFileEntriesForSupervisor: filteredFileEntries, 
-        allFileEntries: allFileEntries,
-        staffMembers: staffMembers
+        allFileEntriesForSupervisor: filteredFileEntries || [], 
+        allFileEntries: allFileEntries || [],
+        staffMembers: staffMembers || []
     };
   }, [filteredEntriesLoading, isReportLoading, staffLoading, currentUser, filteredFileEntries, allFileEntries, staffMembers]);
 
     const { constituencyWorks, depositWorksCount, arsWorksCount, totalCompletedCount } = useMemo(() => {
-        // Get all sites from public deposit works, regardless of status.
-        const publicDepositWorks = allFileEntries
-            .filter(entry => 
-                !entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)
-            )
+        const publicDepositWorks = (allFileEntries || [])
+            .filter(entry => entry && (!entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)))
             .flatMap(entry => 
                 (entry.siteDetails || []).map(site => ({
                     ...site,
@@ -157,8 +154,7 @@ export default function DashboardPage() {
                 }))
             );
 
-        // Get all ARS works from the dedicated ARS collection.
-        const arsWorks = arsEntries.map(entry => ({
+        const arsWorks = (arsEntries || []).map(entry => ({
             nameOfSite: entry.nameOfSite,
             constituency: entry.constituency,
             purpose: entry.arsTypeOfScheme || 'ARS',
