@@ -99,7 +99,7 @@ export default function DataEntryPage() {
   const fileIdToEdit = searchParams?.get("id");
   const approveUpdateId = searchParams?.get("approveUpdateId");
   const workType = searchParams?.get("workType") as 'public' | 'private' | null;
-  const pageToReturnTo = searchParams?.get('page');
+  const pageToReturnTo = searchParams?.get('page') ?? null;
   
   const { user, isLoading: authIsLoading, fetchAllUsers } = useAuth();
   const { fetchEntryForEditing } = useFileEntries();
@@ -118,11 +118,11 @@ export default function DataEntryPage() {
   
   const returnPath = useMemo(() => {
     let base = '/dashboard/file-room';
-    if (workType === 'private') base = '/dashboard/private-deposit-works';
+    if (workTypeContext === 'private') base = '/dashboard/private-deposit-works';
     if (isApprovingUpdate) base = '/dashboard/pending-updates';
     
     return pageToReturnTo ? `${base}?page=${pageToReturnTo}` : base;
-  }, [workType, isApprovingUpdate, pageToReturnTo]);
+  }, [workTypeContext, isApprovingUpdate, pageToReturnTo]);
 
   useEffect(() => {
     const loadAllData = async () => {
@@ -199,7 +199,7 @@ export default function DataEntryPage() {
             description = errorState;
         } else if (user?.role === 'editor') {
             if (isCreatingNew) {
-                title = workType === 'private'
+                title = workTypeContext === 'private'
                     ? "New File Data Entry - Private Deposit"
                     : "New File Data Entry - Deposit Work";
                 description = "Use this form to input new work orders, project updates, or other relevant data for the Ground Water Department.";
@@ -239,7 +239,7 @@ export default function DataEntryPage() {
     }
     
     setHeader(title, description);
-  }, [fileIdToEdit, user, approveUpdateId, setHeader, fileNoForHeader, workType, dataLoading, errorState]);
+  }, [fileIdToEdit, user, approveUpdateId, setHeader, fileNoForHeader, workTypeContext, dataLoading, errorState]);
 
 
   const supervisorList = useMemo(() => {
@@ -331,7 +331,7 @@ export default function DataEntryPage() {
                 initialData={pageData.initialData}
                 supervisorList={supervisorList}
                 userRole={user?.role}
-                workTypeContext={workType}
+                workTypeContext={workTypeContext}
                 pageToReturnTo={pageToReturnTo}
                 isFormDisabled={isFormDisabledForSupervisor}
              />
@@ -345,4 +345,3 @@ export default function DataEntryPage() {
     </div>
   );
 }
-
