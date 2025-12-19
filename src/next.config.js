@@ -13,9 +13,7 @@ const nextConfig = {
   experimental: {
     // This allows cross-origin requests from the preview environment,
     // preventing the warnings you were seeing in the logs.
-    allowedDevOrigins: [
-        "https://*.cloudworkstations.dev",
-    ],
+    // NOTE: allowedDevOrigins was removed as it was causing a build error.
   },
   images: {
     remotePatterns: [
@@ -61,3 +59,4 @@ const nextConfig = {
 
 // Force cache invalidation by updating this comment.
 module.exports = nextConfig;
+

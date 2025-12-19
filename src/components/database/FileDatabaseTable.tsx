@@ -1,3 +1,4 @@
+
 // src/components/database/FileDatabaseTable.tsx
 "use client";
 
@@ -122,7 +123,7 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
   }, [user, fileEntries, getPendingUpdates]);
 
   useEffect(() => {
-    const pageFromUrl = searchParams.get('page');
+    const pageFromUrl = searchParams?.get('page');
     const pageNum = pageFromUrl ? parseInt(pageFromUrl, 10) : 1;
     if (!isNaN(pageNum) && pageNum > 0) {
       setCurrentPage(pageNum);
@@ -144,7 +145,7 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams?.toString());
     params.set('page', String(page));
     router.push(`?${params.toString()}`);
   };
