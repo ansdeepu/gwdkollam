@@ -10,11 +10,6 @@ const nextConfig = {
     // Set to false to ignore linting errors during build.
     ignoreDuringBuilds: false,
   },
-  experimental: {
-    allowedDevOrigins: [
-        "https://*.cloudworkstations.dev",
-    ],
-  },
   images: {
     remotePatterns: [
       {

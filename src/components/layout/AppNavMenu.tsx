@@ -1,3 +1,4 @@
+
 // src/components/layout/AppNavMenu.tsx
 "use client";
 
@@ -151,7 +152,7 @@ export default function AppNavMenu() {
                 <SidebarMenuButton
                   asChild
                   size="compact"
-                  isActive={pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))}
+                  isActive={pathname === item.href || (item.href !== '/dashboard' && !!pathname && pathname.startsWith(item.href))}
                   tooltip={{ children: item.label, side: "right", align: "center" }}
                   className="justify-start pr-8"
                 >
