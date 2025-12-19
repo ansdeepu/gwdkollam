@@ -9,6 +9,7 @@ import UpdatePasswordForm from "@/components/auth/UpdatePasswordForm";
 import { Badge } from "@/components/ui/badge";
 import { usePageHeader } from "@/hooks/usePageHeader";
 import { useEffect } from "react";
+import { cn } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -28,6 +29,30 @@ const KeyRound = (props: React.SVGProps<SVGSVGElement>) => (
 const Briefcase = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
 );
+
+const hashCode = (str: string): number => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i);
+        hash = (hash << 5) - hash + char;
+        hash |= 0; 
+    }
+    return hash;
+};
+
+const getColorClass = (nameOrEmail: string): string => {
+    const colors = [
+        "bg-red-200 text-red-800", "bg-orange-200 text-orange-800", "bg-amber-200 text-amber-800",
+        "bg-yellow-200 text-yellow-800", "bg-lime-200 text-lime-800", "bg-green-200 text-green-800",
+        "bg-emerald-200 text-emerald-800", "bg-teal-200 text-teal-800", "bg-cyan-200 text-cyan-800",
+        "bg-sky-200 text-sky-800", "bg-blue-200 text-blue-800", "bg-indigo-200 text-indigo-800",
+        "bg-violet-200 text-violet-800", "bg-purple-200 text-purple-800", "bg-fuchsia-200 text-fuchsia-800",
+        "bg-pink-200 text-pink-800", "bg-rose-200 text-rose-800"
+    ];
+    const hash = hashCode(nameOrEmail);
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
+};
 
 
 const getInitials = (name?: string, email?: string | null) => {
@@ -52,6 +77,7 @@ export default function ProfilePage() {
   const { staffMembers, isLoading: staffLoading } = useStaffMembers();
 
   const staffInfo = staffMembers.find(s => s.id === user?.staffId);
+  const avatarColorClass = getColorClass(user?.name || user?.email || 'user');
   
   if (authLoading || staffLoading) {
     return (
@@ -77,7 +103,7 @@ export default function ProfilePage() {
             <CardHeader className="items-center text-center">
               <Avatar className="h-24 w-24 mb-4">
                 <AvatarImage src={staffInfo?.photoUrl || undefined} alt={user.name || 'User'} data-ai-hint="person user" />
-                <AvatarFallback className="text-3xl">{getInitials(user.name, user.email)}</AvatarFallback>
+                <AvatarFallback className={cn("text-3xl", avatarColorClass)}>{getInitials(user.name, user.email)}</AvatarFallback>
               </Avatar>
               <CardTitle className="text-2xl">{user.name || 'User'}</CardTitle>
               <CardDescription>{user.email}</CardDescription>

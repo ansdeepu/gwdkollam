@@ -78,7 +78,7 @@ export default function AdminRegisterPage() {
             <div className="mt-4 rounded-md border border-accent/30 bg-accent/10 p-3 text-center md:text-left">
               <p className="text-sm font-medium text-accent">Important:</p>
               <p className="text-xs text-accent/80">
-                Newly created users will have the 'viewer' role and will require approval before they can log in.
+                Newly created users will have the 'viewer' role and will need to be approved before they can log in.
               </p>
             </div>
           </div>
