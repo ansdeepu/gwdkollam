@@ -715,8 +715,8 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData | null, o
 export default function DataEntryFormComponent({ fileNoToEdit, initialData, supervisorList, userRole, workTypeContext, pageToReturnTo, isFormDisabled = false }: DataEntryFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const fileIdToEdit = searchParams.get("id");
-  const approveUpdateId = searchParams.get("approveUpdateId");
+  const fileIdToEdit = searchParams?.get("id");
+  const approveUpdateId = searchParams?.get("approveUpdateId");
 
   const { addFileEntry, updateFileEntry } = useFileEntries();
   const { createPendingUpdate } = usePendingUpdates();
