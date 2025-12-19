@@ -14,7 +14,7 @@ const Loader2 = (props: React.SVGProps<SVGSVGElement>) => (
 
 export default function TenderLayout({ children }: { children: ReactNode }) {
     const params = useParams();
-    const { id } = params;
+    const id = params?.id;
     const { getTender, isLoading } = useE_tenders();
     const { allStaffMembers, allRateDescriptions, allBidders } = useDataStore(); // Ensure data store is loaded
     const [tender, setTender] = useState<E_tender | null>(null);
