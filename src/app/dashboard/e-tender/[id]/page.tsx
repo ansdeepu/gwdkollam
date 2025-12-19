@@ -30,7 +30,7 @@ const FilePlus = (props: React.SVGProps<SVGSVGElement>) => (
 export default function TenderPage() {
     const params = useParams();
     const router = useRouter();
-    const { id } = params;
+    const id = params?.id;
     const { getTender, isLoading } = useE_tenders();
     const { setHeader } = usePageHeader();
     const [tender, setTender] = useState<E_tender | null>(null);
