@@ -464,8 +464,8 @@ export default function TenderDetails() {
                                              <div className="space-y-2">
                                                 <h4 className="text-sm font-medium text-muted-foreground">Key Dates</h4>
                                                 <div className="p-4 border rounded-md bg-slate-50 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                                                    <DetailRow label="Last Date & Time of Receipt" value={watch('dateTimeOfReceipt')} />
-                                                    <DetailRow label="Date & Time of Opening" value={watch('dateTimeOfOpening')} />
+                                                    <DetailRow label="Last Date & Time of Receipt" value={watch('dateTimeOfReceipt')} isReceiptFormat={true} />
+                                                    <DetailRow label="Date & Time of Opening" value={watch('dateTimeOfOpening')} isOpeningFormat={true}/>
                                                 </div>
                                             </div>
                                         </div>
@@ -499,8 +499,8 @@ export default function TenderDetails() {
                                                         <DetailRow label="Type" value={corrigendum.corrigendumType} />
                                                         <DetailRow label="Date" value={corrigendum.corrigendumDate} />
                                                         <DetailRow label="Reason" value={corrigendum.reason} />
-                                                        <DetailRow label="New Last Date &amp; Time" value={corrigendum.lastDateOfReceipt} />
-                                                        <DetailRow label="New Opening Date &amp; Time" value={corrigendum.dateOfOpeningTender} />
+                                                        <DetailRow label="New Last Date &amp; Time" value={corrigendum.lastDateOfReceipt} isReceiptFormat={true} />
+                                                        <DetailRow label="New Opening Date &amp; Time" value={corrigendum.dateOfOpeningTender} isOpeningFormat={true} />
                                                     </dl>
                                                 </div>
                                             ))}
