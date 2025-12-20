@@ -1,8 +1,7 @@
-
 // src/components/e-tender/pdf/generators/nitGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
-import { formatDateSafe } from '../../utils';
+import { formatDateSafe, formatTenderNoForFilename } from '../../utils';
 import type { StaffMember } from '@/lib/schemas';
 
 export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMember[]): Promise<Uint8Array> {
@@ -18,7 +17,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const form = pdfDoc.getForm();
     
     // A simple way to check if this is for a retender is if the dates passed in `tender` (which may be from an override) don't match the original tender's main dates.
-    const originalTender = tender; // In this context, `tender` might already be the merged object.
     const isRetender = tender.retenders && tender.retenders.some(
         r => r.lastDateOfReceipt === tender.dateTimeOfReceipt && r.dateOfOpeningTender === tender.dateTimeOfOpening
     );
@@ -29,6 +27,8 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
+    const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
+    const fileName = `aNIT${formattedTenderNo}.pdf`;
 
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
@@ -63,4 +63,3 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     form.flatten();
     return await pdfDoc.save();
 }
-

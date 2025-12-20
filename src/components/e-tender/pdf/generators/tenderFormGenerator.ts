@@ -1,8 +1,7 @@
-
 // src/components/e-tender/pdf/generators/tenderFormGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
-import { formatDateSafe } from '../../utils';
+import { formatDateSafe, formatTenderNoForFilename } from '../../utils';
 import type { StaffMember } from '@/lib/schemas';
 
 export async function generateTenderForm(tender: E_tender, allStaffMembers?: StaffMember[]): Promise<Uint8Array> {
@@ -29,6 +28,9 @@ export async function generateTenderForm(tender: E_tender, allStaffMembers?: Sta
         if (amount === undefined || amount === null) return '';
         return `Rs. ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     }
+
+    const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
+    const fileName = `bTenderForm${formattedTenderNo}.pdf`;
 
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,

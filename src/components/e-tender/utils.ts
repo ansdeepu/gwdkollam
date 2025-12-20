@@ -17,9 +17,18 @@ export const formatDateForInput = (date: any, isDateTime: boolean = false): stri
 
 export const formatTenderNoForFilename = (tenderNo: string | undefined | null): string => {
     if (!tenderNo) return 'Tender';
-    // Example: GWD/Q/T-25/2024-25 -> T25_Y2024-25
-    const sanitized = tenderNo.replace(/\//g, '_');
-    return sanitized;
+
+    const tenderMatch = tenderNo.match(/T-(\d+)/);
+    const yearMatch = tenderNo.match(/(\d{4})-(\d{2})/);
+
+    if (tenderMatch && yearMatch) {
+        const tenderNumber = `T${tenderMatch[1]}`;
+        const yearPart = `${yearMatch[1]}${yearMatch[2]}`;
+        return `${yearPart}${tenderNumber}`;
+    }
+    
+    // Fallback for old or different formats
+    return tenderNo.replace(/[\/\-]/g, '_');
 };
 
 

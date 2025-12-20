@@ -15,9 +15,10 @@ import { formatTenderNoForFilename } from '../utils';
 
 interface CorrigendumReportsProps {
   corrigendum: Corrigendum;
+  index: number;
 }
 
-export default function CorrigendumReports({ corrigendum }: CorrigendumReportsProps) {
+export default function CorrigendumReports({ corrigendum, index }: CorrigendumReportsProps) {
   const { tender } = useTenderData();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -47,7 +48,8 @@ export default function CorrigendumReports({ corrigendum }: CorrigendumReportsPr
       }
       
       const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
-      const fileName = `${fileNamePrefix}${formattedTenderNo}.pdf`;
+      const corrigendumIndex = corrigendum.corrigendumType === 'Retender' ? '' : `${index + 1}`;
+      const fileName = `${fileNamePrefix}${corrigendumIndex}${formattedTenderNo}.pdf`;
       download(pdfBytes, fileName, 'application/pdf');
       toast({ title: "PDF Generated", description: "Corrigendum report has been downloaded." });
 

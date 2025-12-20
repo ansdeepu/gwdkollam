@@ -1,7 +1,7 @@
 // src/components/e-tender/pdf/generators/bidOpeningSummaryGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts, TextAlignment } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
-import { formatDateSafe } from '../../utils';
+import { formatDateSafe, formatTenderNoForFilename } from '../../utils';
 import { numberToWords } from './utils';
 import type { StaffMember } from '@/lib/schemas';
 
@@ -30,6 +30,9 @@ export async function generateBidOpeningSummary(tender: E_tender, allStaffMember
     bidOpeningText += ' Accordingly, the bids are recommended for technical and financial evaluation.';
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
+
+    const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
+    const fileName = `aBidOpening${formattedTenderNo}.pdf`;
 
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,

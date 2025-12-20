@@ -1,8 +1,7 @@
-
 // src/components/e-tender/pdf/generators/technicalSummaryGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts, TextAlignment } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
-import { formatDateSafe } from '../../utils';
+import { formatDateSafe, formatTenderNoForFilename } from '../../utils';
 import type { StaffMember } from '@/lib/schemas';
 
 export async function generateTechnicalSummary(tender: E_tender, allStaffMembers?: StaffMember[]): Promise<Uint8Array> {
@@ -31,6 +30,8 @@ export async function generateTechnicalSummary(tender: E_tender, allStaffMembers
     }).join('\n');
 
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
+    const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
+    const fileName = `bTechEvaluation${formattedTenderNo}.pdf`;
     
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,

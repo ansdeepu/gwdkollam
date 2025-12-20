@@ -1,4 +1,3 @@
-
 // src/components/e-tender/pdf/PdfReportDialogs.tsx
 "use client";
 
@@ -116,7 +115,9 @@ const CorrigendumReportButton = ({ corrigendum, index }: { corrigendum: Corrigen
             }
 
             const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
-            const fileName = `${fileNamePrefix}_${index + 1}${formattedTenderNo}.pdf`;
+            const corrigendumIndex = corrigendum.corrigendumType === 'Retender' ? '' : `${index + 1}`;
+            const fileName = `${fileNamePrefix}${corrigendumIndex}${formattedTenderNo}.pdf`;
+
             download(pdfBytes, fileName, 'application/pdf');
             toast({ title: "PDF Generated", description: "Corrigendum report has been downloaded." });
 
@@ -256,13 +257,13 @@ export default function PdfReportDialogs() {
                             />
                             <ReportButton
                                 label="Technical Summary"
-                                onClick={() => handleGeneratePdf(generateTechnicalSummary, `cTechEvaluation${formattedTenderNo}.pdf`, 'Your Technical Summary has been downloaded.')}
+                                onClick={() => handleGeneratePdf(generateTechnicalSummary, `bTechEvaluation${formattedTenderNo}.pdf`, 'Your Technical Summary has been downloaded.')}
                                 disabled={!hasOpeningDetails || !hasBidders}
                                 tooltipContent={!hasOpeningDetails ? "Add Tender Opening Details first." : "Add at least one bidder first."}
                             />
                             <ReportButton
                                 label="Financial Summary"
-                                onClick={() => handleGeneratePdf(generateFinancialSummary, `bFinEvaluation${formattedTenderNo}.pdf`, 'Your Financial Summary has been downloaded.')}
+                                onClick={() => handleGeneratePdf(generateFinancialSummary, `cFinEvaluation${formattedTenderNo}.pdf`, 'Your Financial Summary has been downloaded.')}
                                 disabled={!hasOpeningDetails || !hasBidders}
                                 tooltipContent={!hasOpeningDetails ? "Add Tender Opening Details first." : "Add at least one bidder first."}
                             />

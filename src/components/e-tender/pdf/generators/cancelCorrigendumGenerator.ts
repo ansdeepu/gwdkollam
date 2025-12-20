@@ -1,4 +1,3 @@
-
 // src/components/e-tender/pdf/generators/cancelCorrigendumGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts, TextAlignment } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';

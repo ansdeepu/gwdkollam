@@ -3,14 +3,15 @@
 
 import React, { useEffect } from 'react';
 import { useTenderData } from '@/components/e-tender/TenderDataContext';
-import { formatDateSafe } from '@/components/e-tender/utils';
+import { formatDateSafe, formatTenderNoForFilename } from '@/components/e-tender/utils';
 
 export default function TenderPrintPage() {
     const { tender } = useTenderData();
 
     useEffect(() => {
         if (tender) {
-            document.title = `NIT_${tender.eTenderNo?.replace(/\//g, '_') || 'Notice'}`;
+            const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
+            document.title = `aNIT${formattedTenderNo}`;
         }
     }, [tender]);
 
