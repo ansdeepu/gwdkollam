@@ -19,11 +19,9 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const form = pdfDoc.getForm();
     const page = pdfDoc.getPages()[0];
     
-    // A simple way to check if this is for a retender is if the dates passed in `tender` (which may be from an override) don't match the original tender's main dates.
     const isRetender = tender.retenders && tender.retenders.some(
         r => r.lastDateOfReceipt === tender.dateTimeOfReceipt && r.dateOfOpeningTender === tender.dateTimeOfOpening
     );
-
 
     const tenderFee = tender.tenderFormFee || 0;
     const gst = tenderFee * 0.18;
