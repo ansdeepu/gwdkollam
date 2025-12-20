@@ -55,7 +55,7 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
                 const isBold = boldFields.includes(fieldName);
                 
                 if (fieldName === 'name_of_work') {
-                    textField.setFontSize(11); // Set a larger font size
+                    textField.setFontSize(14); // Set a larger font size
                 }
                 
                 textField.setText(String(fieldMappings[fieldName] || ''));
