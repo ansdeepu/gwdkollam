@@ -79,6 +79,8 @@ export async function generateFinancialSummary(tender: E_tender, allStaffMembers
         }
     });
 
+    form.flatten();
+
     const attachedFilesText = getAttachedFilesString(tender);
     if (attachedFilesText) {
         page.drawText(attachedFilesText, {
@@ -89,8 +91,6 @@ export async function generateFinancialSummary(tender: E_tender, allStaffMembers
             color: rgb(0.3, 0.3, 0.3),
         });
     }
-
-    form.flatten();
     
     return await pdfDoc.save();
 }

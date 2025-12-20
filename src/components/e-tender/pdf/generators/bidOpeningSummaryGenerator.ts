@@ -66,6 +66,8 @@ export async function generateBidOpeningSummary(tender: E_tender, allStaffMember
         }
     });
 
+    form.flatten();
+
     const attachedFilesText = getAttachedFilesString(tender);
     if (attachedFilesText) {
         page.drawText(attachedFilesText, {
@@ -76,8 +78,6 @@ export async function generateBidOpeningSummary(tender: E_tender, allStaffMember
             color: rgb(0.3, 0.3, 0.3),
         });
     }
-
-    form.flatten();
     
     return await pdfDoc.save();
 }

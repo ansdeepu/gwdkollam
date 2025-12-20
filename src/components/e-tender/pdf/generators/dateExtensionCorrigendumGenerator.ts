@@ -70,6 +70,8 @@ export async function generateDateExtensionCorrigendum(
         }
     }
     
+    form.flatten();
+
     const attachedFilesText = getAttachedFilesString(tender);
     if (attachedFilesText) {
         page.drawText(attachedFilesText, {
@@ -80,8 +82,6 @@ export async function generateDateExtensionCorrigendum(
             color: rgb(0.3, 0.3, 0.3),
         });
     }
-
-    form.flatten();
 
     return await pdfDoc.save();
 }

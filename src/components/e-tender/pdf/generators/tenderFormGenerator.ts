@@ -77,6 +77,8 @@ export async function generateTenderForm(tender: E_tender, allStaffMembers?: Sta
         }
     });
     
+    form.flatten();
+
     const attachedFilesText = getAttachedFilesString(tender);
     if (attachedFilesText) {
         pdfDoc.getPages().forEach(page => {
@@ -89,8 +91,6 @@ export async function generateTenderForm(tender: E_tender, allStaffMembers?: Sta
             });
         });
     }
-
-    form.flatten();
 
     return await pdfDoc.save();
 }

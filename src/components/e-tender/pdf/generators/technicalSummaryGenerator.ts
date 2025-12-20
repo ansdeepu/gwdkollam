@@ -67,6 +67,8 @@ export async function generateTechnicalSummary(tender: E_tender, allStaffMembers
         }
     });
 
+    form.flatten();
+    
     const attachedFilesText = getAttachedFilesString(tender);
     if (attachedFilesText) {
         page.drawText(attachedFilesText, {
@@ -78,7 +80,5 @@ export async function generateTechnicalSummary(tender: E_tender, allStaffMembers
         });
     }
 
-    form.flatten();
-    
     return await pdfDoc.save();
 }
