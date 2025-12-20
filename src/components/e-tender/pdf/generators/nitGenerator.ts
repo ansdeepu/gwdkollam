@@ -44,6 +44,9 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         'bid_submission_fee': displayTenderFee,
         'location': tender.location,
         'period_of_completion': tender.periodOfCompletion,
+        'file_no_2': tender.fileNo2 ? `GKT/${tender.fileNo2}` : '',
+        'file_no_3': tender.fileNo3 ? `GKT/${tender.fileNo3}` : '',
+        'file_no_4': tender.fileNo4 ? `GKT/${tender.fileNo4}` : '',
     };
     
     const allFields = form.getFields();
@@ -69,16 +72,5 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
 
     form.flatten();
     
-    const attachedFilesText = getAttachedFilesString(tender);
-    if (attachedFilesText) {
-        page.drawText(attachedFilesText, {
-            x: 56.7, // approx 2cm margin
-            y: 56.7, // approx 2cm margin
-            font: timesRomanFont,
-            size: 10,
-            color: rgb(0.3, 0.3, 0.3),
-        });
-    }
-
     return await pdfDoc.save();
 }
