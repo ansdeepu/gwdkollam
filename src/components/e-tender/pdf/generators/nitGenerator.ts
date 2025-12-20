@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/generators/nitGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts, rgb } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
@@ -25,7 +26,7 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
 
 
     const tenderFee = tender.tenderFormFee || 0;
-    const gst = fee * 0.18;
+    const gst = tenderFee * 0.18;
     const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
