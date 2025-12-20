@@ -43,9 +43,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         'bid_submission_fee': displayTenderFee,
         'location': tender.location,
         'period_of_completion': tender.periodOfCompletion,
-        'file_no_2': tender.fileNo2 ? `GKT/${tender.fileNo2}` : '',
-        'file_no_3': tender.fileNo3 ? `GKT/${tender.fileNo3}` : '',
-        'file_no_4': tender.fileNo4 ? `GKT/${tender.fileNo4}` : '',
     };
     
     const allFields = form.getFields();
@@ -68,6 +65,26 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             }
         }
     });
+
+    // Manually draw the additional file numbers as there are no form fields for them.
+    const additionalFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
+    if (additionalFileNos.length > 0) {
+        const fileNoField = form.getTextField('file_no_header');
+        const widgets = fileNoField.acroField.getWidgets();
+        if (widgets.length > 0) {
+            const { x, y, width, height } = widgets[0].getRectangle();
+            let currentY = y - 12; // Start drawing below the first file number
+            additionalFileNos.forEach(fn => {
+                page.drawText(`GKT/${fn}`, {
+                    x: x,
+                    y: currentY,
+                    font: timesRomanBoldFont,
+                    size: 10,
+                });
+                currentY -= 12; // Move down for the next line
+            });
+        }
+    }
 
     form.flatten();
     
