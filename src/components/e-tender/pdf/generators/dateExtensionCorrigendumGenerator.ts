@@ -1,8 +1,9 @@
 // src/components/e-tender/pdf/generators/dateExtensionCorrigendumGenerator.ts
-import { PDFDocument, StandardFonts, TextAlignment } from "pdf-lib";
+import { PDFDocument, StandardFonts, TextAlignment, rgb } from "pdf-lib";
 import type { E_tender } from "@/hooks/useE_tenders";
 import type { Corrigendum, StaffMember } from "@/lib/schemas";
 import { formatDateSafe } from "../../utils";
+import { getAttachedFilesString } from "./utils";
 
 export async function generateDateExtensionCorrigendum(
     tender: E_tender,
@@ -24,6 +25,9 @@ export async function generateDateExtensionCorrigendum(
     const form = pdfDoc.getForm();
     const font = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     const boldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+    const page = pdfDoc.getPages()[0];
+    const { width, height } = page.getSize();
+
 
     // Format dates
     const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, true, false);
@@ -67,6 +71,18 @@ export async function generateDateExtensionCorrigendum(
     }
 
     form.flatten();
+    
+    // Add Attached Files line
+    const attachedFilesText = getAttachedFilesString(tender);
+    if (attachedFilesText) {
+        page.drawText(attachedFilesText, {
+            x: 56.7, // approx 2cm margin
+            y: 56.7, // approx 2cm margin
+            font: font,
+            size: 10,
+            color: rgb(0.3, 0.3, 0.3),
+        });
+    }
 
     return await pdfDoc.save();
 }

@@ -1,8 +1,9 @@
 // src/components/e-tender/pdf/generators/financialSummaryGenerator.ts
-import { PDFDocument, PDFTextField, StandardFonts } from 'pdf-lib';
+import { PDFDocument, PDFTextField, StandardFonts, rgb } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe, formatTenderNoForFilename } from '../../utils';
 import type { StaffMember } from '@/lib/schemas';
+import { getAttachedFilesString } from './utils';
 
 export async function generateFinancialSummary(tender: E_tender, allStaffMembers?: StaffMember[]): Promise<Uint8Array> {
     const templatePath = '/Financial-Summary.pdf';
@@ -15,6 +16,8 @@ export async function generateFinancialSummary(tender: E_tender, allStaffMembers
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
+    const page = pdfDoc.getPages()[0];
+    const { width, height } = page.getSize();
 
     const bidders = [...(tender.bidders || [])].filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0).sort((a, b) => a.quotedAmount! - b.quotedAmount!);
     const l1Bidder = bidders[0];
@@ -77,5 +80,18 @@ export async function generateFinancialSummary(tender: E_tender, allStaffMembers
     });
 
     form.flatten();
+    
+    // Add Attached Files line
+    const attachedFilesText = getAttachedFilesString(tender);
+    if (attachedFilesText) {
+        page.drawText(attachedFilesText, {
+            x: 56.7, // approx 2cm margin
+            y: 56.7, // approx 2cm margin
+            font: timesRomanFont,
+            size: 10,
+            color: rgb(0.3, 0.3, 0.3),
+        });
+    }
+    
     return await pdfDoc.save();
 }

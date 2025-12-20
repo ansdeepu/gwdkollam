@@ -1,8 +1,9 @@
 // src/components/e-tender/pdf/generators/retenderCorrigendumGenerator.ts
-import { PDFDocument, PDFTextField, StandardFonts, TextAlignment } from 'pdf-lib';
+import { PDFDocument, PDFTextField, StandardFonts, TextAlignment, rgb } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe } from '../../utils';
 import type { Corrigendum, StaffMember } from '@/lib/schemas';
+import { getAttachedFilesString } from './utils';
 
 export async function generateRetenderCorrigendum(tender: E_tender, corrigendum: Corrigendum, allStaffMembers?: StaffMember[]): Promise<Uint8Array> {
     const templatePath = '/Corrigendum-Retender.pdf';
@@ -15,6 +16,8 @@ export async function generateRetenderCorrigendum(tender: E_tender, corrigendum:
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
+    const page = pdfDoc.getPages()[0];
+    const { width, height } = page.getSize();
 
     const lastDate = formatDateSafe(tender.dateTimeOfReceipt, true, true, false);
     const reasonText = corrigendum.reason || `no bids were received`;
@@ -56,5 +59,18 @@ export async function generateRetenderCorrigendum(tender: E_tender, corrigendum:
     });
 
     form.flatten();
+    
+    // Add Attached Files line
+    const attachedFilesText = getAttachedFilesString(tender);
+    if (attachedFilesText) {
+        page.drawText(attachedFilesText, {
+            x: 56.7, // approx 2cm margin
+            y: 56.7, // approx 2cm margin
+            font: timesRomanFont,
+            size: 10,
+            color: rgb(0.3, 0.3, 0.3),
+        });
+    }
+
     return await pdfDoc.save();
 }

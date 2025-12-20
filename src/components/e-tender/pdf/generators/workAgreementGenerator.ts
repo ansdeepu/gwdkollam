@@ -4,7 +4,7 @@ import type { E_tender } from '@/hooks/useE_tenders';
 import { format, isValid } from 'date-fns';
 import { formatTenderNoForFilename } from '../../utils';
 import type { StaffMember } from '@/lib/schemas';
-import { numberToWords } from './utils';
+import { numberToWords, getAttachedFilesString } from './utils';
 
 const cm = (cmValue: number) => cmValue * 28.3465;
 
@@ -118,6 +118,18 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
       lineHeight: paragraphLineHeight,
       color: rgb(0, 0, 0),
     });
+
+    // 4. Add Attached Files line
+    const attachedFilesText = getAttachedFilesString(tender);
+    if (attachedFilesText) {
+        page.drawText(attachedFilesText, {
+            x: leftMargin,
+            y: cm(2.5), // Position near the bottom
+            font: timesRomanFont,
+            size: 10,
+            color: rgb(0.3, 0.3, 0.3),
+        });
+    }
 
     return await pdfDoc.save();
 }

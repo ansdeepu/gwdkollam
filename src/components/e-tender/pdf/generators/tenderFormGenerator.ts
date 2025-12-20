@@ -1,8 +1,9 @@
 // src/components/e-tender/pdf/generators/tenderFormGenerator.ts
-import { PDFDocument, PDFTextField, StandardFonts } from 'pdf-lib';
+import { PDFDocument, PDFTextField, StandardFonts, rgb } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe, formatTenderNoForFilename } from '../../utils';
 import type { StaffMember } from '@/lib/schemas';
+import { getAttachedFilesString } from './utils';
 
 export async function generateTenderForm(tender: E_tender, allStaffMembers?: StaffMember[]): Promise<Uint8Array> {
     const templatePath = '/Tender-Form.pdf';
@@ -77,5 +78,20 @@ export async function generateTenderForm(tender: E_tender, allStaffMembers?: Sta
     });
     
     form.flatten();
+    
+    // Add Attached Files line to each page
+    const attachedFilesText = getAttachedFilesString(tender);
+    if (attachedFilesText) {
+        pdfDoc.getPages().forEach(page => {
+            page.drawText(attachedFilesText, {
+                x: 56.7, // approx 2cm margin
+                y: 56.7, // approx 2cm margin
+                font: timesRomanFont,
+                size: 10,
+                color: rgb(0.3, 0.3, 0.3),
+            });
+        });
+    }
+
     return await pdfDoc.save();
 }
