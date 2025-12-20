@@ -66,9 +66,6 @@ export async function generateBidOpeningSummary(tender: E_tender, allStaffMember
         }
     });
 
-    form.flatten();
-    
-    // Add Attached Files line
     const attachedFilesText = getAttachedFilesString(tender);
     if (attachedFilesText) {
         page.drawText(attachedFilesText, {
@@ -80,5 +77,7 @@ export async function generateBidOpeningSummary(tender: E_tender, allStaffMember
         });
     }
 
+    form.flatten();
+    
     return await pdfDoc.save();
 }

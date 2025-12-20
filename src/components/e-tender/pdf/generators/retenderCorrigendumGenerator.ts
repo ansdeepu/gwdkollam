@@ -58,9 +58,6 @@ export async function generateRetenderCorrigendum(tender: E_tender, corrigendum:
         }
     });
 
-    form.flatten();
-    
-    // Add Attached Files line
     const attachedFilesText = getAttachedFilesString(tender);
     if (attachedFilesText) {
         page.drawText(attachedFilesText, {
@@ -71,6 +68,8 @@ export async function generateRetenderCorrigendum(tender: E_tender, corrigendum:
             color: rgb(0.3, 0.3, 0.3),
         });
     }
+
+    form.flatten();
 
     return await pdfDoc.save();
 }

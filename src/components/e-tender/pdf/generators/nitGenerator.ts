@@ -17,7 +17,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
     const page = pdfDoc.getPages()[0];
-    const { width, height } = page.getSize();
     
     // A simple way to check if this is for a retender is if the dates passed in `tender` (which may be from an override) don't match the original tender's main dates.
     const isRetender = tender.retenders && tender.retenders.some(
@@ -68,9 +67,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         }
     });
 
-    form.flatten();
-    
-    // Add Attached Files line
     const attachedFilesText = getAttachedFilesString(tender);
     if (attachedFilesText) {
         page.drawText(attachedFilesText, {
@@ -81,6 +77,8 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             color: rgb(0.3, 0.3, 0.3),
         });
     }
+    
+    form.flatten();
 
     return await pdfDoc.save();
 }
