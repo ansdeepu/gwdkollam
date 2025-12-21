@@ -26,10 +26,17 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const gst = tenderFormFeeValue * 0.18;
     const displayTenderFormFee = tender.tenderFormFee ? `Rs. ${tenderFormFeeValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
     
-    const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
+    const boldFields = ['e_tender_no_header', 'tender_date_header'];
+
+    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean).map(fn => `GKT/${fn}`);
+    let fileNoHeaderText = `File No. GKT/${tender.fileNo || ''}`;
+    if (relatedFileNos.length > 0) {
+        fileNoHeaderText += `\nRelated File Numbers:\n${relatedFileNos.join('\n')}`;
+    }
+
 
     const fieldMappings: Record<string, any> = {
-        'file_no_header': `GKT/${tender.fileNo || ''}`,
+        'file_no_header': fileNoHeaderText,
         'e_tender_no_header': `${tender.eTenderNo || ''}${isRetender ? ' (Re-Tender)' : ''}`,
         'tender_date_header': formatDateSafe(tender.tenderDate),
         'name_of_work': tender.nameOfWork,
@@ -50,6 +57,11 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             try {
                 const textField = form.getTextField(fieldName);
                 const isBold = boldFields.includes(fieldName);
+
+                // Enable multiline for the file_no_header field
+                if (fieldName === 'file_no_header') {
+                    textField.enableMultiline();
+                }
                 
                 if (fieldName === 'name_of_work') {
                     textField.setFontSize(10); 
@@ -62,33 +74,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             }
         }
     });
-
-    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
-    if (relatedFileNos.length > 0) {
-        let yPosition = 680; // Start Y position below the main header line
-        const xPosition = 56.7; // Left margin (approx 2cm)
-        const lineHeight = 14;
-
-        page.drawText('Related File Numbers:', {
-            x: xPosition,
-            y: yPosition,
-            font: timesRomanBoldFont,
-            size: 11,
-            color: rgb(0, 0, 0),
-        });
-        yPosition -= lineHeight;
-
-        relatedFileNos.forEach(fn => {
-            page.drawText(`GKT/${fn}`, {
-                x: xPosition,
-                y: yPosition,
-                font: timesRomanFont,
-                size: 11,
-                color: rgb(0, 0, 0),
-            });
-            yPosition -= lineHeight;
-        });
-    }
 
     form.flatten();
     
