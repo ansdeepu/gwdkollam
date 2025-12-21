@@ -3,7 +3,6 @@ import { PDFDocument, PDFTextField, StandardFonts, rgb } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe, formatTenderNoForFilename } from '../../utils';
 import type { StaffMember } from '@/lib/schemas';
-import { getAttachedFilesString } from './utils';
 
 export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMember[]): Promise<Uint8Array> {
     const templatePath = '/NIT.pdf';
@@ -28,20 +27,11 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
 
-    // New logic: Append related file numbers to the name of work
-    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
-    let nameOfWorkDisplay = tender.nameOfWork;
-    if (relatedFileNos.length > 0) {
-        const relatedFilesString = relatedFileNos.map(fn => `GKT/${fn}`).join(', ');
-        nameOfWorkDisplay += ` (Related File Numbers: ${relatedFilesString})`;
-    }
-
-
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
         'e_tender_no_header': `${tender.eTenderNo || ''}${isRetender ? ' (Re-Tender)' : ''}`,
         'tender_date_header': formatDateSafe(tender.tenderDate),
-        'name_of_work': nameOfWorkDisplay, // Use the modified name of work
+        'name_of_work': tender.nameOfWork,
         'pac': tender.estimateAmount ? `Rs. ${tender.estimateAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
         'emd': tender.emd ? `Rs. ${tender.emd.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
         'last_date_submission': formatDateSafe(tender.dateTimeOfReceipt, true, true, false),
@@ -65,15 +55,49 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
                 }
                 
                 textField.setText(String(fieldMappings[fieldName] || ''));
-                if (fieldName === 'file_no_2') {
-                    textField.enableMultiline();
-                }
                 textField.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
             } catch(e) {
                 console.warn(`Could not fill field ${fieldName}:`, e);
             }
         }
     });
+
+    // --- Manual Text Drawing for Related File Numbers ---
+    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
+    if (relatedFileNos.length > 0) {
+        try {
+            const fileNoField = form.getTextField('file_no_header');
+            const widgets = fileNoField.acroField.getWidgets();
+            if (widgets.length > 0) {
+                const rect = widgets[0].getRectangle();
+                let currentY = rect.y - 15; // Start drawing 15 units below the main file number field
+
+                const drawLine = (text: string, font: any, size: number, indent: number) => {
+                    page.drawText(text, {
+                        x: rect.x + indent,
+                        y: currentY,
+                        font: font,
+                        size: size,
+                        color: rgb(0, 0, 0),
+                    });
+                    currentY -= 12; // Move to the next line
+                };
+                
+                // Draw the heading with a small indent
+                drawLine("Related File Numbers:", timesRomanBoldFont, 10, 5);
+
+                // Draw the file numbers with a larger indent
+                relatedFileNos.forEach(fileNo => {
+                    if (fileNo) {
+                        drawLine(`GKT/${fileNo}`, timesRomanFont, 10, 10);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error("Error drawing related file numbers:", error);
+        }
+    }
+    // --- End Manual Text Drawing ---
 
     form.flatten();
     
