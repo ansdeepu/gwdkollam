@@ -70,7 +70,8 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             const widgets = fileNoField.acroField.getWidgets();
             if (widgets.length > 0) {
                 const rect = widgets[0].getRectangle();
-                let currentY = rect.y - 15; // Start drawing below the main file number field
+                const leftMargin = 72; // Approximately 2.5cm
+                let currentY = rect.y - 12; // Start drawing below the main file number field
 
                 const drawLine = (text: string, font: any, size: number, x: number) => {
                     page.drawText(text, {
@@ -80,16 +81,14 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
                         size: size,
                         color: rgb(0, 0, 0),
                     });
-                    currentY -= 12; // Move to the next line for the subsequent text
+                    currentY -= (size * 1.2); // Move to the next line
                 };
                 
-                // Draw the heading slightly indented
-                drawLine("Related File Numbers:", timesRomanBoldFont, 10, rect.x + 5);
+                drawLine("Related File Numbers:", timesRomanBoldFont, 10, leftMargin);
 
-                // Draw the file numbers with a larger indent
                 relatedFileNos.forEach(fileNo => {
                     if (fileNo) {
-                        drawLine(`GKT/${fileNo}`, timesRomanFont, 10, rect.x + 10);
+                        drawLine(`GKT/${fileNo}`, timesRomanFont, 10, leftMargin);
                     }
                 });
             }
