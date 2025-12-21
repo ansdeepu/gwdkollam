@@ -308,7 +308,7 @@ export default function TenderDetails() {
     };
     
     const watchedBasicFields = watch([
-        'eTenderNo', 'tenderDate', 'fileNo', 'nameOfWork', 'nameOfWorkMalayalam',
+        'eTenderNo', 'tenderDate', 'fileNo', 'fileNo2', 'fileNo3', 'fileNo4', 'nameOfWork', 'nameOfWorkMalayalam',
         'location', 'estimateAmount', 'tenderFormFee', 'emd', 'periodOfCompletion',
         'dateTimeOfReceipt', 'dateTimeOfOpening', 'tenderType'
     ]);
@@ -439,6 +439,9 @@ export default function TenderDetails() {
                                                     <DetailRow label="eTender No." value={watch('eTenderNo')} />
                                                     <DetailRow label="Tender Date" value={watch('tenderDate')} align="center" />
                                                     <DetailRow label="File No." value={watch('fileNo') ? `GKT/${watch('fileNo')}` : null} />
+                                                    <DetailRow label="File No. 2" value={watch('fileNo2') ? `GKT/${watch('fileNo2')}` : null} />
+                                                    <DetailRow label="File No. 3" value={watch('fileNo3') ? `GKT/${watch('fileNo3')}` : null} />
+                                                    <DetailRow label="File No. 4" value={watch('fileNo4') ? `GKT/${watch('fileNo4')}` : null} />
                                                 </div>
                                             </div>
                                              <div className="space-y-2">
