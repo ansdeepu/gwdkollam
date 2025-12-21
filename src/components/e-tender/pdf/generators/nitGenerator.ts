@@ -26,8 +26,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const gst = tenderFormFeeValue * 0.18;
     const displayTenderFormFee = tender.tenderFormFee ? `Rs. ${tenderFormFeeValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
     
-    const hasRelatedFiles = tender.fileNo2 || tender.fileNo3 || tender.fileNo4;
-
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
         'e_tender_no_header': `${tender.eTenderNo || ''}${isRetender ? ' (Re-Tender)' : ''}`,
@@ -42,6 +40,8 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         'period_of_completion': tender.periodOfCompletion,
     };
     
+    const hasRelatedFiles = tender.fileNo2 || tender.fileNo3 || tender.fileNo4;
+
     if (hasRelatedFiles) {
         fieldMappings['header_1'] = "Related File Numbers:";
         if (tender.fileNo2) fieldMappings['file_no_2'] = `GKT/${tender.fileNo2}`;
