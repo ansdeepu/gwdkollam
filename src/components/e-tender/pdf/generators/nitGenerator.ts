@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/generators/nitGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts, rgb, TextAlignment } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
