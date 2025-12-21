@@ -70,26 +70,26 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             const widgets = fileNoField.acroField.getWidgets();
             if (widgets.length > 0) {
                 const rect = widgets[0].getRectangle();
-                let currentY = rect.y - 15; // Start drawing 15 units below the main file number field
+                let currentY = rect.y - 15; // Start drawing below the main file number field
 
-                const drawLine = (text: string, font: any, size: number, indent: number) => {
+                const drawLine = (text: string, font: any, size: number, x: number) => {
                     page.drawText(text, {
-                        x: rect.x + indent,
+                        x: x,
                         y: currentY,
                         font: font,
                         size: size,
                         color: rgb(0, 0, 0),
                     });
-                    currentY -= 12; // Move to the next line
+                    currentY -= 12; // Move to the next line for the subsequent text
                 };
                 
-                // Draw the heading with a small indent
-                drawLine("Related File Numbers:", timesRomanBoldFont, 10, 5);
+                // Draw the heading slightly indented
+                drawLine("Related File Numbers:", timesRomanBoldFont, 10, rect.x + 5);
 
                 // Draw the file numbers with a larger indent
                 relatedFileNos.forEach(fileNo => {
                     if (fileNo) {
-                        drawLine(`GKT/${fileNo}`, timesRomanFont, 10, 10);
+                        drawLine(`GKT/${fileNo}`, timesRomanFont, 10, rect.x + 10);
                     }
                 });
             }
