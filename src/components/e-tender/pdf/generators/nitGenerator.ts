@@ -42,22 +42,8 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         'period_of_completion': tender.periodOfCompletion,
     };
     
-    const additionalFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
-
-    if (additionalFileNos.length > 0) {
-        fieldMappings['related_files_header'] = "Related File Numbers:";
-        fieldMappings['file_no_2'] = `GKT/${additionalFileNos[0]}`;
-        if (additionalFileNos.length > 1) {
-            fieldMappings['file_no_3'] = `GKT/${additionalFileNos[1]}`;
-        }
-        if (additionalFileNos.length > 2) {
-            fieldMappings['file_no_4'] = `GKT/${additionalFileNos[2]}`;
-        }
-    }
-
-
+    // Fill the fields that exist in the template
     const allFields = form.getFields();
-
     allFields.forEach(field => {
         const fieldName = field.getName();
         if (fieldName in fieldMappings) {
@@ -76,6 +62,37 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             }
         }
     });
+
+    // Manually draw additional file numbers below the main file number
+    const additionalFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
+    if (additionalFileNos.length > 0) {
+        const fileNoHeaderField = form.getTextField('file_no_header');
+        const widgets = fileNoHeaderField.acroField.getWidgets();
+        if (widgets.length > 0) {
+            const rect = widgets[0].getRectangle();
+            let currentY = rect.y - 12; // Start drawing below the main file number field
+
+            page.drawText('Related File Numbers:', {
+                x: rect.x,
+                y: currentY,
+                font: timesRomanBoldFont,
+                size: 10,
+                color: rgb(0, 0, 0),
+            });
+            currentY -= 12; // Move down for the next line
+
+            additionalFileNos.forEach(fileNo => {
+                page.drawText(`GKT/${fileNo}`, {
+                    x: rect.x,
+                    y: currentY,
+                    font: timesRomanFont,
+                    size: 10,
+                    color: rgb(0, 0, 0),
+                });
+                currentY -= 12; // Move down for the next line
+            });
+        }
+    }
 
     form.flatten();
     
