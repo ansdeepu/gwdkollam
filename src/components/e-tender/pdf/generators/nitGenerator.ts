@@ -1,4 +1,3 @@
-
 // src/components/e-tender/pdf/generators/nitGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts, rgb } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
@@ -63,6 +62,29 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             }
         }
     });
+
+    const fileNoField = form.getTextField('file_no_header');
+    const widgets = fileNoField.acroField.getWidgets();
+    if (widgets.length > 0) {
+        const firstWidget = widgets[0];
+        const { x, y, width, height } = firstWidget.getRectangle();
+
+        const additionalFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
+        let currentY = y - 12; // Start drawing below the first file number
+
+        additionalFileNos.forEach(fileNo => {
+            if (fileNo) {
+                page.drawText(`GKT/${fileNo}`, {
+                    x: x,
+                    y: currentY,
+                    font: timesRomanBoldFont,
+                    size: 11,
+                    color: rgb(0, 0, 0),
+                });
+                currentY -= 12; // Move down for the next line
+            }
+        });
+    }
 
     const attachedFilesText = getAttachedFilesString(tender);
     if (attachedFilesText) {
