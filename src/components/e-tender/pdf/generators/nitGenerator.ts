@@ -26,16 +26,18 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const gst = tenderFormFeeValue * 0.18;
     const displayTenderFormFee = tender.tenderFormFee ? `Rs. ${tenderFormFeeValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
     
-    const boldFields = ['file_no_header'];
-
     const hasRelatedFiles = tender.fileNo2 || tender.fileNo3 || tender.fileNo4;
+    
+    let fileNoHeaderText = `GKT/${tender.fileNo || ''}`;
+    if (hasRelatedFiles) {
+        fileNoHeaderText += `\nRelated File Numbers:`;
+        if (tender.fileNo2) fileNoHeaderText += `\n- GKT/${tender.fileNo2}`;
+        if (tender.fileNo3) fileNoHeaderText += `\n- GKT/${tender.fileNo3}`;
+        if (tender.fileNo4) fileNoHeaderText += `\n- GKT/${tender.fileNo4}`;
+    }
 
     const fieldMappings: Record<string, any> = {
-        'file_no_header': `GKT/${tender.fileNo || ''}`,
-        'header_1': hasRelatedFiles ? 'Related File Numbers:' : '',
-        'file_no_2': tender.fileNo2 ? `GKT/${tender.fileNo2}` : '',
-        'file_no_3': tender.fileNo3 ? `GKT/${tender.fileNo3}` : '',
-        'file_no_4': tender.fileNo4 ? `GKT/${tender.fileNo4}` : '',
+        'file_no_header': fileNoHeaderText,
         'e_tender_no_header': `${tender.eTenderNo || ''}${isRetender ? ' (Re-Tender)' : ''}`,
         'tender_date_header': formatDateSafe(tender.tenderDate),
         'name_of_work': tender.nameOfWork,
@@ -52,17 +54,24 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const allFields = form.getFields();
     allFields.forEach(field => {
         const fieldName = field.getName();
-        if (fieldName in fieldMappings) {
+        if (fieldName in fieldMappings && fieldMappings[fieldName]) {
             try {
                 const textField = form.getTextField(fieldName);
-                const isBold = boldFields.includes(fieldName);
+                let font = timesRomanFont;
+                if(fieldName === 'file_no_header'){
+                    font = timesRomanBoldFont;
+                }
+                
+                textField.setText(String(fieldMappings[fieldName] || ''));
+                if(fieldName === 'file_no_header'){
+                    textField.enableMultiline();
+                }
 
                 if (fieldName === 'name_of_work') {
                     textField.setFontSize(10);
                 }
                 
-                textField.setText(String(fieldMappings[fieldName] || ''));
-                textField.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
+                textField.updateAppearances(font);
             } catch(e) {
                 console.warn(`Could not fill field ${fieldName}:`, e);
             }
