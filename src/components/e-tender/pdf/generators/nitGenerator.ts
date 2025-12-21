@@ -62,11 +62,10 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             }
         }
     });
-
-    // Manually draw the related file numbers
+    
     const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
     if (relatedFileNos.length > 0) {
-        let yPosition = 750; // Starting vertical position, adjust as needed
+        let yPosition = 750; // A fixed, safe vertical starting position
         const xPosition = 56.7; // Left margin
         const lineHeight = 14;
 
