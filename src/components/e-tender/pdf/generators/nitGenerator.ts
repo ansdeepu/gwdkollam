@@ -27,11 +27,10 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
 
-    // Consolidate related file numbers into a single multi-line string
     const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4]
         .filter(Boolean)
         .map(fn => `GKT/${fn}`);
-    
+
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
         'e_tender_no_header': `${tender.eTenderNo || ''}${isRetender ? ' (Re-Tender)' : ''}`,
@@ -44,8 +43,7 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         'bid_submission_fee': displayTenderFormFee,
         'location': tender.location,
         'period_of_completion': tender.periodOfCompletion,
-        'related_files_header': relatedFileNos.length > 0 ? "Related File Numbers:" : "",
-        'related_files': relatedFileNos.join('\n'), // Use a single field with newlines
+        'related_files': relatedFileNos.join('\n'), // Combine into a single multi-line field
     };
 
     // Fill the fields that exist in the template
