@@ -27,8 +27,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const displayTenderFormFee = tender.tenderFormFee ? `Rs. ${tenderFormFeeValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
-    
-    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean).map(fn => `GKT/${fn}`);
 
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
@@ -43,12 +41,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         'location': tender.location,
         'period_of_completion': tender.periodOfCompletion,
     };
-    
-    // Conditionally add related file numbers
-    if (relatedFileNos.length > 0) {
-        fieldMappings['related_files_header'] = "Related File Numbers";
-        fieldMappings['file_no_2'] = relatedFileNos.join('\n');
-    }
 
     // Fill the fields that exist in the template
     const allFields = form.getFields();
@@ -73,6 +65,24 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             }
         }
     });
+
+    // Manually draw additional file numbers
+    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
+    if (relatedFileNos.length > 0) {
+        const textLines = [
+            "Related File Numbers:",
+            ...relatedFileNos.map(fn => `     GKT/${fn}`)
+        ];
+
+        page.drawText(textLines.join('\n'), {
+            x: 70,  // Adjust x position as needed
+            y: 740, // Adjust y position to be below the header
+            font: timesRomanFont,
+            size: 10,
+            lineHeight: 12,
+            color: rgb(0, 0, 0),
+        });
+    }
 
     form.flatten();
     
