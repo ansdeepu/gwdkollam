@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/generators/nitGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts, rgb, TextAlignment } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
@@ -44,9 +45,15 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
 
     if (hasRelatedFiles) {
         fieldMappings['header_1'] = "Related File Numbers:";
-        if (tender.fileNo2) fieldMappings['file_no_2'] = `GKT/${tender.fileNo2}`;
-        if (tender.fileNo3) fieldMappings['file_no_3'] = `GKT/${tender.fileNo3}`;
-        if (tender.fileNo4) fieldMappings['file_no_4'] = `GKT/${tender.fileNo4}`;
+        if (tender.fileNo2) {
+            fieldMappings['file_no_2'] = `GKT/${tender.fileNo2}`;
+        }
+        if (tender.fileNo3) {
+            fieldMappings['file_no_3'] = `GKT/${tender.fileNo3}`;
+        }
+        if (tender.fileNo4) {
+            fieldMappings['file_no_4'] = `GKT/${tender.fileNo4}`;
+        }
     }
 
     // Fill the fields that exist in the template
