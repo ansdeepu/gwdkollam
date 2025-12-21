@@ -75,8 +75,8 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         ];
 
         page.drawText(textLines.join('\n'), {
-            x: 70,  // Adjust x position as needed
-            y: 740, // Adjust y position to be below the header
+            x: 70,
+            y: 740, 
             font: timesRomanFont,
             size: 10,
             lineHeight: 12,
