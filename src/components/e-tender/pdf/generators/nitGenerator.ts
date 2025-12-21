@@ -16,7 +16,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
-    const page = pdfDoc.getPages()[0];
     
     const isRetender = tender.retenders && tender.retenders.some(
         r => r.lastDateOfReceipt === tender.dateTimeOfReceipt && r.dateOfOpeningTender === tender.dateTimeOfOpening
@@ -28,7 +27,10 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
 
-    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
+    // Consolidate related file numbers into a single multi-line string
+    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4]
+        .filter(Boolean)
+        .map(fn => `GKT/${fn}`);
     
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
@@ -43,9 +45,7 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         'location': tender.location,
         'period_of_completion': tender.periodOfCompletion,
         'related_files_header': relatedFileNos.length > 0 ? "Related File Numbers:" : "",
-        'file_no_2': relatedFileNos[0] ? `GKT/${relatedFileNos[0]}` : "",
-        'file_no_3': relatedFileNos[1] ? `GKT/${relatedFileNos[1]}` : "",
-        'file_no_4': relatedFileNos[2] ? `GKT/${relatedFileNos[2]}` : "",
+        'related_files': relatedFileNos.join('\n'), // Use a single field with newlines
     };
 
     // Fill the fields that exist in the template
@@ -58,7 +58,11 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
                 const isBold = boldFields.includes(fieldName);
                 
                 if (fieldName === 'name_of_work') {
-                    textField.setFontSize(10); // Adjust font size if needed for longer text
+                    textField.setFontSize(10); 
+                }
+
+                if (fieldName === 'related_files') {
+                    textField.enableMultiline();
                 }
                 
                 textField.setText(String(fieldMappings[fieldName] || ''));
