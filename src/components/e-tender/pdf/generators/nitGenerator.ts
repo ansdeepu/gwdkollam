@@ -22,9 +22,9 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         r => r.lastDateOfReceipt === tender.dateTimeOfReceipt && r.dateOfOpeningTender === tender.dateTimeOfOpening
     );
 
-    const tenderFee = tender.tenderFormFee || 0;
-    const gst = tenderFee * 0.18;
-    const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
+    const tenderFormFeeValue = tender.tenderFormFee || 0;
+    const gst = tenderFormFeeValue * 0.18;
+    const displayTenderFormFee = tender.tenderFormFee ? `Rs. ${tenderFormFeeValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
     
@@ -37,7 +37,7 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         'emd': tender.emd ? `Rs. ${tender.emd.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
         'last_date_submission': formatDateSafe(tender.dateTimeOfReceipt, true, true, false),
         'opening_date': formatDateSafe(tender.dateTimeOfOpening, true, false, true),
-        'bid_submission_fee': displayTenderFee,
+        'bid_submission_fee': displayTenderFormFee,
         'location': tender.location,
         'period_of_completion': tender.periodOfCompletion,
     };
@@ -70,20 +70,22 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         const widgets = fileNoHeaderField.acroField.getWidgets();
         if (widgets.length > 0) {
             const rect = widgets[0].getRectangle();
-            let currentY = rect.y - 12; // Start drawing below the main file number field
+            let currentY = rect.y - 14; // Start drawing below the main file number field
+            const indentX = rect.x + 15; // Indent the text to the right
 
+            // Draw the label first
             page.drawText('Related File Numbers:', {
-                x: rect.x,
+                x: indentX,
                 y: currentY,
                 font: timesRomanBoldFont,
                 size: 10,
                 color: rgb(0, 0, 0),
             });
-            currentY -= 12; // Move down for the next line
+            currentY -= 12; // Move down for the first file number
 
             additionalFileNos.forEach(fileNo => {
                 page.drawText(`GKT/${fileNo}`, {
-                    x: rect.x,
+                    x: indentX, // Use the same indented x-coordinate
                     y: currentY,
                     font: timesRomanFont,
                     size: 10,
