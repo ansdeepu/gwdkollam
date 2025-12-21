@@ -3,6 +3,7 @@ import { PDFDocument, PDFTextField, StandardFonts, rgb } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe, formatTenderNoForFilename } from '../../utils';
 import type { StaffMember } from '@/lib/schemas';
+import { getAttachedFilesString } from './utils';
 
 export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMember[]): Promise<Uint8Array> {
     const templatePath = '/NIT.pdf';
@@ -27,6 +28,8 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
 
+    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
+    
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
         'e_tender_no_header': `${tender.eTenderNo || ''}${isRetender ? ' (Re-Tender)' : ''}`,
@@ -39,6 +42,10 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         'bid_submission_fee': displayTenderFormFee,
         'location': tender.location,
         'period_of_completion': tender.periodOfCompletion,
+        'related_files_header': relatedFileNos.length > 0 ? "Related File Numbers:" : "",
+        'file_no_2': relatedFileNos[0] ? `GKT/${relatedFileNos[0]}` : "",
+        'file_no_3': relatedFileNos[1] ? `GKT/${relatedFileNos[1]}` : "",
+        'file_no_4': relatedFileNos[2] ? `GKT/${relatedFileNos[2]}` : "",
     };
 
     // Fill the fields that exist in the template
@@ -61,42 +68,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             }
         }
     });
-
-    // --- Manual Text Drawing for Related File Numbers ---
-    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
-    if (relatedFileNos.length > 0) {
-        try {
-            const fileNoField = form.getTextField('file_no_header');
-            const widgets = fileNoField.acroField.getWidgets();
-            if (widgets.length > 0) {
-                const rect = widgets[0].getRectangle();
-                const leftMargin = 72; // Approximately 2.5cm
-                let currentY = rect.y - 12; // Start drawing below the main file number field
-
-                const drawLine = (text: string, font: any, size: number, x: number) => {
-                    page.drawText(text, {
-                        x: x,
-                        y: currentY,
-                        font: font,
-                        size: size,
-                        color: rgb(0, 0, 0),
-                    });
-                    currentY -= (size * 1.2); // Move to the next line
-                };
-                
-                drawLine("Related File Numbers:", timesRomanBoldFont, 10, leftMargin);
-
-                relatedFileNos.forEach(fileNo => {
-                    if (fileNo) {
-                        drawLine(`GKT/${fileNo}`, timesRomanFont, 10, leftMargin);
-                    }
-                });
-            }
-        } catch (error) {
-            console.error("Error drawing related file numbers:", error);
-        }
-    }
-    // --- End Manual Text Drawing ---
 
     form.flatten();
     
