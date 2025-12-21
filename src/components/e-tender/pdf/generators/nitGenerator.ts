@@ -26,7 +26,7 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const gst = tenderFormFeeValue * 0.18;
     const displayTenderFormFee = tender.tenderFormFee ? `Rs. ${tenderFormFeeValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
     
-    const boldFields = ['e_tender_no_header', 'tender_date_header', 'file_no_header'];
+    const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
 
     const hasRelatedFiles = tender.fileNo2 || tender.fileNo3 || tender.fileNo4;
 
