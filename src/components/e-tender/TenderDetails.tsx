@@ -440,7 +440,7 @@ export default function TenderDetails() {
                                                     <DetailRow label="Tender Date" value={watch('tenderDate')} align="center" />
                                                     <DetailRow label="File No. 1" value={watch('fileNo') ? `GKT/${watch('fileNo')}` : null} />
                                                     <DetailRow label="File No. 2" value={watch('fileNo2') ? `GKT/${watch('fileNo2')}` : null} />
-                                                    <DetailRow label="File No. 3" value={watch('fileNo3') ? `GKT/${watch('fileNo3')}` : null} />
+                                                    <DetailRow label="File No. 3" value={watch('fileNo3') ? `GKT/${watch('fileNo3')}` : null} align="center" />
                                                     <DetailRow label="File No. 4" value={watch('fileNo4') ? `GKT/${watch('fileNo4')}` : null} />
                                                 </div>
                                             </div>
