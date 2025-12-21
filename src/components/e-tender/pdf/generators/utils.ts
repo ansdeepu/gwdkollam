@@ -1,4 +1,7 @@
+
 // src/components/e-tender/pdf/generators/utils.ts
+
+import type { E_tender } from '@/hooks/useE_tenders';
 
 export const numberToWords = (num: number): string => {
     if (num < 0) return 'Negative';
@@ -32,11 +35,11 @@ export const numberToWords = (num: number): string => {
     return word.trim();
 };
 
-export const getAttachedFilesString = (tender: any): string => {
+export const getAttachedFilesString = (tender: E_tender): string => {
     const fileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
     if (fileNos.length === 0) {
         return '';
     }
     const formattedFileNos = fileNos.map(fn => `GKT/${fn}`);
-    return `Attached Files - ${formattedFileNos.join(', ')}`;
+    return `Related File Numbers (Included Works): ${formattedFileNos.join(', ')}`;
 };

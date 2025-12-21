@@ -28,11 +28,7 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const displayTenderFee = tender.tenderFormFee ? `Rs. ${tenderFee.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
-    const formattedTenderNo = formatTenderNoForFilename(tender.eTenderNo);
-    const fileName = `aNIT${formattedTenderNo}.pdf`;
     
-    const hasAdditionalFiles = tender.fileNo2 || tender.fileNo3 || tender.fileNo4;
-
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
         'e_tender_no_header': `${tender.eTenderNo || ''}${isRetender ? ' (Re-Tender)' : ''}`,
@@ -45,10 +41,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         'bid_submission_fee': displayTenderFee,
         'location': tender.location,
         'period_of_completion': tender.periodOfCompletion,
-        'related_files_header': hasAdditionalFiles ? "Related File Numbers" : "",
-        'file_no_2': tender.fileNo2 ? `GKT/${tender.fileNo2}` : "",
-        'file_no_3': tender.fileNo3 ? `GKT/${tender.fileNo3}` : "",
-        'file_no_4': tender.fileNo4 ? `GKT/${tender.fileNo4}` : "",
     };
     
     const allFields = form.getFields();
@@ -61,7 +53,7 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
                 const isBold = boldFields.includes(fieldName);
                 
                 if (fieldName === 'name_of_work') {
-                    textField.setFontSize(14); // Set a larger font size
+                    textField.setFontSize(14);
                 }
                 
                 textField.setText(String(fieldMappings[fieldName] || ''));
@@ -75,11 +67,11 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const attachedFilesText = getAttachedFilesString(tender);
     if (attachedFilesText) {
         page.drawText(attachedFilesText, {
-            x: 56.7, // approx 2cm margin from left
-            y: 56.7, // approx 2cm margin from bottom
-            font: timesRomanFont,
+            x: 56.7,
+            y: 740, // Positioned below the main header
+            font: timesRomanBoldFont,
             size: 10,
-            color: rgb(0.3, 0.3, 0.3),
+            color: rgb(0, 0, 0),
         });
     }
     
