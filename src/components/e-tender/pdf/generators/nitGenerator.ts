@@ -65,7 +65,7 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     
     const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
     if (relatedFileNos.length > 0) {
-        let yPosition = 750; // A fixed, safe vertical starting position
+        let yPosition = 710; // Lowered Y position to avoid header overlap
         const xPosition = 56.7; // Left margin
         const lineHeight = 14;
 
