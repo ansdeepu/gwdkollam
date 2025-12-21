@@ -71,6 +71,17 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             }
         }
     });
+
+    const attachedFilesText = getAttachedFilesString(tender);
+    if (attachedFilesText) {
+        page.drawText(attachedFilesText, {
+            x: 56.7, // approx 2cm margin from left
+            y: 56.7, // approx 2cm margin from bottom
+            font: timesRomanFont,
+            size: 10,
+            color: rgb(0.3, 0.3, 0.3),
+        });
+    }
     
     form.flatten();
     
