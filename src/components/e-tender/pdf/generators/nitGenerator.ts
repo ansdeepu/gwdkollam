@@ -28,18 +28,18 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     
     const boldFields = ['e_tender_no_header', 'tender_date_header'];
 
-    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean).map(fn => `GKT/${fn}`);
+    // Collect related file numbers
+    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4]
+      .filter(Boolean) // Remove any null/undefined entries
+      .map(fn => `GKT/${fn}`); // Format them
     
-    // Corrected logic: Do not add "File No." prefix. The template already has it.
-    let fileNoHeaderText = `GKT/${tender.fileNo || ''}`;
-    if (relatedFileNos.length > 0) {
-        // Add the related files under a specific heading for clarity
-        fileNoHeaderText += `\n\nRelated File Numbers:\n${relatedFileNos.join('\n')}`;
-    }
+    const mainFileNoText = `GKT/${tender.fileNo || ''}`;
+    const relatedFilesText = relatedFileNos.join('\n');
 
 
     const fieldMappings: Record<string, any> = {
-        'file_no_header': fileNoHeaderText,
+        'file_no_header': mainFileNoText,
+        'related_files': relatedFilesText, // Use the dedicated field for related files
         'e_tender_no_header': `${tender.eTenderNo || ''}${isRetender ? ' (Re-Tender)' : ''}`,
         'tender_date_header': formatDateSafe(tender.tenderDate),
         'name_of_work': tender.nameOfWork,
@@ -61,8 +61,8 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
                 const textField = form.getTextField(fieldName);
                 const isBold = boldFields.includes(fieldName);
 
-                // Enable multiline for the file_no_header field
-                if (fieldName === 'file_no_header') {
+                // Enable multiline for the fields that will hold multiple lines
+                if (fieldName === 'file_no_header' || fieldName === 'related_files') {
                     textField.enableMultiline();
                 }
                 
