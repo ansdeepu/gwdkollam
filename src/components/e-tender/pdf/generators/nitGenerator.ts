@@ -29,9 +29,12 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const boldFields = ['e_tender_no_header', 'tender_date_header'];
 
     const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean).map(fn => `GKT/${fn}`);
-    let fileNoHeaderText = `File No. GKT/${tender.fileNo || ''}`;
+    
+    // Corrected logic: Do not add "File No." prefix. The template already has it.
+    let fileNoHeaderText = `GKT/${tender.fileNo || ''}`;
     if (relatedFileNos.length > 0) {
-        fileNoHeaderText += `\nRelated File Numbers:\n${relatedFileNos.join('\n')}`;
+        // Add the related files under a specific heading for clarity
+        fileNoHeaderText += `\n\nRelated File Numbers:\n${relatedFileNos.join('\n')}`;
     }
 
 
