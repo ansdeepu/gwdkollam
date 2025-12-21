@@ -28,6 +28,8 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
     
+    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean).map(fn => `GKT/${fn}`);
+
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
         'e_tender_no_header': `${tender.eTenderNo || ''}${isRetender ? ' (Re-Tender)' : ''}`,
@@ -43,12 +45,9 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     };
     
     // Conditionally add related file numbers
-    const hasAdditionalFiles = tender.fileNo2 || tender.fileNo3 || tender.fileNo4;
-    if (hasAdditionalFiles) {
-        fieldMappings['related_files_header'] = 'Related File Numbers';
-        if (tender.fileNo2) fieldMappings['file_no_2'] = `GKT/${tender.fileNo2}`;
-        if (tender.fileNo3) fieldMappings['file_no_3'] = `GKT/${tender.fileNo3}`;
-        if (tender.fileNo4) fieldMappings['file_no_4'] = `GKT/${tender.fileNo4}`;
+    if (relatedFileNos.length > 0) {
+        fieldMappings['related_files_header'] = "Related File Numbers";
+        fieldMappings['file_no_2'] = relatedFileNos.join('\n');
     }
 
     // Fill the fields that exist in the template
@@ -65,6 +64,9 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
                 }
                 
                 textField.setText(String(fieldMappings[fieldName] || ''));
+                if (fieldName === 'file_no_2') {
+                    textField.enableMultiline();
+                }
                 textField.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
             } catch(e) {
                 console.warn(`Could not fill field ${fieldName}:`, e);
