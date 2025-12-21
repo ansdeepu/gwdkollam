@@ -4,6 +4,7 @@ import { PDFDocument, PDFTextField, StandardFonts, rgb } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe, formatTenderNoForFilename } from '../../utils';
 import type { StaffMember } from '@/lib/schemas';
+import { getAttachedFilesString } from './utils';
 
 export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMember[]): Promise<Uint8Array> {
     const templatePath = '/NIT.pdf';
@@ -44,7 +45,7 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         'bid_submission_fee': displayTenderFee,
         'location': tender.location,
         'period_of_completion': tender.periodOfCompletion,
-        'related_files_header': hasAdditionalFiles ? "Related File Numbers (Included Works)" : "",
+        'related_files_header': hasAdditionalFiles ? "Related File Numbers" : "",
         'file_no_2': tender.fileNo2 ? `GKT/${tender.fileNo2}` : "",
         'file_no_3': tender.fileNo3 ? `GKT/${tender.fileNo3}` : "",
         'file_no_4': tender.fileNo4 ? `GKT/${tender.fileNo4}` : "",
