@@ -16,6 +16,7 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const timesRomanFont = await pdfDoc.embedFont(StandardFonts.TimesRoman);
     const timesRomanBoldFont = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
     const form = pdfDoc.getForm();
+    const page = pdfDoc.getPages()[0];
     
     const isRetender = tender.retenders && tender.retenders.some(
         r => r.lastDateOfReceipt === tender.dateTimeOfReceipt && r.dateOfOpeningTender === tender.dateTimeOfOpening
@@ -26,10 +27,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const displayTenderFormFee = tender.tenderFormFee ? `Rs. ${tenderFormFeeValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
-
-    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4]
-        .filter(Boolean)
-        .map(fn => `GKT/${fn}`);
 
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
@@ -43,7 +40,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         'bid_submission_fee': displayTenderFormFee,
         'location': tender.location,
         'period_of_completion': tender.periodOfCompletion,
-        'related_files': relatedFileNos.join('\n'), // Combine into a single multi-line field
     };
 
     // Fill the fields that exist in the template
@@ -58,10 +54,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
                 if (fieldName === 'name_of_work') {
                     textField.setFontSize(10); 
                 }
-
-                if (fieldName === 'related_files') {
-                    textField.enableMultiline();
-                }
                 
                 textField.setText(String(fieldMappings[fieldName] || ''));
                 textField.updateAppearances(isBold ? timesRomanBoldFont : timesRomanFont);
@@ -70,6 +62,34 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             }
         }
     });
+
+    // Manually draw the related file numbers
+    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
+    if (relatedFileNos.length > 0) {
+        let yPosition = 750; // Starting vertical position, adjust as needed
+        const xPosition = 56.7; // Left margin
+        const lineHeight = 14;
+
+        page.drawText('Related File Numbers:', {
+            x: xPosition,
+            y: yPosition,
+            font: timesRomanBoldFont,
+            size: 11,
+            color: rgb(0, 0, 0),
+        });
+        yPosition -= lineHeight;
+
+        relatedFileNos.forEach(fn => {
+            page.drawText(`GKT/${fn}`, {
+                x: xPosition,
+                y: yPosition,
+                font: timesRomanFont,
+                size: 11,
+                color: rgb(0, 0, 0),
+            });
+            yPosition -= lineHeight;
+        });
+    }
 
     form.flatten();
     
