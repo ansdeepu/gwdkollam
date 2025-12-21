@@ -42,6 +42,15 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         'period_of_completion': tender.periodOfCompletion,
     };
     
+    // Conditionally add related file numbers
+    const hasAdditionalFiles = tender.fileNo2 || tender.fileNo3 || tender.fileNo4;
+    if (hasAdditionalFiles) {
+        fieldMappings['related_files_header'] = 'Related File Numbers';
+        if (tender.fileNo2) fieldMappings['file_no_2'] = `GKT/${tender.fileNo2}`;
+        if (tender.fileNo3) fieldMappings['file_no_3'] = `GKT/${tender.fileNo3}`;
+        if (tender.fileNo4) fieldMappings['file_no_4'] = `GKT/${tender.fileNo4}`;
+    }
+
     // Fill the fields that exist in the template
     const allFields = form.getFields();
     allFields.forEach(field => {
@@ -62,39 +71,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             }
         }
     });
-
-    // Manually draw additional file numbers below the main file number
-    const additionalFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
-    if (additionalFileNos.length > 0) {
-        const fileNoHeaderField = form.getTextField('file_no_header');
-        const widgets = fileNoHeaderField.acroField.getWidgets();
-        if (widgets.length > 0) {
-            const rect = widgets[0].getRectangle();
-            let currentY = rect.y - 14; // Start drawing below the main file number field
-            const indentX = rect.x + 15; // Indent the text to the right
-
-            // Draw the label first
-            page.drawText('Related File Numbers:', {
-                x: indentX,
-                y: currentY,
-                font: timesRomanBoldFont,
-                size: 10,
-                color: rgb(0, 0, 0),
-            });
-            currentY -= 12; // Move down for the first file number
-
-            additionalFileNos.forEach(fileNo => {
-                page.drawText(`GKT/${fileNo}`, {
-                    x: indentX, // Use the same indented x-coordinate
-                    y: currentY,
-                    font: timesRomanFont,
-                    size: 10,
-                    color: rgb(0, 0, 0),
-                });
-                currentY -= 12; // Move down for the next line
-            });
-        }
-    }
 
     form.flatten();
     
