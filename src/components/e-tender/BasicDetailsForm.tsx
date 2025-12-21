@@ -107,9 +107,6 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                             </div>
                              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                 <FormField name="fileNo" control={control} render={({ field }) => ( <FormItem><FormLabel>File No. 1</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="fileNo2" control={control} render={({ field }) => ( <FormItem><FormLabel>File No. 2</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="fileNo3" control={control} render={({ field }) => ( <FormItem><FormLabel>File No. 3</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="fileNo4" control={control} render={({ field }) => ( <FormItem><FormLabel>File No. 4</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                             <div className="grid grid-cols-1 gap-4">
                                <FormField name="nameOfWork" control={control} render={({ field }) => ( <FormItem><FormLabel>Name of Work</FormLabel><FormControl><Textarea {...field} className="min-h-[60px]"/></FormControl><FormMessage /></FormItem> )}/>
