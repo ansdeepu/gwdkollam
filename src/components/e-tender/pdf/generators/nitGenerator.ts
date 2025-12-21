@@ -57,7 +57,7 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             try {
                 const textField = form.getTextField(fieldName);
                 let font = timesRomanFont;
-                if(['file_no_header'].includes(fieldName)){
+                if(['file_no_header', 'e_tender_no_header', 'tender_date_header'].includes(fieldName)){
                     font = timesRomanBoldFont;
                 }
                 
