@@ -42,6 +42,20 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         'period_of_completion': tender.periodOfCompletion,
     };
     
+    const additionalFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
+
+    if (additionalFileNos.length > 0) {
+        fieldMappings['related_files_header'] = "Related File Numbers:";
+        fieldMappings['file_no_2'] = `GKT/${additionalFileNos[0]}`;
+        if (additionalFileNos.length > 1) {
+            fieldMappings['file_no_3'] = `GKT/${additionalFileNos[1]}`;
+        }
+        if (additionalFileNos.length > 2) {
+            fieldMappings['file_no_4'] = `GKT/${additionalFileNos[2]}`;
+        }
+    }
+
+
     const allFields = form.getFields();
 
     allFields.forEach(field => {
@@ -63,40 +77,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
         }
     });
 
-    const fileNoField = form.getTextField('file_no_header');
-    const widgets = fileNoField.acroField.getWidgets();
-    if (widgets.length > 0) {
-        const firstWidget = widgets[0];
-        const { x, y, width, height } = firstWidget.getRectangle();
-
-        const additionalFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
-        let currentY = y - 12; // Start drawing below the first file number
-
-        additionalFileNos.forEach(fileNo => {
-            if (fileNo) {
-                page.drawText(`GKT/${fileNo}`, {
-                    x: x,
-                    y: currentY,
-                    font: timesRomanBoldFont,
-                    size: 11,
-                    color: rgb(0, 0, 0),
-                });
-                currentY -= 12; // Move down for the next line
-            }
-        });
-    }
-
-    const attachedFilesText = getAttachedFilesString(tender);
-    if (attachedFilesText) {
-        page.drawText(attachedFilesText, {
-            x: 56.7,
-            y: 740, // Positioned below the main header
-            font: timesRomanBoldFont,
-            size: 10,
-            color: rgb(0, 0, 0),
-        });
-    }
-    
     form.flatten();
     
     return await pdfDoc.save();
