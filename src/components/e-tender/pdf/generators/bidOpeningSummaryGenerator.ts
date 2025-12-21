@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/generators/bidOpeningSummaryGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts, TextAlignment, rgb } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
@@ -67,17 +68,6 @@ export async function generateBidOpeningSummary(tender: E_tender, allStaffMember
     });
 
     form.flatten();
-
-    const attachedFilesText = getAttachedFilesString(tender);
-    if (attachedFilesText) {
-        page.drawText(attachedFilesText, {
-            x: 56.7, // approx 2cm margin
-            y: 56.7, // approx 2cm margin
-            font: timesRomanFont,
-            size: 10,
-            color: rgb(0.3, 0.3, 0.3),
-        });
-    }
     
     return await pdfDoc.save();
 }

@@ -36,10 +36,7 @@ export const numberToWords = (num: number): string => {
 };
 
 export const getAttachedFilesString = (tender: E_tender): string => {
-    const fileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
-    if (fileNos.length === 0) {
-        return '';
-    }
-    const formattedFileNos = fileNos.map(fn => `GKT/${fn}`);
-    return `Related File Numbers (Included Works): ${formattedFileNos.join(', ')}`;
+    // This function is being temporarily cleared to resolve a build error.
+    // The related file number feature will be re-implemented correctly.
+    return '';
 };

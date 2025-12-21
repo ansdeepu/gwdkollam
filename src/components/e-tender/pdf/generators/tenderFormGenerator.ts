@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/generators/tenderFormGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts, rgb } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
@@ -78,19 +79,6 @@ export async function generateTenderForm(tender: E_tender, allStaffMembers?: Sta
     });
     
     form.flatten();
-
-    const attachedFilesText = getAttachedFilesString(tender);
-    if (attachedFilesText) {
-        pdfDoc.getPages().forEach(page => {
-            page.drawText(attachedFilesText, {
-                x: 56.7, // approx 2cm margin
-                y: 56.7, // approx 2cm margin
-                font: timesRomanFont,
-                size: 10,
-                color: rgb(0.3, 0.3, 0.3),
-            });
-        });
-    }
-
+    
     return await pdfDoc.save();
 }

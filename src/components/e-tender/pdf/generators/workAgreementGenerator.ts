@@ -1,3 +1,4 @@
+
 // src/components/e-tender/pdf/generators/workAgreementGenerator.ts
 import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
@@ -119,17 +120,7 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
       color: rgb(0, 0, 0),
     });
 
-    // 4. Add Attached Files line
-    const attachedFilesText = getAttachedFilesString(tender);
-    if (attachedFilesText) {
-        page.drawText(attachedFilesText, {
-            x: leftMargin,
-            y: cm(2.5), // Position near the bottom
-            font: timesRomanFont,
-            size: 10,
-            color: rgb(0.3, 0.3, 0.3),
-        });
-    }
+    // 4. No attached files text for this document.
 
     return await pdfDoc.save();
 }
