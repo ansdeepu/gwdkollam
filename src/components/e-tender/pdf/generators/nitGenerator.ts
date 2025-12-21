@@ -29,12 +29,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const hasRelatedFiles = tender.fileNo2 || tender.fileNo3 || tender.fileNo4;
     
     let fileNoHeaderText = `GKT/${tender.fileNo || ''}`;
-    if (hasRelatedFiles) {
-        fileNoHeaderText += `\nRelated File Numbers:`;
-        if (tender.fileNo2) fileNoHeaderText += `\n- GKT/${tender.fileNo2}`;
-        if (tender.fileNo3) fileNoHeaderText += `\n- GKT/${tender.fileNo3}`;
-        if (tender.fileNo4) fileNoHeaderText += `\n- GKT/${tender.fileNo4}`;
-    }
 
     const fieldMappings: Record<string, any> = {
         'file_no_header': fileNoHeaderText,
@@ -58,14 +52,11 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             try {
                 const textField = form.getTextField(fieldName);
                 let font = timesRomanFont;
-                if(fieldName === 'file_no_header'){
+                if(['file_no_header'].includes(fieldName)){
                     font = timesRomanBoldFont;
                 }
                 
                 textField.setText(String(fieldMappings[fieldName] || ''));
-                if(fieldName === 'file_no_header'){
-                    textField.enableMultiline();
-                }
 
                 if (fieldName === 'name_of_work') {
                     textField.setFontSize(10);
@@ -77,8 +68,50 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             }
         }
     });
-
+    
     form.flatten();
+    
+    // Manually draw related file numbers to ensure visibility and correct placement
+    if (hasRelatedFiles) {
+        let yPosition = 680; // Start below the main header line
+        const xPosition = 56.7; // Left margin
+        const lineHeight = 14;
+
+        page.drawText("Related File Numbers:", {
+            x: xPosition,
+            y: yPosition,
+            font: timesRomanBoldFont,
+            size: 10,
+        });
+        yPosition -= lineHeight;
+
+        if (tender.fileNo2) {
+            page.drawText(`GKT/${tender.fileNo2}`, {
+                x: xPosition,
+                y: yPosition,
+                font: timesRomanFont,
+                size: 10,
+            });
+            yPosition -= lineHeight;
+        }
+        if (tender.fileNo3) {
+            page.drawText(`GKT/${tender.fileNo3}`, {
+                x: xPosition,
+                y: yPosition,
+                font: timesRomanFont,
+                size: 10,
+            });
+            yPosition -= lineHeight;
+        }
+        if (tender.fileNo4) {
+            page.drawText(`GKT/${tender.fileNo4}`, {
+                x: xPosition,
+                y: yPosition,
+                font: timesRomanFont,
+                size: 10,
+            });
+        }
+    }
     
     return await pdfDoc.save();
 }
