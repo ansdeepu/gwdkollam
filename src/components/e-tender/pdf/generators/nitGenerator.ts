@@ -28,11 +28,20 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
 
+    // New logic: Append related file numbers to the name of work
+    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
+    let nameOfWorkDisplay = tender.nameOfWork;
+    if (relatedFileNos.length > 0) {
+        const relatedFilesString = relatedFileNos.map(fn => `GKT/${fn}`).join(', ');
+        nameOfWorkDisplay += ` (Related File Numbers: ${relatedFilesString})`;
+    }
+
+
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
         'e_tender_no_header': `${tender.eTenderNo || ''}${isRetender ? ' (Re-Tender)' : ''}`,
         'tender_date_header': formatDateSafe(tender.tenderDate),
-        'name_of_work': tender.nameOfWork,
+        'name_of_work': nameOfWorkDisplay, // Use the modified name of work
         'pac': tender.estimateAmount ? `Rs. ${tender.estimateAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
         'emd': tender.emd ? `Rs. ${tender.emd.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : 'N/A',
         'last_date_submission': formatDateSafe(tender.dateTimeOfReceipt, true, true, false),
@@ -52,7 +61,7 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
                 const isBold = boldFields.includes(fieldName);
                 
                 if (fieldName === 'name_of_work') {
-                    textField.setFontSize(14);
+                    textField.setFontSize(10); // Adjust font size if needed for longer text
                 }
                 
                 textField.setText(String(fieldMappings[fieldName] || ''));
@@ -65,24 +74,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
             }
         }
     });
-
-    // Manually draw additional file numbers
-    const relatedFileNos = [tender.fileNo2, tender.fileNo3, tender.fileNo4].filter(Boolean);
-    if (relatedFileNos.length > 0) {
-        const textLines = [
-            "Related File Numbers:",
-            ...relatedFileNos.map(fn => `     GKT/${fn}`)
-        ];
-
-        page.drawText(textLines.join('\n'), {
-            x: 70,
-            y: 740, 
-            font: timesRomanFont,
-            size: 10,
-            lineHeight: 12,
-            color: rgb(0, 0, 0),
-        });
-    }
 
     form.flatten();
     
