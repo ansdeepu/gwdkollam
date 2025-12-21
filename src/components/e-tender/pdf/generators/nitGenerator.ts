@@ -26,12 +26,16 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     const gst = tenderFormFeeValue * 0.18;
     const displayTenderFormFee = tender.tenderFormFee ? `Rs. ${tenderFormFeeValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} & Rs. ${gst.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (GST 18%)` : 'N/A';
     
-    const boldFields = ['e_tender_no_header', 'tender_date_header'];
+    const boldFields = ['e_tender_no_header', 'tender_date_header', 'file_no_header'];
 
     const hasRelatedFiles = tender.fileNo2 || tender.fileNo3 || tender.fileNo4;
 
     const fieldMappings: Record<string, any> = {
         'file_no_header': `GKT/${tender.fileNo || ''}`,
+        'header_1': hasRelatedFiles ? 'Related File Numbers:' : '',
+        'file_no_2': tender.fileNo2 ? `GKT/${tender.fileNo2}` : '',
+        'file_no_3': tender.fileNo3 ? `GKT/${tender.fileNo3}` : '',
+        'file_no_4': tender.fileNo4 ? `GKT/${tender.fileNo4}` : '',
         'e_tender_no_header': `${tender.eTenderNo || ''}${isRetender ? ' (Re-Tender)' : ''}`,
         'tender_date_header': formatDateSafe(tender.tenderDate),
         'name_of_work': tender.nameOfWork,
@@ -66,35 +70,6 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     });
 
     form.flatten();
-
-    // Manually draw the related file numbers below the main file number
-    if (hasRelatedFiles) {
-        let yPosition = 750; // Start below the main header
-        const xPosition = 56.7; // Left margin
-        const lineHeight = 12;
-
-        page.drawText("Related File Numbers:", {
-            x: xPosition,
-            y: yPosition,
-            font: timesRomanFont,
-            size: 10,
-        });
-
-        yPosition -= lineHeight;
-        
-        const relatedFiles = [tender.fileNo2, tender.fileNo3, tender.fileNo4];
-        relatedFiles.forEach(fileNo => {
-            if (fileNo) {
-                page.drawText(`GKT/${fileNo}`, {
-                    x: xPosition,
-                    y: yPosition,
-                    font: timesRomanFont,
-                    size: 10,
-                });
-                yPosition -= lineHeight;
-            }
-        });
-    }
     
     return await pdfDoc.save();
 }
