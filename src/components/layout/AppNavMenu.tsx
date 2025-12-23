@@ -146,7 +146,7 @@ export default function AppNavMenu() {
   };
 
   return (
-    <SidebarMenu className="gap-0.5">
+    <SidebarMenu className="gap-0">
       {accessibleNavItems.map((item, index) => (
         <SidebarMenuItem key={item.href}>
             <div className="flex items-center w-full group">

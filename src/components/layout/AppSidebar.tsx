@@ -1,3 +1,4 @@
+
 // src/components/layout/AppSidebar.tsx
 "use client";
 
@@ -101,10 +102,8 @@ export default function AppSidebar() {
           </span>
         </Link>
       </SidebarHeader>
-      <SidebarContent className="flex-1 p-2">
-        <ScrollArea className="h-full">
+      <SidebarContent className="flex-1 p-2 overflow-y-auto no-scrollbar">
           <AppNavMenu />
-        </ScrollArea>
       </SidebarContent>
       <SidebarFooter className="p-2 border-t border-sidebar-border mt-auto">
         <DropdownMenu>
