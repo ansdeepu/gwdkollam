@@ -645,7 +645,7 @@ export default function TenderDetails() {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('selectionNotice')}><Edit className="h-4 w-4 mr-2" />{hasAnySelectionNoticeData ? 'Edit' : 'Add'}</Button>}
-                                        {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearSelectionNoticeConfirmOpen(true)}>Delete</Button>}
+                                        {!isReadOnly && <Button type="button" size="icon" variant="destructive" onClick={() => setIsClearSelectionNoticeConfirmOpen(true)}><Trash2 className="h-4 w-4"/></Button>}
                                     </div>
                                 </CardHeader>
                                 {hasAnySelectionNoticeData ? (
