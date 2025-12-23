@@ -368,17 +368,17 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
             </Table>
           </div>
         </CardContent>
-        <CardFooter className="p-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">
-              Showing <strong>{fileEntries.length > 0 ? startEntryNum : 0}</strong>-<strong>{endEntryNum}</strong> of <strong>{fileEntries.length}</strong> files.
-          </p>
-          {totalPages > 1 && (
-            <PaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-            />
-          )}
+        <CardFooter className="p-4 border-t flex flex-wrap items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+                Showing <strong>{fileEntries.length > 0 ? startEntryNum : 0}</strong>-<strong>{endEntryNum}</strong> of <strong>{fileEntries.length}</strong> files.
+            </p>
+            {totalPages > 1 && (
+                <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                />
+            )}
         </CardFooter>
       </Card>
 

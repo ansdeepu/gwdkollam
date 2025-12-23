@@ -712,7 +712,7 @@ export default function ArsPage() {
                     </Table>
                 </div>
                 {totalPages > 1 && (
-                    <div className="p-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="p-4 border-t flex flex-wrap items-center justify-between gap-4">
                         <p className="text-sm text-muted-foreground">
                             Showing <strong>{filteredSites.length > 0 ? startEntryNum : 0}</strong>-<strong>{endEntryNum}</strong> of <strong>{filteredSites.length}</strong> sites.
                         </p>
