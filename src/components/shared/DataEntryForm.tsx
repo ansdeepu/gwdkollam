@@ -627,102 +627,10 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                 </ScrollArea>
             </div>
             <DialogFooter className="p-6 pt-4 shrink-0">
-                <Button variant="outline" type="button" onClick={onCancel}>Cancel</Button>
-                <Button type="submit" form="site-dialog-form">Save</Button>
+                <Button variant="outline" type="button" onClick={onCancel}>{isReadOnly ? 'Close' : 'Cancel'}</Button>
+                {!isReadOnly && <Button type="submit" form="site-dialog-form">Save</Button>}
             </DialogFooter>
         </div>
-    );
-};
-
-const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData | null, onCancel: () => void }) => {
-    if (!site) return null;
-    
-    const purpose = site.purpose as SitePurpose;
-    const wellConstructionPurposes: SitePurpose[] = ["BWC", "TWC", "FPW"];
-    const isDrillingPurpose = wellConstructionPurposes.includes(purpose as SitePurpose);
-    const wellDevelopmentPurposes: SitePurpose[] = ["BW Dev", "TW Dev", "FPW Dev"];
-    const isDevelopingPurpose = wellDevelopmentPurposes.includes(purpose as SitePurpose);
-    const isMWSSSchemePurpose = ['MWSS', 'MWSS Ext', 'Pumping Scheme', 'MWSS Pump Reno'].includes(purpose);
-    const isHPSPurpose = ['HPS', 'HPR'].includes(purpose);
-    const isARSPurpose = ['ARS'].includes(purpose);
-
-    const allDetails = {
-        "Main Details": {
-            "Name of Site": site.nameOfSite, "Purpose": site.purpose, "Local Self Govt.": site.localSelfGovt,
-            "Constituency (LAC)": site.constituency, "Latitude": site.latitude, "Longitude": site.longitude,
-        },
-        "Work Implementation": {
-            "Site Conditions": site.siteConditions,
-            "Estimate Amount (₹)": site.estimateAmount, "Remitted for Site (₹)": site.remittedAmount,
-            "TS Amount (₹)": site.tsAmount, "Tender No.": site.tenderNo, "Contractor Name": site.contractorName,
-            "Assigned Supervisor": site.supervisorName,
-            "Supervisor Designation": site.supervisorDesignation,
-            "Implementation Remarks": site.implementationRemarks
-        },
-        "Survey Details": isDrillingPurpose && {
-            "Recommended Diameter (mm)": site.surveyRecommendedDiameter, "Recommended TD (m)": site.surveyRecommendedTD,
-            ...(purpose === 'BWC' && { "Recommended OB (m)": site.surveyRecommendedOB, "Recommended Casing Pipe (m)": site.surveyRecommendedCasingPipe }),
-            ...(purpose === 'TWC' && { "Recommended Plain Pipe (m)": site.surveyRecommendedPlainPipe, "Recommended Slotted Pipe (m)": site.surveyRecommendedSlottedPipe, "MS Casing Pipe (m)": site.surveyRecommendedMsCasingPipe }),
-            ...(purpose === 'FPW' && { "Recommended Casing Pipe (m)": site.surveyRecommendedCasingPipe }),
-            "Survey Location": site.surveyLocation, "Survey Remarks": site.surveyRemarks,
-        },
-        "Drilling Details": isDrillingPurpose && {
-            "Actual Diameter (mm)": site.diameter, ...(purpose === 'TWC' && { "Pilot Drilling Depth (m)": site.pilotDrillingDepth }),
-            "Actual TD (m)": site.totalDepth, ...(purpose === 'BWC' && { "Actual OB (m)": site.surveyOB }),
-            "Actual Casing Pipe (m)": site.casingPipeUsed, ...(purpose === 'BWC' && { "Outer Casing (m)": site.outerCasingPipe, "Inner Casing (m)": site.innerCasingPipe }),
-            ...(purpose === 'TWC' && { "Plain Pipe (m)": site.surveyPlainPipe, "Slotted Pipe (m)": site.surveySlottedPipe, "MS Casing Pipe (m)": site.outerCasingPipe }),
-            "Yield (LPH)": site.yieldDischarge, "Zone Details (m)": site.zoneDetails, "Static Water Level (m)": site.waterLevel,
-            "Type of Rig": site.typeOfRig, "Drilling Remarks": site.drillingRemarks
-        },
-        "Developing Details": isDevelopingPurpose && {
-            "Diameter (mm)": site.diameter, "TD (m)": site.totalDepth, "Discharge (LPH)": site.yieldDischarge,
-            "Water Level (m)": site.waterLevel, "Developing Remarks": site.developingRemarks,
-        },
-        "Scheme Details": (isMWSSSchemePurpose || isHPSPurpose || isARSPurpose) && {
-            ...(isMWSSSchemePurpose && { "Well Discharge (LPH)": site.yieldDischarge, "Pump Details": site.pumpDetails, "Pumping Line (m)": site.pumpingLineLength, "Delivery Line (m)": site.deliveryLineLength, "Tank Capacity (L)": site.waterTankCapacity, "# Taps": site.noOfTapConnections }),
-            ...(isHPSPurpose && { "Depth Erected (m)": site.totalDepth, "Water Level (m)": site.waterLevel }),
-            ...(isARSPurpose && { "ARS # Structures": site.arsNumberOfStructures, "ARS Storage (m³)": site.arsStorageCapacity, "ARS # Fillings": site.arsNumberOfFillings }),
-            "# Beneficiaries": site.noOfBeneficiary,
-            "Scheme Remarks": site.schemeRemarks,
-        },
-        "Work Status": {
-            "Status": site.workStatus, "Completion Date": site.dateOfCompletion,
-            "Total Expenditure (₹)": site.totalExpenditure, "Work Remarks": site.workRemarks,
-        }
-    };
-    
-    return (
-        <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
-            <DialogHeader className="p-6 pb-4 shrink-0">
-                <DialogTitle>View Site: {site.nameOfSite}</DialogTitle>
-                <DialogDescription>A read-only summary of all available details for this site.</DialogDescription>
-            </DialogHeader>
-            <div className="flex-1 min-h-0">
-                <ScrollArea className="h-full px-6 py-4">
-                    <div className="space-y-6">
-                        {Object.entries(allDetails).map(([sectionTitle, details]) => {
-                            if (!details || Object.values(details).every(v => v === null || v === undefined || v === '')) return null;
-                            return (
-                                <Card key={sectionTitle}>
-                                    <CardHeader className="p-4"><CardTitle className="text-base">{sectionTitle}</CardTitle></CardHeader>
-                                    <CardContent className="p-4 pt-0">
-                                        <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-3">
-                                            {Object.entries(details).map(([key, value]) => {
-                                                if (value === null || value === undefined || value === '') return null;
-                                                return <DetailRow key={key} label={key} value={value} />;
-                                            })}
-                                        </dl>
-                                    </CardContent>
-                                </Card>
-                            )
-                        })}
-                    </div>
-                </ScrollArea>
-            </div>
-            <DialogFooter className="p-6 pt-4 shrink-0">
-                <Button variant="outline" type="button" onClick={onCancel}>Close</Button>
-            </DialogFooter>
-        </DialogContent>
     );
 };
 
@@ -942,11 +850,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const applicationTypeOptionsForForm = getApplicationTypeOptions();
 
   const handleEyeIconClick = (site: SiteDetailFormData, index: number) => {
-    if (isEditor || isSupervisor) {
-      openDialog('site', { index, ...site });
-    } else {
-      openDialog('viewSite', { index, ...site });
-    }
+    openDialog('site', { index, ...site });
   };
 
   const totalRemittanceWatched = watch('totalRemittance');
@@ -1176,7 +1080,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             </DialogContent>
         </Dialog>
          <Dialog open={dialogState.type === 'site'} onOpenChange={closeDialog}>
-            <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-6xl h-[90vh] flex flex-col p-0"><SiteDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} supervisorList={supervisorList} isReadOnly={false} isSupervisor={isSupervisor} allLsgConstituencyMaps={allLsgConstituencyMaps}/></DialogContent>
+            <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-6xl h-[90vh] flex flex-col p-0"><SiteDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} supervisorList={supervisorList} isReadOnly={dialogState.isView || isViewer} isSupervisor={isSupervisor} allLsgConstituencyMaps={allLsgConstituencyMaps}/></DialogContent>
         </Dialog>
          <Dialog open={dialogState.type === 'payment'} onOpenChange={closeDialog}>
             <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-4xl flex flex-col p-0"><PaymentDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} /></DialogContent>
@@ -1186,10 +1090,7 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
                 <ReorderSiteDialog fromIndex={dialogState.data.from} siteCount={siteFields.length} onConfirm={handleDialogConfirm} onCancel={closeDialog} />
             </Dialog>
         )}
-        <Dialog open={dialogState.type === 'viewSite'} onOpenChange={closeDialog}>
-            <ViewSiteDialog site={dialogState.data} onCancel={closeDialog} />
-        </Dialog>
-
+       
         <AlertDialog open={itemToDelete !== null} onOpenChange={() => setItemToDelete(null)}>
             <AlertDialogContent>
                 <AlertDialogHeader><AlertDialogTitle>Are you sure?</AlertDialogTitle><AlertDialogDescription>This will permanently remove the selected {itemToDelete?.type} entry from this file.</AlertDialogDescription></AlertDialogHeader>
