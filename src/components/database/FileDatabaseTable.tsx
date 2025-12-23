@@ -86,9 +86,10 @@ interface FileDatabaseTableProps {
   fileEntries: DataEntryFormData[];
   isLoading: boolean;
   searchActive: boolean;
+  totalEntries: number;
 }
 
-export default function FileDatabaseTable({ fileEntries, isLoading, searchActive }: FileDatabaseTableProps) {
+export default function FileDatabaseTable({ fileEntries, isLoading, searchActive, totalEntries }: FileDatabaseTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { toast } = useToast();
@@ -253,7 +254,7 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
   }
 
   const startEntryNum = (currentPage - 1) * ITEMS_PER_PAGE + 1;
-  const endEntryNum = Math.min(currentPage * ITEMS_PER_PAGE, fileEntries.length);
+  const endEntryNum = startEntryNum + paginatedEntries.length - 1;
 
   const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Awaiting Dept. Rig", "Work Initiated"];
 
@@ -370,7 +371,7 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
         </CardContent>
         <CardFooter className="p-4 border-t flex flex-wrap items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-                Showing <strong>{fileEntries.length > 0 ? startEntryNum : 0}</strong>-<strong>{endEntryNum}</strong> of <strong>{fileEntries.length}</strong> files.
+              Showing <strong>{totalEntries > 0 ? startEntryNum : 0}</strong>-<strong>{endEntryNum}</strong> of <strong>{totalEntries}</strong> files.
             </p>
             {totalPages > 1 && (
                 <PaginationControls
