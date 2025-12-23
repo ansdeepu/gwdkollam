@@ -222,23 +222,24 @@ export default function FileManagerPage() {
                 )}
                </div>
             </div>
-             <div className="flex justify-end items-center gap-4 mt-4 pt-4 border-t text-xs text-muted-foreground">
-                <span className="font-semibold">Site Name Color Legend:</span>
-                <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-600"></div><span>Active / Ongoing</span></div>
-                <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-yellow-600"></div><span>To be Refunded</span></div>
-                <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-red-600"></div><span>Completed / Failed</span></div>
+             <div className="flex justify-between items-center gap-4 mt-4 pt-4 border-t">
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span className="font-semibold">Site Name Color Legend:</span>
+                    <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-600"></div><span>Active / Ongoing</span></div>
+                    <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-yellow-600"></div><span>To be Refunded</span></div>
+                    <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-red-600"></div><span>Completed / Failed</span></div>
+                </div>
+                {totalPages > 1 && (
+                    <PaginationControls
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                    />
+                )}
             </div>
         </CardContent>
       </Card>
-      {totalPages > 1 && (
-        <div className="py-2 flex items-center justify-center">
-            <PaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-            />
-        </div>
-      )}
+      
       <FileDatabaseTable 
         fileEntries={paginatedEntries} 
         isLoading={isLoading}
