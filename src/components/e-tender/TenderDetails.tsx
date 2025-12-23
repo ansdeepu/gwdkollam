@@ -399,6 +399,7 @@ export default function TenderDetails() {
     }, [bidderFields]);
 
     const dynamicStatusOptions = useMemo(() => {
+        if (tender.id === 'new') return eTenderStatusOptions;
       if (tenderType === 'Work') {
         return eTenderStatusOptions.filter(opt => opt !== 'Supply Order Issued');
       }
@@ -406,7 +407,7 @@ export default function TenderDetails() {
         return eTenderStatusOptions.filter(opt => opt !== 'Work Order Issued');
       }
       return eTenderStatusOptions;
-    }, [tenderType]);
+    }, [tenderType, tender.id]);
 
 
     return (
@@ -414,7 +415,7 @@ export default function TenderDetails() {
             <div className="space-y-6">
                 <Card>
                     <CardHeader className="p-4 flex flex-row justify-end">
-                        <Button variant="outline" onClick={() => router.back()}>
+                        <Button variant="destructive" onClick={() => router.back()}>
                             <ArrowLeft className="mr-2 h-4 w-4" />
                             Back
                         </Button>
