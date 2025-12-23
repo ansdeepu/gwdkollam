@@ -1,3 +1,4 @@
+
 // src/app/dashboard/file-database/page.tsx
 "use client";
 
@@ -21,7 +22,12 @@ export default function FileDatabasePage() {
     <div className="space-y-6">
       <Card className="shadow-lg">
         <CardContent className="pt-6">
-          <FileDatabaseTable fileEntries={fileEntries} isLoading={isLoading} searchActive={false} />
+          <FileDatabaseTable 
+            fileEntries={fileEntries} 
+            isLoading={isLoading} 
+            searchActive={false} 
+            totalEntries={fileEntries.length} 
+          />
         </CardContent>
       </Card>
     </div>
