@@ -143,7 +143,7 @@ export default function TenderDetails() {
     const [isClearWorkOrderConfirmOpen, setIsClearWorkOrderConfirmOpen] = useState(false);
     const [retenderToDelete, setRetenderToDelete] = useState<{ id: string; index: number } | null>(null);
 
-    const isReadOnly = user?.role === 'viewer';
+    const isReadOnly = user?.role === 'viewer' || user?.role === 'supervisor';
 
     const form = useForm<E_tenderFormData>({
         resolver: zodResolver(E_tenderSchema),
