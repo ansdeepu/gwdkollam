@@ -21,9 +21,10 @@ import { eTenderStatusOptions } from '@/lib/schemas/eTenderSchema';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import PaginationControls from '@/components/shared/PaginationControls';
 
 const Loader2 = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
 );
 const PlusCircle = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
@@ -46,6 +47,8 @@ const Copy = (props: React.SVGProps<SVGSVGElement>) => (
 const Clock = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
 );
+
+const ITEMS_PER_PAGE = 50;
 
 const getStatusRowClass = (status?: E_tenderStatus): string => {
     if (!status) return "";
@@ -83,6 +86,7 @@ export default function ETenderListPage() {
     const [isDeletingTender, setIsDeletingTender] = useState(false);
     const [tenderToCopy, setTenderToCopy] = useState<E_tender | null>(null);
     const [isCopying, setIsCopying] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
 
 
     React.useEffect(() => {
@@ -146,6 +150,17 @@ export default function ETenderListPage() {
 
         return { filteredTenders: filtered, lastCreatedDate: lastCreated };
     }, [allE_tenders, searchTerm, statusFilter]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, statusFilter]);
+
+    const paginatedTenders = useMemo(() => {
+        const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+        return filteredTenders.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+    }, [filteredTenders, currentPage]);
+    
+    const totalPages = Math.ceil(filteredTenders.length / ITEMS_PER_PAGE);
 
 
     const handleCreateNew = () => {
@@ -290,14 +305,17 @@ export default function ETenderListPage() {
                             )}
                         </div>
                     </div>
-                    <div className="flex justify-end items-center gap-4 mt-4 pt-4 border-t text-xs text-muted-foreground">
-                        <span className="font-semibold">Row Color Legend:</span>
-                        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-gray-400"></div><span>Tender Process</span></div>
-                        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-orange-400"></div><span>Bid Opened</span></div>
-                        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-blue-400"></div><span>Selection Notice</span></div>
-                        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-400"></div><span>Work/Supply Order</span></div>
-                        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-yellow-400"></div><span>Retender</span></div>
-                        <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-red-400"></div><span>Cancelled</span></div>
+                     <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t">
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <span className="font-semibold">Row Color Legend:</span>
+                            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-gray-400"></div><span>Tender Process</span></div>
+                            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-orange-400"></div><span>Bid Opened</span></div>
+                            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-blue-400"></div><span>Selection Notice</span></div>
+                            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-400"></div><span>Work/Supply Order</span></div>
+                            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-yellow-400"></div><span>Retender</span></div>
+                            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-red-400"></div><span>Cancelled</span></div>
+                        </div>
+                         {totalPages > 1 && <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />}
                     </div>
                 </CardContent>
             </Card>
@@ -319,8 +337,8 @@ export default function ETenderListPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {filteredTenders.length > 0 ? (
-                                        filteredTenders.map((tender, index) => {
+                                    {paginatedTenders.length > 0 ? (
+                                        paginatedTenders.map((tender, index) => {
                                             const hasRetenders = tender.retenders && tender.retenders.length > 0;
                                             const latestRetender = hasRetenders ? tender.retenders![tender.retenders!.length - 1] : null;
 
@@ -329,7 +347,7 @@ export default function ETenderListPage() {
 
                                             return (
                                                 <TableRow key={tender.id} className={getStatusRowClass(tender.presentStatus)}>
-                                                    <TableCell className="align-top">{index + 1}</TableCell>
+                                                    <TableCell className="align-top">{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</TableCell>
                                                     <TableCell className="font-bold align-top">
                                                         <div className="flex flex-col">
                                                             <span className="whitespace-normal break-words">{`GKT/${tender.fileNo}/${tender.eTenderNo}`}</span>
@@ -377,6 +395,11 @@ export default function ETenderListPage() {
                             </Table>
                         </TooltipProvider>
                     </div>
+                    {totalPages > 1 && (
+                         <div className="flex items-center justify-center py-4">
+                           <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+                        </div>
+                    )}
                 </CardContent>
             </Card>
             
