@@ -17,6 +17,7 @@ import { usePageHeader } from '@/hooks/usePageHeader';
 import { usePageNavigation } from '@/hooks/usePageNavigation';
 import { useFileEntries } from '@/hooks/useFileEntries'; // Correctly import useFileEntries
 import { useDataStore } from '@/hooks/use-data-store';
+import PaginationControls from '@/components/shared/PaginationControls';
 
 export const dynamic = 'force-dynamic';
 
@@ -173,6 +174,19 @@ export default function FileManagerPage() {
     router.push('/dashboard/data-entry?workType=public');
   };
 
+  const ITEMS_PER_PAGE = 50;
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(filteredEntries.length / ITEMS_PER_PAGE);
+
+  const paginatedEntries = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredEntries.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredEntries, currentPage]);
+  
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="space-y-6">
        <Card>
@@ -216,9 +230,17 @@ export default function FileManagerPage() {
             </div>
         </CardContent>
       </Card>
-      
+      {totalPages > 1 && (
+        <div className="py-2 flex items-center justify-center">
+            <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+            />
+        </div>
+      )}
       <FileDatabaseTable 
-        fileEntries={filteredEntries} 
+        fileEntries={paginatedEntries} 
         isLoading={isLoading}
         searchActive={!!searchTerm}
       />

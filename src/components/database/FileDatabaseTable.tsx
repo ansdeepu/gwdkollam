@@ -262,15 +262,6 @@ export default function FileDatabaseTable({ fileEntries, isLoading, searchActive
     <TooltipProvider>
       <Card className="shadow-lg">
         <CardContent className="p-0">
-          {totalPages > 1 && (
-            <div className="p-4 border-b flex items-center justify-center">
-                <PaginationControls
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                />
-            </div>
-           )}
           <div className="max-h-[70vh] overflow-auto">
             <Table>
               <TableHeader className="sticky top-0 bg-secondary z-10">

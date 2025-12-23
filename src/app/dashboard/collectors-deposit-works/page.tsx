@@ -16,6 +16,7 @@ import { parseISO, isValid, format } from 'date-fns';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { usePageNavigation } from '@/hooks/usePageNavigation';
 import { useFileEntries } from '@/hooks/useFileEntries';
+import PaginationControls from '@/components/shared/PaginationControls';
 
 export const dynamic = 'force-dynamic';
 
@@ -166,6 +167,19 @@ export default function CollectorsDepositWorksPage() {
     router.push('/dashboard/data-entry?workType=collector');
   };
 
+  const ITEMS_PER_PAGE = 50;
+  const [currentPage, setCurrentPage] = useState(1);
+  const totalPages = Math.ceil(filteredEntries.length / ITEMS_PER_PAGE);
+
+  const paginatedEntries = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredEntries.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredEntries, currentPage]);
+  
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="space-y-6">
        <Card>
@@ -201,7 +215,7 @@ export default function CollectorsDepositWorksPage() {
                 )}
                </div>
             </div>
-             <div className="flex justify-end items-center gap-4 mt-4 pt-4 border-t text-xs text-muted-foreground">
+             <div className="flex justify-between items-center gap-4 mt-4 pt-4 border-t text-xs text-muted-foreground">
                 <span className="font-semibold">Site Name Color Legend:</span>
                 <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-600"></div><span>Active / Ongoing</span></div>
                 <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-yellow-600"></div><span>To be Refunded</span></div>
@@ -209,14 +223,21 @@ export default function CollectorsDepositWorksPage() {
             </div>
         </CardContent>
       </Card>
+       {totalPages > 1 && (
+        <div className="py-2 flex items-center justify-center">
+            <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+            />
+        </div>
+      )}
       
       <FileDatabaseTable 
-        fileEntries={filteredEntries} 
+        fileEntries={paginatedEntries} 
         isLoading={isLoading}
         searchActive={!!searchTerm}
       />
     </div>
   );
 }
-
-    

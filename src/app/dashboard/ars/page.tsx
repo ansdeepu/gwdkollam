@@ -639,13 +639,14 @@ export default function ArsPage() {
         </CardContent>
        </Card>
       
+        {totalPages > 1 && (
+            <div className="py-4 flex items-center justify-center">
+                <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+            </div>
+        )}
+
         <Card className="shadow-lg">
             <CardContent className="p-0">
-                {totalPages > 1 && (
-                    <div className="p-4 border-b flex items-center justify-center">
-                        <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
-                    </div>
-                )}
                 <div className="max-h-[70vh] overflow-auto">
                     <Table>
                         <TableHeader className="bg-secondary sticky top-0">
@@ -806,7 +807,3 @@ export default function ArsPage() {
     </div>
   );
 }
-
-    
-
-    
