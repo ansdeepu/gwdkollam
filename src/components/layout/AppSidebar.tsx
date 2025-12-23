@@ -24,6 +24,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { useStaffMembers } from '@/hooks/useStaffMembers';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Inline SVG components
 const LogOut = (props: React.SVGProps<SVGSVGElement>) => (
@@ -101,7 +102,9 @@ export default function AppSidebar() {
         </Link>
       </SidebarHeader>
       <SidebarContent className="flex-1 p-2">
-        <AppNavMenu />
+        <ScrollArea className="h-full">
+          <AppNavMenu />
+        </ScrollArea>
       </SidebarContent>
       <SidebarFooter className="p-2 border-t border-sidebar-border mt-auto">
         <DropdownMenu>

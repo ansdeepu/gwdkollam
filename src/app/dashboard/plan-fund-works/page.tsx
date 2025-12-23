@@ -1,5 +1,5 @@
 
-// src/app/dashboard/file-room/page.tsx
+// src/app/dashboard/plan-fund-works/page.tsx
 "use client";
 
 import { useState, useMemo, useEffect } from 'react';
@@ -15,23 +15,20 @@ import { usePendingUpdates } from '@/hooks/usePendingUpdates';
 import { parseISO, isValid, format } from 'date-fns';
 import { usePageHeader } from '@/hooks/usePageHeader';
 import { usePageNavigation } from '@/hooks/usePageNavigation';
-import { useFileEntries } from '@/hooks/useFileEntries'; // Correctly import useFileEntries
-import { useDataStore } from '@/hooks/use-data-store';
+import { useFileEntries } from '@/hooks/useFileEntries';
 
 export const dynamic = 'force-dynamic';
 
 const Search = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
 );
 const FilePlus2 = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><path d="M14 2v6h6"/><path d="M3 15h6"/><path d="M6 12v6"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M4 22h14a2 2 0 0 0 2-2V7.5L14.5 2H6a2 2 0 0 0-2 2v4"/><path d="M14 2v6h6"/><path d="M3 15h6"/><path d="M6 12v6"/></svg>
 );
 const Clock = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
 );
 
-const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
-const COLLECTOR_APPLICATION_TYPES: ApplicationType[] = ["Collector_MPLAD", "Collector_MLASDF", "Collector_MLA_Asset_Development_Fund", "Collector_DRW", "Collector_SC/ST", "Collector_ARWSS", "Collector_Others"];
 const PLAN_FUND_APPLICATION_TYPES: ApplicationType[] = ["GWBDWS"];
 const SUPERVISOR_ONGOING_STATUSES: SiteWorkStatus[] = ["Work Order Issued", "Work in Progress", "Work Initiated", "Awaiting Dept. Rig"];
 
@@ -55,14 +52,14 @@ const safeParseDate = (dateValue: any): Date | null => {
 };
 
 
-export default function FileManagerPage() {
+export default function PlanFundWorksPage() {
   const { setHeader } = usePageHeader();
   const { user } = useAuth();
-  const { fileEntries, isLoading } = useFileEntries(); // Use the hook which handles filtering
+  const { fileEntries, isLoading } = useFileEntries();
   
   useEffect(() => {
-    const description = 'List of all public and government deposit works in the system, sorted by most recent remittance.';
-    setHeader('Deposit Works', description);
+    const description = 'List of all deposit works funded by the Plan Fund (GWBDWS).';
+    setHeader("Plan Fund Works", description);
   }, [setHeader, user]);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -71,14 +68,10 @@ export default function FileManagerPage() {
   
   const canCreate = user?.role === 'editor';
   
-  const { depositWorkEntries, totalSites, lastCreatedDate } = useMemo(() => {
-    let entries = fileEntries.filter(entry => {
-        if (!entry.applicationType) return true; // Include if type is not set
-        if (PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)) return false; // Exclude private
-        if (COLLECTOR_APPLICATION_TYPES.includes(entry.applicationType)) return false; // Exclude collector
-        if (PLAN_FUND_APPLICATION_TYPES.includes(entry.applicationType)) return false; // Exclude plan fund
-        return true; // Include all others (government, LSGD, etc.)
-    });
+  const { planFundWorkEntries, totalSites, lastCreatedDate } = useMemo(() => {
+    let entries = fileEntries.filter(entry => 
+        !!entry.applicationType && PLAN_FUND_APPLICATION_TYPES.includes(entry.applicationType)
+    );
     
     // Sort all entries by the first remittance date, newest first.
     entries.sort((a, b) => {
@@ -124,15 +117,15 @@ export default function FileManagerPage() {
         return latest;
     }, null as Date | null);
     
-    return { depositWorkEntries: entries, totalSites: totalSiteCount, lastCreatedDate: lastCreated };
+    return { planFundWorkEntries: entries, totalSites: totalSiteCount, lastCreatedDate: lastCreated };
   }, [fileEntries, user]);
   
   const filteredEntries = useMemo(() => {
     if (!searchTerm) {
-      return depositWorkEntries;
+      return planFundWorkEntries;
     }
     const lowerSearchTerm = searchTerm.toLowerCase();
-    return depositWorkEntries.filter(entry => {
+    return planFundWorkEntries.filter(entry => {
         const appTypeDisplay = entry.applicationType ? applicationTypeDisplayMap[entry.applicationType as ApplicationType] : "";
         const searchableContent = [
             entry.fileNo, entry.applicantName, entry.phoneNo, entry.secondaryMobileNo, appTypeDisplay, entry.fileStatus, entry.remarks, entry.constituency,
@@ -165,12 +158,12 @@ export default function FileManagerPage() {
 
         return searchableContent.includes(lowerSearchTerm);
     });
-  }, [depositWorkEntries, searchTerm]);
+  }, [planFundWorkEntries, searchTerm]);
 
 
   const handleAddNewClick = () => {
     setIsNavigating(true);
-    router.push('/dashboard/data-entry?workType=public');
+    router.push('/dashboard/data-entry?workType=planFund');
   };
 
   return (
@@ -225,3 +218,5 @@ export default function FileManagerPage() {
     </div>
   );
 }
+
+    

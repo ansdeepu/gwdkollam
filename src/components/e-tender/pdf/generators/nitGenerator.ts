@@ -40,12 +40,14 @@ export async function generateNIT(tender: E_tender, allStaffMembers?: StaffMembe
     };
     
     // Conditionally add related file numbers
-    if (tender.fileNo2 || tender.fileNo3 || tender.fileNo4) {
+    const hasRelatedFiles = tender.fileNo2 || tender.fileNo3 || tender.fileNo4;
+    if (hasRelatedFiles) {
         fieldMappings['header_1'] = "Related File Numbers:";
         if (tender.fileNo2) fieldMappings['file_no_2'] = `GKT/${tender.fileNo2}`;
         if (tender.fileNo3) fieldMappings['file_no_3'] = `GKT/${tender.fileNo3}`;
         if (tender.fileNo4) fieldMappings['file_no_4'] = `GKT/${tender.fileNo4}`;
     }
+
 
     const allFields = form.getFields();
     allFields.forEach(field => {

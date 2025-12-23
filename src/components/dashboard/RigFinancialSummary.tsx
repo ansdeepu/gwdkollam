@@ -79,8 +79,8 @@ const FinancialRow = ({ label, data, total, onCellClick, onTotalClick }: { label
         </>
       ) : (
         rigTypeColumns.map(rigType => (
-            <TableCell key={rigType} className="text-center">
-                <Button variant="link" disabled={!data[rigType]} onClick={() => onCellClick(rigType as RigType)} className="p-0 h-auto font-semibold">{data[rigType] || 0}</Button>
+            <TableCell key={rigType} className="text-center font-bold">
+                <Button variant="link" disabled={!data[rigType]} onClick={() => onCellClick(rigType as RigType)} className="p-0 h-auto font-bold">{data[rigType] || 0}</Button>
             </TableCell>
         ))
       )}
@@ -98,12 +98,12 @@ const FinancialAmountRow = ({ label, data, total, onCellClick, onTotalClick }: {
       <TableHead>{label}</TableHead>
       {isAgencyRow ? (
          <TableCell colSpan={rigTypeColumns.length} className="text-right font-mono font-bold">
-              <Button variant="link" disabled={total === 0} onClick={() => onCellClick("Agency")} className="p-0 h-auto font-mono text-right w-full block">{(data["Agency"] || 0).toLocaleString('en-IN')}</Button>
+              <Button variant="link" disabled={total === 0} onClick={() => onCellClick("Agency")} className="p-0 h-auto font-mono text-right w-full block font-bold">{(data["Agency"] || 0).toLocaleString('en-IN')}</Button>
          </TableCell>
       ) : (
         rigTypeColumns.map(rigType => (
-            <TableCell key={rigType} className="text-right font-mono">
-                <Button variant="link" disabled={!data[rigType]} onClick={() => onCellClick(rigType as RigType)} className="p-0 h-auto font-mono text-right w-full block">{(data[rigType] || 0).toLocaleString('en-IN')}</Button>
+            <TableCell key={rigType} className="text-right font-mono font-bold">
+                <Button variant="link" disabled={!data[rigType]} onClick={() => onCellClick(rigType as RigType)} className="p-0 h-auto font-mono text-right w-full block font-bold">{(data[rigType] || 0).toLocaleString('en-IN')}</Button>
             </TableCell>
         ))
       )}

@@ -1,5 +1,3 @@
-
-
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -51,6 +49,10 @@ import {
   type SiteWorkStatus,
   constituencyOptions,
   type Constituency,
+  PUBLIC_DEPOSIT_APPLICATION_TYPES,
+  PRIVATE_APPLICATION_TYPES,
+  COLLECTOR_APPLICATION_TYPES,
+  PLAN_FUND_APPLICATION_TYPES,
 } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -165,14 +167,16 @@ const DetailRow = ({ label, value, className }: { label: string; value: any, cla
 };
 
 
-interface DataEntryFormProps { fileNoToEdit?: string; initialData: DataEntryFormData; supervisorList: (StaffMember & { uid: string; name: string })[]; userRole?: UserRole; workTypeContext: 'public' | 'private' | null; pageToReturnTo: string | null; isFormDisabled?: boolean;}
-
-const PUBLIC_APPLICATION_TYPES = applicationTypeOptions.filter(
-  (type) => !type.startsWith("Private_")
-) as ApplicationType[];
-const PRIVATE_APPLICATION_TYPES = applicationTypeOptions.filter(
-  (type) => type.startsWith("Private_")
-) as ApplicationType[];
+interface DataEntryFormProps {
+    fileNoToEdit?: string;
+    initialData: DataEntryFormData;
+    supervisorList: (StaffMember & { uid: string; name: string })[];
+    userRole?: UserRole;
+    workTypeContext: 'public' | 'private' | 'collector' | 'planFund' | null;
+    returnPath: string; // Add this prop
+    pageToReturnTo: string | null;
+    isFormDisabled?: boolean;
+}
 
 const formatDateForInput = (date: Date | string | null | undefined): string => {
     if (!date) return "";
@@ -249,7 +253,7 @@ const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOption
     );
 };
 
-const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initialData?: any, onConfirm: (data: any) => void, onCancel: () => void }) => {
+const RemittanceDialogContent = ({ initialData, onConfirm, onCancel, isDeferredFunding }: { initialData?: any, onConfirm: (data: any) => void, onCancel: () => void, isDeferredFunding: boolean; }) => {
     const { toast } = useToast();
     const form = useForm<RemittanceDetailFormData>({
       resolver: zodResolver(RemittanceDetailSchema),
@@ -264,6 +268,14 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
         onConfirm(data);
     };
     
+    // Filtered options for the Account dropdown
+    const availableRemittanceAccounts = useMemo(() => {
+        if (isDeferredFunding) {
+            return remittedAccountOptions.filter(o => o === "Plan Fund"); // Or whatever is appropriate
+        }
+        return remittedAccountOptions.filter(o => o !== "Plan Fund");
+    }, [isDeferredFunding]);
+
     return (
       <Form {...form}>
         <form
@@ -274,15 +286,17 @@ const RemittanceDialogContent = ({ initialData, onConfirm, onCancel }: { initial
           }}
         >
             <DialogHeader>
-                <DialogTitle>Remittance Details</DialogTitle>
+                <DialogTitle>{isDeferredFunding ? 'Administrative Sanction Details' : 'Remittance Details'}</DialogTitle>
             </DialogHeader>
             <div className="p-6 pt-0 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className={cn("grid grid-cols-1 gap-4", isDeferredFunding ? "md:grid-cols-2" : "md:grid-cols-3")}>
                     <FormField name="dateOfRemittance" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Date <span className="text-destructive">*</span></FormLabel><FormControl><Input type="date" {...field} /></FormControl><FormMessage /></FormItem> )}/>
                     <FormField name="amountRemitted" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} /></FormControl><FormMessage /></FormItem> )}/>
-                    <FormField name="remittedAccount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Account <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger></FormControl><SelectContent>{remittedAccountOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                    {!isDeferredFunding && (
+                        <FormField name="remittedAccount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Account <span className="text-destructive">*</span></FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select Account" /></SelectTrigger></FormControl><SelectContent>{availableRemittanceAccounts.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )}/>
+                    )}
                 </div>
-                <FormField name="remittanceRemarks" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Remittance Remarks</FormLabel><FormControl><Textarea {...field} placeholder="Add any remarks for this remittance entry..." /></FormControl><FormMessage /></FormItem> )}/>
+                <FormField name="remittanceRemarks" control={form.control} render={({ field }) => ( <FormItem><FormLabel>{isDeferredFunding ? 'AS Remarks' : 'Remittance Remarks'}</FormLabel><FormControl><Textarea {...field} placeholder="Add any remarks for this entry..." /></FormControl><FormMessage /></FormItem> )}/>
             </div>
             <DialogFooter>
                 <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
@@ -584,7 +598,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                                 <FormField name="totalDepth" control={control} render={({field})=> <FormItem><FormLabel>Depth Erected (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
                                                 <FormField name="waterLevel" control={control} render={({field})=> <FormItem><FormLabel>Water Level (m)</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(true)}/></FormControl><FormMessage/></FormItem>} />
                                             </>}
-                                            {isARSPurpose && <>
+                                           {isARSPurpose && <>
                                                 <FormField name="arsNumberOfStructures" control={control} render={({field})=> <FormItem><FormLabel>Number of Structures</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage/></FormItem>} />
                                                 <FormField name="arsStorageCapacity" control={control} render={({field})=> <FormItem><FormLabel>Storage Capacity (m³)</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage/></FormItem>} />
                                                 <FormField name="arsNumberOfFillings" control={control} render={({field})=> <FormItem><FormLabel>Number of Fillings</FormLabel><FormControl><Input type="number" {...field} onChange={e=>field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage/></FormItem>} />
@@ -712,7 +726,7 @@ const ViewSiteDialog = ({ site, onCancel }: { site: SiteDetailFormData | null, o
     );
 };
 
-export default function DataEntryFormComponent({ fileNoToEdit, initialData, supervisorList, userRole, workTypeContext, pageToReturnTo, isFormDisabled = false }: DataEntryFormProps) {
+export default function DataEntryFormComponent({ fileNoToEdit, initialData, supervisorList, userRole, workTypeContext, returnPath, pageToReturnTo, isFormDisabled = false }: DataEntryFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const fileIdToEdit = searchParams?.get("id");
@@ -733,13 +747,25 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const isEditor = userRole === 'editor';
   const isSupervisor = userRole === 'supervisor';
   const isViewer = userRole === 'viewer';
-
+  
   const form = useForm<DataEntryFormData>({
     resolver: zodResolver(DataEntrySchema),
     defaultValues: initialData,
   });
 
   const { control, handleSubmit, setValue, getValues, watch, trigger } = form;
+
+  const isDeferredFunding = useMemo(() => {
+    const appType = getValues('applicationType');
+    if (fileIdToEdit && appType) {
+        return PLAN_FUND_APPLICATION_TYPES.includes(appType as any) || COLLECTOR_APPLICATION_TYPES.includes(appType as any);
+    }
+    return workTypeContext === 'planFund' || workTypeContext === 'collector';
+  }, [workTypeContext, fileIdToEdit, getValues]);
+
+
+  const remittanceTitle = isDeferredFunding ? "2. Administrative Sanction Details" : "2. Remittance Details";
+
 
   const { fields: remittanceFields, append: appendRemittance, remove: removeRemittance, update: updateRemittance } = useFieldArray({ control, name: "remittanceDetails" });
   const { fields: siteFields, append: appendSite, remove: removeSite, update: updateSite, move: moveSite } = useFieldArray({ control, name: "siteDetails" });
@@ -748,15 +774,6 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   const watchedRemittanceDetails = watch("remittanceDetails");
   const watchedPaymentDetails = watch("paymentDetails");
   const watchedSiteDetails = watch("siteDetails");
-
-  const returnPath = useMemo(() => {
-    let base = '/dashboard/file-room';
-    if (workTypeContext === 'private') base = '/dashboard/private-deposit-works';
-    if (approveUpdateId) base = '/dashboard/pending-updates';
-    
-    return pageToReturnTo ? `${base}?page=${pageToReturnTo}` : base;
-  }, [workTypeContext, approveUpdateId, pageToReturnTo]);
-
 
   useEffect(() => {
     const totalRemittance = watchedRemittanceDetails?.reduce((sum, item) => sum + (Number(item.amountRemitted) || 0), 0) || 0;
@@ -908,7 +925,21 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
   };
   
   const closeDialog = () => setDialogState({ type: null, data: null, isView: false });
-  const applicationTypeOptionsForForm = workTypeContext === 'private' ? PRIVATE_APPLICATION_TYPES : PUBLIC_APPLICATION_TYPES;
+  
+  const getApplicationTypeOptions = () => {
+    switch (workTypeContext) {
+        case 'private':
+            return PRIVATE_APPLICATION_TYPES;
+        case 'collector':
+            return COLLECTOR_APPLICATION_TYPES;
+        case 'planFund':
+            return PLAN_FUND_APPLICATION_TYPES;
+        case 'public':
+        default:
+            return PUBLIC_DEPOSIT_APPLICATION_TYPES;
+    }
+  };
+  const applicationTypeOptionsForForm = getApplicationTypeOptions();
 
   const handleEyeIconClick = (site: SiteDetailFormData, index: number) => {
     if (isEditor || isSupervisor) {
@@ -945,25 +976,42 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
 
         <Card>
             <CardHeader className="flex flex-row justify-between items-start">
-                <div><CardTitle className="text-xl">2. Remittance Details</CardTitle></div>
+                <div><CardTitle className="text-xl">{remittanceTitle}</CardTitle></div>
                 {isEditor && !isFormDisabled && <Button type="button" onClick={() => openDialog('remittance', createDefaultRemittanceDetail())} disabled={isSupervisor || isViewer}><PlusCircle className="h-4 w-4 mr-2" />Add</Button>}
             </CardHeader>
             <CardContent>
                 <div className="relative max-h-[400px] overflow-auto">
                     <Table>
-                        <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount (₹)</TableHead><TableHead>Account</TableHead><TableHead>Remittance Remarks</TableHead>{isEditor && !isFormDisabled && <TableHead>Actions</TableHead>}</TableRow></TableHeader>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Date</TableHead>
+                                <TableHead>Amount (₹)</TableHead>
+                                {!isDeferredFunding && <TableHead>Account</TableHead>}
+                                <TableHead>{isDeferredFunding ? 'AS Remarks' : 'Remittance Remarks'}</TableHead>
+                                {isEditor && !isFormDisabled && <TableHead>Actions</TableHead>}
+                            </TableRow>
+                        </TableHeader>
                         <TableBody>
                             {remittanceFields.length > 0 ? remittanceFields.map((item, index) => (
                                 <TableRow key={item.id}>
                                     <TableCell>{item.dateOfRemittance ? format(new Date(item.dateOfRemittance), 'dd/MM/yyyy') : 'N/A'}</TableCell>
                                     <TableCell>{(Number(item.amountRemitted) || 0).toLocaleString('en-IN')}</TableCell>
-                                    <TableCell>{item.remittedAccount}</TableCell>
+                                    {!isDeferredFunding && <TableCell>{item.remittedAccount}</TableCell>}
                                     <TableCell>{item.remittanceRemarks}</TableCell>
                                     {isEditor && !isFormDisabled && <TableCell><div className="flex gap-1"><Button type="button" variant="ghost" size="icon" onClick={() => openDialog('remittance', { index, ...item })} disabled={isSupervisor || isViewer}><Edit className="h-4 w-4"/></Button><Button type="button" variant="ghost" size="icon" className="text-destructive" onClick={() => setItemToDelete({type: 'remittance', index})} disabled={isSupervisor || isViewer}><Trash2 className="h-4 w-4"/></Button></div></TableCell>}
                                 </TableRow>
-                            )) : <TableRow><TableCell colSpan={isEditor && !isFormDisabled ? 5 : 4} className="text-center h-24">No remittance details added.</TableCell></TableRow>}
+                            )) : <TableRow><TableCell colSpan={isEditor && !isFormDisabled ? (!isDeferredFunding ? 5 : 4) : (!isDeferredFunding ? 4 : 3)} className="text-center h-24">No details added.</TableCell></TableRow>}
                         </TableBody>
-                        <TableFooterComponent><TableRow><TableCell colSpan={isEditor && !isFormDisabled ? 4 : 3} className="text-right font-bold">Total Remittance</TableCell><TableCell className="font-bold">₹{totalRemittanceWatched?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}</TableCell></TableRow></TableFooterComponent>
+                        <TableFooterComponent>
+                            <TableRow>
+                                <TableCell colSpan={isEditor && !isFormDisabled ? (!isDeferredFunding ? 4 : 3) : (!isDeferredFunding ? 3 : 2)} className="text-right font-bold">
+                                    Total Remittance
+                                </TableCell>
+                                <TableCell className="font-bold">
+                                    ₹{totalRemittanceWatched?.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}) || '0.00'}
+                                </TableCell>
+                            </TableRow>
+                        </TableFooterComponent>
                     </Table>
                 </div>
             </CardContent>
@@ -1118,7 +1166,14 @@ export default function DataEntryFormComponent({ fileNoToEdit, initialData, supe
             <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-4xl"><ApplicationDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} formOptions={applicationTypeOptionsForForm} /></DialogContent>
         </Dialog>
         <Dialog open={dialogState.type === 'remittance'} onOpenChange={closeDialog}>
-            <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-3xl"><RemittanceDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} /></DialogContent>
+            <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-3xl">
+                <RemittanceDialogContent
+                    initialData={dialogState.data}
+                    onConfirm={handleDialogConfirm}
+                    onCancel={closeDialog}
+                    isDeferredFunding={isDeferredFunding}
+                />
+            </DialogContent>
         </Dialog>
          <Dialog open={dialogState.type === 'site'} onOpenChange={closeDialog}>
             <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-6xl h-[90vh] flex flex-col p-0"><SiteDialogContent initialData={dialogState.data} onConfirm={handleDialogConfirm} onCancel={closeDialog} supervisorList={supervisorList} isReadOnly={false} isSupervisor={isSupervisor} allLsgConstituencyMaps={allLsgConstituencyMaps}/></DialogContent>

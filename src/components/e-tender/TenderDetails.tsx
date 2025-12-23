@@ -435,9 +435,9 @@ export default function TenderDetails() {
                                         <div className="space-y-6 pt-4">
                                             <div className="space-y-2">
                                                 <h4 className="text-sm font-medium text-muted-foreground">Tender Identification</h4>
-                                                <div className="p-4 border rounded-md bg-slate-50 grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-4">
+                                                <div className="p-4 border rounded-md bg-slate-50 grid grid-cols-1 md:grid-cols-4 gap-x-8 gap-y-4">
                                                     <DetailRow label="eTender No." value={watch('eTenderNo')} />
-                                                    <DetailRow label="Tender Date" value={watch('tenderDate')} align="center" />
+                                                    <DetailRow label="Tender Date" value={watch('tenderDate')} />
                                                     <DetailRow label="File No." value={watch('fileNo') ? `GKT/${watch('fileNo')}` : null} />
                                                     <DetailRow label="File No. 2" value={watch('fileNo2') ? `GKT/${watch('fileNo2')}` : null} />
                                                     <DetailRow label="File No. 3" value={watch('fileNo3') ? `GKT/${watch('fileNo3')}` : null} />

@@ -19,16 +19,23 @@ const nativeDateSchema = z.preprocess(
     .refine((val) => !val || !isNaN(Date.parse(val)) || val === '', { message: "Invalid date" }) // Allow empty string
 );
 
-export const applicationTypeOptions = [
-  "Private_Domestic",
-  "Private_Irrigation",
-  "Private_Institution",
-  "Private_Industry",
+export const PUBLIC_DEPOSIT_APPLICATION_TYPES = [
   "LSGD",
   "Government_Institution",
   "Government_Water_Authority",
   "Government_PMKSY",
   "Government_Others",
+  "Other_Schemes",
+] as const;
+
+export const PRIVATE_APPLICATION_TYPES = [
+  "Private_Domestic",
+  "Private_Irrigation",
+  "Private_Institution",
+  "Private_Industry",
+] as const;
+
+export const COLLECTOR_APPLICATION_TYPES = [
   "Collector_MPLAD",
   "Collector_MLASDF",
   "Collector_MLA_Asset_Development_Fund",
@@ -36,8 +43,15 @@ export const applicationTypeOptions = [
   "Collector_SC/ST",
   "Collector_ARWSS",
   "Collector_Others",
-  "GWBDWS",
-  "Other_Schemes",
+] as const;
+
+export const PLAN_FUND_APPLICATION_TYPES = ["GWBDWS"] as const;
+
+export const applicationTypeOptions = [
+  ...PRIVATE_APPLICATION_TYPES,
+  ...PUBLIC_DEPOSIT_APPLICATION_TYPES,
+  ...COLLECTOR_APPLICATION_TYPES,
+  ...PLAN_FUND_APPLICATION_TYPES,
 ] as const;
 export type ApplicationType = typeof applicationTypeOptions[number];
 

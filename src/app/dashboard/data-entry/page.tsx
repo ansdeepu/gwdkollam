@@ -10,7 +10,7 @@ import { useAuth, type UserProfile } from "@/hooks/useAuth";
 import { useFileEntries } from "@/hooks/useFileEntries";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { useMemo, useEffect, useState, useCallback } from "react";
-import type { DataEntryFormData, StaffMember, UserRole } from "@/lib/schemas";
+import type { DataEntryFormData, StaffMember, UserRole, ApplicationType } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import { usePendingUpdates } from "@/hooks/usePendingUpdates";
 import { isValid, parse, format, parseISO } from 'date-fns';
@@ -18,6 +18,10 @@ import { usePageHeader } from "@/hooks/usePageHeader";
 import { useDataStore } from "@/hooks/use-data-store";
 
 export const dynamic = 'force-dynamic';
+
+const COLLECTOR_APPLICATION_TYPES: ApplicationType[] = ["Collector_MPLAD", "Collector_MLASDF", "Collector_MLA_Asset_Development_Fund", "Collector_DRW", "Collector_SC/ST", "Collector_ARWSS", "Collector_Others"];
+const PLAN_FUND_APPLICATION_TYPES: ApplicationType[] = ["GWBDWS"];
+const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
 
 const toDateOrNull = (value: any): Date | null => {
     if (value === null || value === undefined || value === '') return null;
@@ -98,9 +102,9 @@ export default function DataEntryPage() {
   const router = useRouter();
   const fileIdToEdit = searchParams?.get("id");
   const approveUpdateId = searchParams?.get("approveUpdateId");
-  const workType = searchParams?.get("workType") as 'public' | 'private' | null;
   const pageToReturnTo = searchParams?.get('page') ?? null;
-  
+  const workTypeContext = searchParams?.get('workType') as 'public' | 'private' | 'collector' | 'planFund' | null;
+
   const { user, isLoading: authIsLoading, fetchAllUsers } = useAuth();
   const { fetchEntryForEditing } = useFileEntries();
   const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
@@ -116,13 +120,30 @@ export default function DataEntryPage() {
   
   const isApprovingUpdate = !!(user?.role === 'editor' && approveUpdateId);
   
-  const returnPath = useMemo(() => {
-    let base = '/dashboard/file-room';
-    if (workType === 'private') base = '/dashboard/private-deposit-works';
-    if (isApprovingUpdate) base = '/dashboard/pending-updates';
-    
+ const returnPath = useMemo(() => {
+    let base = '/dashboard/file-room'; // Default to Deposit Works
+    const appType = pageData?.initialData.applicationType;
+
+    if (approveUpdateId) {
+        base = '/dashboard/pending-updates';
+    } else if (fileIdToEdit && appType) {
+        // This is the "edit" case. It needs to determine the work type from the loaded data.
+        if (COLLECTOR_APPLICATION_TYPES.includes(appType)) {
+            base = '/dashboard/collectors-deposit-works';
+        } else if (PLAN_FUND_APPLICATION_TYPES.includes(appType)) {
+            base = '/dashboard/plan-fund-works';
+        } else if (PRIVATE_APPLICATION_TYPES.includes(appType)) {
+            base = '/dashboard/private-deposit-works';
+        }
+    } else { // This is the "new file" case, which relies on the URL param
+        if (workTypeContext === 'collector') base = '/dashboard/collectors-deposit-works';
+        else if (workTypeContext === 'planFund') base = '/dashboard/plan-fund-works';
+        else if (workTypeContext === 'private') base = '/dashboard/private-deposit-works';
+    }
     return pageToReturnTo ? `${base}?page=${pageToReturnTo}` : base;
-  }, [workType, isApprovingUpdate, pageToReturnTo]);
+}, [approveUpdateId, pageToReturnTo, fileIdToEdit, workTypeContext, pageData]);
+
+
 
   useEffect(() => {
     const loadAllData = async () => {
@@ -199,9 +220,15 @@ export default function DataEntryPage() {
             description = errorState;
         } else if (user?.role === 'editor') {
             if (isCreatingNew) {
-                title = workType === 'private'
-                    ? "New File Data Entry - Private Deposit"
-                    : "New File Data Entry - Deposit Work";
+                if (workTypeContext === 'private') {
+                    title = "New Private Deposit Work";
+                } else if (workTypeContext === 'collector') {
+                    title = "New Collector's Deposit Work";
+                } else if (workTypeContext === 'planFund') {
+                    title = "New Plan Fund Work";
+                } else {
+                     title = "New Deposit Work";
+                }
                 description = "Use this form to input new work orders, project updates, or other relevant data for the Ground Water Department.";
             } else if (approveUpdateId) {
                 title = "Approve Pending Updates";
@@ -239,7 +266,7 @@ export default function DataEntryPage() {
     }
     
     setHeader(title, description);
-  }, [fileIdToEdit, user, approveUpdateId, setHeader, fileNoForHeader, workType, dataLoading, errorState]);
+  }, [fileIdToEdit, user, approveUpdateId, setHeader, fileNoForHeader, workTypeContext, dataLoading, errorState]);
 
 
   const supervisorList = useMemo(() => {
@@ -311,7 +338,6 @@ export default function DataEntryPage() {
     );
   }
 
-
   return (
     <div className="space-y-6">
        {fileIdToEdit && (
@@ -331,7 +357,8 @@ export default function DataEntryPage() {
                 initialData={pageData.initialData}
                 supervisorList={supervisorList}
                 userRole={user?.role}
-                workTypeContext={workType}
+                workTypeContext={workTypeContext}
+                returnPath={returnPath}
                 pageToReturnTo={pageToReturnTo}
                 isFormDisabled={isFormDisabledForSupervisor}
              />

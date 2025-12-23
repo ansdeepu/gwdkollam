@@ -27,6 +27,7 @@ import RigFinancialSummary from '@/components/dashboard/RigFinancialSummary';
 import ConstituencyWiseOverview from '@/components/dashboard/ConstituencyWiseOverview';
 import { useArsEntries } from '@/hooks/useArsEntries';
 import { Button } from '@/components/ui/button';
+import { PUBLIC_DEPOSIT_APPLICATION_TYPES, COLLECTOR_APPLICATION_TYPES, PLAN_FUND_APPLICATION_TYPES, PRIVATE_APPLICATION_TYPES } from '@/lib/schemas';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,7 +35,7 @@ const Loader2 = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
 );
 const ArrowUp = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
 );
 
 
@@ -51,7 +52,6 @@ const safeParseDate = (dateValue: any): Date | null => {
   return null;
 };
 
-const PRIVATE_APPLICATION_TYPES: ApplicationType[] = ["Private_Domestic", "Private_Irrigation", "Private_Institution", "Private_Industry"];
 const COMPLETED_WORK_STATUSES: SiteWorkStatus[] = ["Work Completed", "Bill Prepared", "Payment Completed", "Utilization Certificate Issued"];
 
 export default function DashboardPage() {
@@ -118,62 +118,75 @@ export default function DashboardPage() {
   const dashboardData = useMemo(() => {
     if (filteredEntriesLoading || isReportLoading || staffLoading || !currentUser) return null;
 
-    const relevantEntries = currentUser.role === 'supervisor' ? filteredFileEntries : allFileEntries;
-
-    const nonArsEntries = (relevantEntries || [])
-        .map(entry => {
-            if (!entry || !entry.siteDetails) return { ...entry, siteDetails: [] };
-            return {
-                ...entry,
-                siteDetails: entry.siteDetails.filter(site => site && site.purpose !== 'ARS' && !site.isArsImport)
-            };
-        })
-        .filter(entry => entry && entry.siteDetails && entry.siteDetails.length > 0);
-
     return {
-        nonArsEntries: nonArsEntries,
         allFileEntriesForSupervisor: filteredFileEntries || [], 
         allFileEntries: allFileEntries || [],
         staffMembers: staffMembers || []
     };
   }, [filteredEntriesLoading, isReportLoading, staffLoading, currentUser, filteredFileEntries, allFileEntries, staffMembers]);
 
-    const { constituencyWorks, depositWorksCount, arsWorksCount, totalCompletedCount } = useMemo(() => {
-        const publicDepositWorks = (allFileEntries || [])
-            .filter(entry => entry && (!entry.applicationType || !PRIVATE_APPLICATION_TYPES.includes(entry.applicationType)))
-            .flatMap(entry => 
-                (entry.siteDetails || []).map(site => ({
-                    ...site,
-                    fileNo: entry.fileNo,
-                    applicantName: entry.applicantName,
-                    constituency: site.constituency,
-                    purpose: site.purpose || 'N/A',
-                    dateOfCompletion: site.dateOfCompletion,
-                    totalExpenditure: site.totalExpenditure || 0,
-                    workStatus: site.workStatus
-                }))
-            );
+  const {
+      constituencyWorks,
+      depositWorksCount,
+      collectorWorksCount,
+      planFundWorksCount,
+      arsWorksCount,
+      totalCompletedCount
+  } = useMemo(() => {
+      const publicFileEntries = (allFileEntries || []).filter(entry => 
+          !entry.applicationType || !(PRIVATE_APPLICATION_TYPES as any).includes(entry.applicationType)
+      );
 
-        const arsWorks = (arsEntries || []).map(entry => ({
-            nameOfSite: entry.nameOfSite,
-            constituency: entry.constituency,
-            purpose: entry.arsTypeOfScheme || 'ARS',
-            fileNo: entry.fileNo,
-            applicantName: 'ARS Scheme',
-            workStatus: entry.arsStatus,
-            dateOfCompletion: entry.dateOfCompletion,
-            totalExpenditure: entry.totalExpenditure || 0,
-        }));
-        
-        const allWorks = [...publicDepositWorks, ...arsWorks];
-        const completedCount = allWorks.filter(w => w.workStatus && COMPLETED_WORK_STATUSES.includes(w.workStatus as SiteWorkStatus)).length;
+      const allWorksFromFiles = publicFileEntries.flatMap(entry => 
+          (entry.siteDetails || []).map(site => ({
+              ...site,
+              fileNo: entry.fileNo,
+              applicantName: entry.applicantName,
+              applicationType: entry.applicationType,
+              constituency: site.constituency,
+              purpose: site.purpose || 'N/A',
+              dateOfCompletion: site.dateOfCompletion,
+              totalExpenditure: site.totalExpenditure || 0,
+              workStatus: site.workStatus
+          }))
+      );
 
-        return {
-            constituencyWorks: allWorks,
-            depositWorksCount: publicDepositWorks.length,
-            arsWorksCount: arsWorks.length,
-            totalCompletedCount: completedCount
-        };
+      const arsWorks = (arsEntries || []).map(entry => ({
+          nameOfSite: entry.nameOfSite,
+          constituency: entry.constituency,
+          purpose: entry.arsTypeOfScheme || 'ARS',
+          fileNo: entry.fileNo,
+          applicantName: 'ARS Scheme',
+          workStatus: entry.arsStatus,
+          dateOfCompletion: entry.dateOfCompletion,
+          totalExpenditure: entry.totalExpenditure || 0,
+      }));
+      
+      const allPublicWorks = [...allWorksFromFiles, ...arsWorks];
+      
+      const completedCount = allPublicWorks.filter(w => w.workStatus && COMPLETED_WORK_STATUSES.includes(w.workStatus as SiteWorkStatus)).length;
+      
+      const countSitesInCategory = (types: readonly ApplicationType[]) => {
+        return publicFileEntries.reduce((acc, entry) => {
+            if (entry.applicationType && (types as any).includes(entry.applicationType)) {
+                return acc + (entry.siteDetails?.length || 0);
+            }
+            return acc;
+        }, 0);
+      };
+      
+      const depositCount = countSitesInCategory(PUBLIC_DEPOSIT_APPLICATION_TYPES);
+      const collectorCount = countSitesInCategory(COLLECTOR_APPLICATION_TYPES);
+      const planFundCount = countSitesInCategory(PLAN_FUND_APPLICATION_TYPES);
+
+      return {
+          constituencyWorks: allPublicWorks,
+          depositWorksCount: depositCount,
+          collectorWorksCount: collectorCount,
+          planFundWorksCount: planFundCount,
+          arsWorksCount: arsWorks.length,
+          totalCompletedCount: completedCount
+      };
   }, [allFileEntries, arsEntries]);
 
 
@@ -202,20 +215,20 @@ export default function DashboardPage() {
       <div className="space-y-6">
         <div id="updates" className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <ETenderNoticeBoard />
-          <ImportantUpdates allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries} />
+          <ImportantUpdates allFileEntries={dashboardData.allFileEntries} />
           <NoticeBoard staffMembers={dashboardData.staffMembers} />
         </div>
 
         <div id="file-status">
           <FileStatusOverview 
-              nonArsEntries={dashboardData.nonArsEntries}
+              nonArsEntries={dashboardData.allFileEntries.filter(e => !e.applicationType?.includes("ARS"))}
               onOpenDialog={handleOpenDialog}
           />
         </div>
         
         <div id="work-status">
           <WorkStatusByService 
-            allFileEntries={currentUser?.role === 'supervisor' ? dashboardData.allFileEntriesForSupervisor : dashboardData.allFileEntries}
+            allFileEntries={dashboardData.allFileEntries}
             onOpenDialog={handleOpenDialog}
             currentUserRole={currentUser?.role}
           />
@@ -225,6 +238,8 @@ export default function DashboardPage() {
           <ConstituencyWiseOverview
             allWorks={constituencyWorks}
             depositWorksCount={depositWorksCount}
+            collectorWorksCount={collectorWorksCount}
+            planFundWorksCount={planFundWorksCount}
             arsWorksCount={arsWorksCount}
             totalCompletedCount={totalCompletedCount}
             onOpenDialog={handleOpenDialog}
@@ -266,7 +281,7 @@ export default function DashboardPage() {
         
         <div id="work-progress">
           <WorkProgress
-            allFileEntries={currentUser?.role === 'supervisor' ? filteredFileEntries : dashboardData.allFileEntries}
+            allFileEntries={dashboardData.allFileEntries}
             onOpenDialog={handleOpenDialog}
             currentUser={currentUser}
           />
