@@ -283,7 +283,7 @@ export default function ETenderListPage() {
                                 )}
                             </div>
                              {lastCreatedDate && (
-                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground self-end mt-1">
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
                                     <Clock className="h-3 w-3"/>
                                     Last created: <span className="font-semibold text-primary/90">{format(lastCreatedDate, 'dd/MM/yy, hh:mm a')}</span>
                                 </div>
