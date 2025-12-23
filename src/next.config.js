@@ -13,7 +13,10 @@ const nextConfig = {
   experimental: {
     // This allows cross-origin requests from the preview environment,
     // preventing the warnings you were seeing in the logs.
-    // NOTE: allowedDevOrigins was removed as it was causing a build error.
+    allowedDevOrigins: [
+      "https://*.cloudworkstations.dev",
+      "https://*.firebase.studio",
+    ]
   },
   images: {
     remotePatterns: [
@@ -57,6 +60,6 @@ const nextConfig = {
   },
 };
 
-// Force cache invalidation by updating this comment.
+// Force cache invalidation by updating this comment. V5
 module.exports = nextConfig;
 
