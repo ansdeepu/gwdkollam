@@ -10,14 +10,6 @@ const nextConfig = {
     // Set to false to ignore linting errors during build.
     ignoreDuringBuilds: false,
   },
-  experimental: {
-    // This allows cross-origin requests from the preview environment,
-    // preventing the warnings you were seeing in the logs.
-    allowedDevOrigins: [
-      "https://*.cloudworkstations.dev",
-      "https://*.firebase.studio",
-    ]
-  },
   images: {
     remotePatterns: [
       {
@@ -62,4 +54,5 @@ const nextConfig = {
 
 // Force cache invalidation by updating this comment. V5
 module.exports = nextConfig;
+
 
