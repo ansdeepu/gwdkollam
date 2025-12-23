@@ -130,7 +130,7 @@ const DetailRow = ({ label, value, subValue, isCurrency = false, align = 'left',
 
 export default function TenderDetails() {
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, isLoading: isAuthLoading } = useAuth();
     const { tender, updateTender } = useTenderData();
     const { addTender, updateTender: saveTenderToDb } = useE_tenders();
     const { allStaffMembers } = useDataStore();
@@ -143,7 +143,7 @@ export default function TenderDetails() {
     const [isClearWorkOrderConfirmOpen, setIsClearWorkOrderConfirmOpen] = useState(false);
     const [retenderToDelete, setRetenderToDelete] = useState<{ id: string; index: number } | null>(null);
 
-    const isReadOnly = user?.role === 'viewer' || user?.role === 'supervisor';
+    const isReadOnly = isAuthLoading || !user || user.role === 'viewer' || user.role === 'supervisor';
 
     const form = useForm<E_tenderFormData>({
         resolver: zodResolver(E_tenderSchema),
@@ -560,7 +560,7 @@ export default function TenderDetails() {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); setActiveModal('opening'); }}><Edit className="h-4 w-4 mr-2"/>Edit</Button>}
-                                        {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearOpeningDetailsConfirmOpen(true); }}><Trash2 className="h-4 w-4"/></Button>}
+                                        {!isReadOnly && <Button type="button" size="icon" variant="destructive" onClick={(e) => { e.stopPropagation(); setIsClearOpeningDetailsConfirmOpen(true); }}><Trash2 className="h-4 w-4"/></Button>}
                                     </div>
                                 </CardHeader>
                                 {hasAnyOpeningData ? (
@@ -672,7 +672,7 @@ export default function TenderDetails() {
                                     </div>
                                      <div className="flex items-center gap-2">
                                         {!isReadOnly && <Button type="button" size="sm" variant="outline" onClick={() => setActiveModal('workOrder')}><Edit className="h-4 w-4 mr-2"/>{hasAnyWorkOrderData ? 'Edit' : 'Add'}</Button>}
-                                        {!isReadOnly && <Button type="button" size="sm" variant="destructive" onClick={() => setIsClearWorkOrderConfirmOpen(true)}><Trash2 className="h-4 w-4"/></Button>}
+                                        {!isReadOnly && <Button type="button" size="icon" variant="destructive" onClick={() => setIsClearWorkOrderConfirmOpen(true)}><Trash2 className="h-4 w-4"/></Button>}
                                     </div>
                                 </CardHeader>
                                 {hasAnyWorkOrderData ? (
