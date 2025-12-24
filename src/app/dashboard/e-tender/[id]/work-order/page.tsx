@@ -64,16 +64,13 @@ export default function WorkOrderPrintPage() {
     const copyToList = useMemo(() => {
         const uniqueStaff = new Map<string, StaffMember>();
 
-        // Define the static list of names to ensure they appear first and in order
-        const staticNames = ["ബിനി ഹെറിക്ക്", "മനു പി. എസ്.", "ബിജുകുമാർ ഡബ്ല്യൂ ."];
-        staticNames.forEach(name => {
-            const staff = allStaffMembers.find(s => (s.name || '').trim() === name.trim());
-            if (staff && !uniqueStaff.has(staff.id)) {
-                uniqueStaff.set(staff.id, staff);
-            }
-        });
-        
-        // Add dynamic members (measurer and supervisors) if they aren't already in the list
+        // 1. Find and add the active Assistant Executive Engineer first
+        const asstExecEng = allStaffMembers.find(s => s.designation === "Assistant Executive Engineer" && s.status === 'Active');
+        if (asstExecEng) {
+            uniqueStaff.set(asstExecEng.id, asstExecEng);
+        }
+
+        // 2. Add dynamic members (measurer and supervisors) if they aren't already in the list
         [measurer, supervisor1, supervisor2, supervisor3].forEach(staff => {
             if (staff && !uniqueStaff.has(staff.id)) {
                 uniqueStaff.set(staff.id, staff);
@@ -113,8 +110,8 @@ export default function WorkOrderPrintPage() {
               <div>
                   <p>സ്വീകർത്താവ്</p>
                    <div className="ml-8 whitespace-pre-wrap min-h-[6rem]">
-                      <p className="text-lg font-semibold">{l1Bidder?.name || '____________________'}</p>
-                      <p className="text-lg">{l1Bidder?.address || '____________________'}</p>
+                      <p className="font-bold">{l1Bidder?.name || '____________________'}</p>
+                      <p className="whitespace-pre-wrap">{l1Bidder?.address || '____________________'}</p>
                   </div>
               </div>
               
@@ -148,7 +145,7 @@ export default function WorkOrderPrintPage() {
                     <li>കുടിവെള്ളപദ്ധതികൾക്കായി വാട്ടർ ടാങ്ക് സ്ഥാപിക്കുന്ന ആംഗിൾ അയൺ അഥവാ കോൺക്രീറ്റ് സ്ട്രക്ച്ചർ / കോൺക്രീറ്റ് അഥവാ സ്റ്റീൽ പമ്പ് ഹൌസ് / ഹൈഡ്രന്റ് / വെൽ പ്രൊട്ടക്ഷൻ കവർ തുടങ്ങിയ എല്ലാ പ്രവൃത്തികളും പൂർത്തികരിക്കുന്നത് എസ്റ്റിമേറ്റിൽ പറഞ്ഞിരിക്കുന്ന അളവിലും തന്നിരിക്കുന്ന ഡ്രോയിംഗിന്റെ അടിസ്ഥാനത്തിലും ആയിരിക്കണം.</li>
                     <li>എസ്റ്റിമേറ്റിൽ പറഞ്ഞിരിക്കുന്ന സ്പെസിഫിക്കേഷൻ പ്രകാരം ഉള്ള വസ്തുക്കൾ മാത്രമാണ് പ്രവൃത്തിയ്ക്ക് ഉപയോഗിക്കേണ്ടത്.</li>
                     <li>വർക്ക് പൂർത്തീകരിച്ച് കംപ്ലീഷൻ സർട്ടിഫിക്കറ്റ് ഉൾപ്പെടെ ബിൽ സമർപ്പിക്കേണ്ടതാണ്. ഫണ്ടിന്റെ ലഭ്യത അനുസരിച്ചാണ്  ബിൽ തുക മാറി നൽകുന്നത്.</li>
-                    <li>പ്രവൃത്തി തൃപ്തികരമല്ലാത്ത പക്ഷം બിൽ തുക മാറി നൽകുന്നതല്ല.</li>
+                    <li>പ്രവൃത്തി തൃപ്തികരമല്ലാത്ത പക്ഷം ബിൽ തുക മാറി നൽകുന്നതല്ല.</li>
                     <li>പ്രവൃത്തിക്ക് വേണ്ട നിശ്ചിത സമയ പരിധി നിർബന്ധമായും പാലിക്കേണ്ടതാണ്.</li>
                     <li>കുടിവെള്ളപദ്ധതിയുടെ കെട്ടിട നമ്പർ, కറണ്ട് കണക്ഷൻ എന്നിവ എടുത്ത് സ്‌کീം പൂർത്തീകരിച്ച് ഓണർഷിപ്പ് സർട്ടിഫിക്കറ്റ് ലഭ്യമാക്കേണ്ടത് കോൺട്രാക്ടറുടെ ചുമതലയാണ്.</li>
                     <li>കാലാ കാലങ്ങളിൽ ഉള്ള സർക്കാർ ഉത്തരവുകൾ  ഈ പ്രവൃത്തിക്കും ബാധകമായിരിക്കും.</li>
