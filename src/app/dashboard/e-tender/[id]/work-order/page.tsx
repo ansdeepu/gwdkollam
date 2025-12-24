@@ -1,3 +1,4 @@
+
 // src/app/dashboard/e-tender/[id]/work-order/page.tsx
 "use client";
 
@@ -44,10 +45,10 @@ export default function WorkOrderPrintPage() {
     ].filter((s): s is StaffMember => !!s);
     
     const supervisorListText = supervisors.length > 0 
-        ? supervisors.map(s => `${s.nameMalayalam || s.name}, ${s.designationMalayalam || s.designation}<span>${s.phoneNo ? ` (ഫോൺ നമ്പർ: ${s.phoneNo})` : ''}</span>`).join(', ') 
+        ? supervisors.map(s => `${s.nameMalayalam || s.name}, ${s.designationMalayalam || s.designation}<span class="text-base">${s.phoneNo ? ` (ഫോൺ നമ്പർ: ${s.phoneNo})` : ''}</span>`).join(', ') 
         : '____________________';
 
-    const mainParagraph = `മേൽ സൂചന പ്രകാരം ${tender.nameOfWorkMalayalam || tender.nameOfWork} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ ഷെഡ്യൂൾ പ്രവൃത്തികൾ ഏറ്റെടുത്ത് നിശ്ചിത സമയപരിധിയായ <span>${tender.periodOfCompletion || '___'}</span> ദിവസത്തിനുള്ളിൽ ഈ ഓഫീസിലെ <span>${supervisorListText}</span> എന്നിവരുടെ മേൽനോട്ടത്തിൽ വിജയകരമായി പൂർത്തിയാക്കി പൂർത്തീകരണ റിപ്പോർട്ടും വർക്ക് ബില്ലും ഓഫീസിൽ ഹാജരാക്കേണ്ടതാണ്.`;
+    const mainParagraph = `മേൽ സൂചന പ്രകാരം ${tender.nameOfWorkMalayalam || tender.nameOfWork} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ ഷെഡ്യൂൾ പ്രവൃത്തികൾ ഏറ്റെടുത്ത് നിശ്ചിത സമയപരിധിയായ <span class="text-base">${tender.periodOfCompletion || '___'}</span> ദിവസത്തിനുള്ളിൽ ഈ ഓഫീസിലെ <span class="text-base">${supervisorListText}</span> എന്നിവരുടെ മേൽനോട്ടത്തിൽ വിജയകരമായി പൂർത്തിയാക്കി പൂർത്തീകരണ റിപ്പോർട്ടും വർക്ക് ബില്ലും ഓഫീസിൽ ഹാജരാക്കേണ്ടതാണ്.`;
     
     const copyToList = [
         ...supervisors,
@@ -64,15 +65,15 @@ export default function WorkOrderPrintPage() {
 
               <div className="flex justify-between">
                   <div>
-                      <p>നമ്പർ: ജി.കെ.റ്റി / {tender.fileNo || '__________'}</p>
-                      <p>ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
+                      <p className="text-base">നമ്പർ: ജി.കെ.റ്റി / {tender.fileNo || '__________'}</p>
+                      <p className="text-base">ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
                   </div>
                   <div className="text-right">
-                      <p className="whitespace-pre-wrap">{officeAddress?.officeNameMalayalam || 'ജില്ലാ ഓഫീസറുടെ കാര്യാലയം, ഭൂജലവകുപ്പ്'}</p>
-                      <p className="whitespace-pre-wrap">{officeAddress?.addressMalayalam || 'ഹൈസ്കൂൾ ജംഗ്ഷൻ, തേവള്ളി പി. ഓ., കൊല്ലം - 691009'}</p>
-                      <p>ഫോൺനമ്പർ. {officeAddress?.phoneNo || '0474 - 2790313'}</p>
-                      <p>ഇമെയിൽ: {officeAddress?.email || 'gwdklm@gmail.com'}</p>
-                      <p>തീയതി: {formatDateSafe(tender.dateWorkOrder) || '__________'}</p>
+                      <p className="whitespace-pre-wrap text-base">{officeAddress?.officeNameMalayalam || 'ജില്ലാ ഓഫീസറുടെ കാര്യാലയം, ഭൂജലവകുപ്പ്'}</p>
+                      <p className="whitespace-pre-wrap text-base">{officeAddress?.addressMalayalam || 'ഹൈസ്കൂൾ ജംഗ്ഷൻ, തേവള്ളി പി. ഓ., കൊല്ലം - 691009'}</p>
+                      <p className="text-base">ഫോൺനമ്പർ. {officeAddress?.phoneNo || '0474 - 2790313'}</p>
+                      <p className="text-base">ഇമെയിൽ: {officeAddress?.email || 'gwdklm@gmail.com'}</p>
+                      <p className="text-base">തീയതി: {formatDateSafe(tender.dateWorkOrder) || '__________'}</p>
                   </div>
               </div>
 
@@ -83,9 +84,9 @@ export default function WorkOrderPrintPage() {
               
               <div>
                   <p>സ്വീകർത്താവ്</p>
-                  <div className="ml-8">
-                      <p>{l1Bidder?.name || '____________________'}</p>
-                      <p className="whitespace-pre-wrap">{l1Bidder?.address || '____________________'}</p>
+                  <div className="ml-8 whitespace-pre-wrap min-h-[3.75rem]">
+                      <p className="text-base font-semibold">{l1Bidder?.name || '____________________'}</p>
+                      <p className="text-base">{l1Bidder?.address || '____________________'}</p>
                   </div>
               </div>
               
@@ -106,8 +107,8 @@ export default function WorkOrderPrintPage() {
               <p className="leading-normal text-justify indent-8" dangerouslySetInnerHTML={{ __html: mainParagraph }}></p>
 
               <div className='pl-8 space-y-1'>
-                <p>എസ്റ്റിമേറ്റ് തുക : {tender.estimateAmount?.toLocaleString('en-IN') || '0'} രൂപ</p>
-                <p>എഗ്രിമെന്റ് തുക: {l1Bidder?.quotedAmount?.toLocaleString('en-IN') || '0'} രൂപ</p>
+                <p className="text-base">എസ്റ്റിമേറ്റ് തുക : {tender.estimateAmount?.toLocaleString('en-IN') || '0'} രൂപ</p>
+                <p className="text-base">എഗ്രിമെന്റ് തുക: {l1Bidder?.quotedAmount?.toLocaleString('en-IN') || '0'} രൂപ</p>
               </div>
 
               <div>
@@ -115,7 +116,7 @@ export default function WorkOrderPrintPage() {
                 <ol className="list-decimal list-outside ml-12 space-y-1 text-justify leading-normal">
                     <li>എല്ലാ വർക്കുകളും തുടങ്ങേണ്ടതും പൂർത്തീകരിക്കേണ്ടതും വകുപ്പ് സൂപ്പർവിഷന് നിയോഗിക്കുന്ന ഉദ്യോഗസ്ഥന്റെ സാന്നിധ്യത്തിൽ ആയിരിക്കണം.</li>
                     <li>കുഴൽകിണർ നിർമ്മാണം, ട്യൂബ് വെൽ നിർമ്മാണം, കുടിവെള്ള പദ്ധതി, കൃത്രിമ ഭൂജലസംപോഷണ പദ്ധതി എന്നിവയ്ക്കായി ഉപയോഗിക്കുന്ന പൈപ്പുകളുടെ  ISI മുദ്ര, ബ്യൂറോ ഓഫ് ഇന്ത്യൻ స్టാൻഡേർഡ്‌സ്‌ അംഗീകരിച്ചിട്ടുള്ള ലിസ്റ്റിൽ ഉൾപ്പെടുന്നതായിരിക്കണം. ആയത് സംബന്ധിച്ച ഗുണനിലവാര സർട്ടിഫിക്കറ്റ് പ്രവൃത്തി നിർവഹണത്തിന് മുന്നോടിയായി ഓഫീസിൽ സമർപ്പിക്കേണ്ടതാണ്.</li>
-                    <li>വർക്ക് ഓർഡർ ലഭിച്ചതിന് <span>5</span> ദിവസത്തിനകം വർക്ക് തുടങ്ങിയിരിക്കേണ്ടതും, വർക്ക് ഓർഡറിൽ പറഞ്ഞിരിക്കുന്ന നിശ്ചിത ദിവസത്തിനകം വർക്ക് പൂർത്തീകരിക്കുകയും ചെയ്യേണ്ടതാണ്.</li>
+                    <li>വർക്ക് ഓർഡർ ലഭിച്ചതിന് <span className="text-base">5</span> ദിവസത്തിനകം വർക്ക് തുടങ്ങിയിരിക്കേണ്ടതും, വർക്ക് ഓർഡറിൽ പറഞ്ഞിരിക്കുന്ന നിശ്ചിത ദിവസത്തിനകം വർക്ക് പൂർത്തീകരിക്കുകയും ചെയ്യേണ്ടതാണ്.</li>
                     <li>കുടിവെള്ളപദ്ധതികൾക്കായി വാട്ടർ ടാങ്ക് സ്ഥാപിക്കുന്ന ആംഗിൾ അയൺ അഥവാ കോൺക്രീറ്റ് സ്ട്രക്ച്ചർ / കോൺക്രീറ്റ് അഥവാ സ്റ്റീൽ പമ്പ് ഹൌസ് / ഹൈഡ്രന്റ് / വെൽ പ്രൊട്ടക്ഷൻ കവർ തുടങ്ങിയ എല്ലാ പ്രവൃത്തികളും പൂർത്തികരിക്കുന്നത് എസ്റ്റിമേറ്റിൽ പറഞ്ഞിരിക്കുന്ന അളവിലും തന്നിരിക്കുന്ന ഡ്രോയിംഗിന്റെ അടിസ്ഥാനത്തിലും ആയിരിക്കണം.</li>
                     <li>എസ്റ്റിമേറ്റിൽ പറഞ്ഞിരിക്കുന്ന സ്പെസിഫിക്കേഷൻ പ്രകാരം ഉള്ള വസ്തുക്കൾ മാത്രമാണ് പ്രവൃത്തിയ്ക്ക് ഉപയോഗിക്കേണ്ടത്.</li>
                     <li>വർക്ക് പൂർത്തീകരിച്ച് കംപ്ലീഷൻ സർട്ടിഫിക്കറ്റ് ഉൾപ്പെടെ ബിൽ സമർപ്പിക്കേണ്ടതാണ്. ഫണ്ടിന്റെ ലഭ്യത അനുസരിച്ചാണ്  ബിൽ തുക മാറി നൽകുന്നത്.</li>

@@ -1,3 +1,4 @@
+
 // src/app/dashboard/e-tender/[id]/selection-notice/page.tsx
 "use client";
 
@@ -68,14 +69,14 @@ export default function SelectionNoticePrintPage() {
 
             return (
                  <p className="leading-relaxed text-justify indent-8">
-                    മേൽ സൂചന പ്രകാരം {workName} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന് മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ് ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന <span>{quotedAmountStr}/-</span> രൂപയുടെ <span>5%</span> തുകയായ <span>{performanceGuaranteeStr}/-</span> രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായും, അഡിഷണൽ പെർഫോമൻസ് ഗ്യാരന്റിയായി എസ്റ്റിമേറ്റ് തുകയുടെ <span>{excessPercentageText}%</span> കുറവ് വന്ന തുകയായ <span>{additionalPerformanceGuaranteeStr}/-</span> രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായും ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും <span>{stampPaperValueStr}/-</span> രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെന്റ് വയ്ക്കുന്നതിനും നിർദ്ദേശിക്കുന്നു.
+                    മേൽ സൂചന പ്രകാരം {workName} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന് മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ് ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന <span className="text-base">{quotedAmountStr}/-</span> രൂപയുടെ <span className="text-base">5%</span> തുകയായ <span className="text-base">{performanceGuaranteeStr}/-</span> രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായും, അഡിഷണൽ പെർഫോമൻസ് ഗ്യാരന്റിയായി എസ്റ്റിമേറ്റ് തുകയുടെ <span className="text-base">{excessPercentageText}%</span> കുറവ് വന്ന തുകയായ <span className="text-base">{additionalPerformanceGuaranteeStr}/-</span> രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായും ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും <span className="text-base">{stampPaperValueStr}/-</span> രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെന്റ് വയ്ക്കുന്നതിനും നിർദ്ദേശിക്കുന്നു.
                 </p>
             );
         }
 
         return (
             <p className="leading-relaxed text-justify indent-8">
-                മേൽ സൂചന പ്രകാരം {workName} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന് മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ് ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന <span>{quotedAmountStr}/-</span> രൂപയുടെ <span>5%</span> തുകയായ <span>{performanceGuaranteeStr}/-</span> രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായി ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും <span>{stampPaperValueStr}/-</span> രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ് വയ്ക്കുന്നതിനും നിർദ്ദേശിക്കുന്നു.
+                മേൽ സൂചന പ്രകാരം {workName} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ പ്രകാരമുള്ള പ്രവൃത്തികൾ ഏറ്റെടുക്കുന്നതിന് മുന്നോടിയായി ഈ നോട്ടീസ് തീയതി മുതൽ പതിന്നാല് ദിവസത്തിനകം പെർഫോമൻസ് ഗ്യാരന്റിയായി ടെണ്ടറിൽ ക്വോട്ട് ചെയ്തിരിക്കുന്ന <span className="text-base">{quotedAmountStr}/-</span> രൂപയുടെ <span className="text-base">5%</span> തുകയായ <span className="text-base">{performanceGuaranteeStr}/-</span> രൂപയിൽ കുറയാത്ത തുക ട്രഷറി ഫിക്സഡ് ഡെപ്പോസിറ്റായി ഈ ഓഫീസിൽ കെട്ടിവയ്ക്കുന്നതിനും <span className="text-base">{stampPaperValueStr}/-</span> രൂപയുടെ മുദ്രപത്രത്തിൽ വർക്ക് എഗ്രിമെൻ്റ് വയ്ക്കുന്നതിനും നിർദ്ദേശിക്കുന്നു.
             </p>
         );
     };
@@ -89,15 +90,15 @@ export default function SelectionNoticePrintPage() {
               
               <div className="flex justify-between pt-2">
                   <div>
-                      <p>നമ്പർ: ജി.കെ.റ്റി / {tender.fileNo || '__________'}</p>
-                      <p>ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
+                      <p className="text-base">നമ്പർ: ജി.കെ.റ്റി / {tender.fileNo || '__________'}</p>
+                      <p className="text-base">ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>
                   </div>
                   <div className="text-right">
-                      <p className="whitespace-pre-wrap">{officeAddress?.officeNameMalayalam || 'ജില്ലാ ഓഫീസറുടെ കാര്യാലയം, ഭൂജലവകുപ്പ്'}</p>
-                      <p className="whitespace-pre-wrap">{officeAddress?.addressMalayalam || 'ഹൈസ്കൂൾ ജംഗ്ഷൻ, തേവള്ളി പി. ഓ., കൊല്ലം - 691009'}</p>
-                      <p>ഫോൺനമ്പർ: {officeAddress?.phoneNo || '0474 - 2790313'}</p>
-                      <p>ഇമെയിൽ: {officeAddress?.email || 'gwdklm@gmail.com'}</p>
-                      <p>തീയതി: {formatDateSafe(tender.selectionNoticeDate) || '__________'}</p>
+                      <p className="whitespace-pre-wrap text-base">{officeAddress?.officeNameMalayalam || 'ജില്ലാ ഓഫീസറുടെ കാര്യാലയം, ഭൂജലവകുപ്പ്'}</p>
+                      <p className="whitespace-pre-wrap text-base">{officeAddress?.addressMalayalam || 'ഹൈസ്കൂൾ ജംഗ്ഷൻ, തേവള്ളി പി. ഓ., കൊല്ലം - 691009'}</p>
+                      <p className="text-base">ഫോൺനമ്പർ: {officeAddress?.phoneNo || '0474 - 2790313'}</p>
+                      <p className="text-base">ഇമെയിൽ: {officeAddress?.email || 'gwdklm@gmail.com'}</p>
+                      <p className="text-base">തീയതി: {formatDateSafe(tender.selectionNoticeDate) || '__________'}</p>
                   </div>
               </div>
 
@@ -108,9 +109,9 @@ export default function SelectionNoticePrintPage() {
 
               <div className="pt-2">
                   <p>സ്വീകർത്താവ്</p>
-                  <div className="ml-8">
-                      <p>{l1Bidder?.name || '____________________'}</p>
-                      <p className="whitespace-pre-wrap">{l1Bidder?.address || '____________________'}</p>
+                  <div className="ml-8 whitespace-pre-wrap min-h-[3.75rem]">
+                      <p className="text-base font-semibold">{l1Bidder?.name || '____________________'}</p>
+                      <p className="text-base">{l1Bidder?.address || '____________________'}</p>
                   </div>
               </div>
               
