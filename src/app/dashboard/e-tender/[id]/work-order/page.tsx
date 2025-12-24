@@ -71,8 +71,8 @@ export default function WorkOrderPrintPage() {
                   <div className="text-right">
                       <p className="whitespace-pre-wrap text-base">{officeAddress?.officeNameMalayalam || 'ജില്ലാ ഓഫീസറുടെ കാര്യാലയം, ഭൂജലവകുപ്പ്'}</p>
                       <p className="whitespace-pre-wrap text-base">{officeAddress?.addressMalayalam || 'ഹൈസ്കൂൾ ജംഗ്ഷൻ, തേവള്ളി പി. ഓ., കൊല്ലം - 691009'}</p>
-                      <p className="text-base">ഫോൺനമ്പർ. {officeAddress?.phoneNo || '0474 - 2790313'}</p>
-                      <p className="text-base">ഇമെയിൽ: {officeAddress?.email || 'gwdklm@gmail.com'}</p>
+                      <p className="text-lg">ഫോൺനമ്പർ. {officeAddress?.phoneNo || '0474 - 2790313'}</p>
+                      <p className="text-lg">{officeAddress?.email || 'gwdklm@gmail.com'}</p>
                       <p className="text-base">തീയതി: {formatDateSafe(tender.dateWorkOrder) || '__________'}</p>
                   </div>
               </div>
@@ -84,20 +84,20 @@ export default function WorkOrderPrintPage() {
               
               <div>
                   <p>സ്വീകർത്താവ്</p>
-                  <div className="ml-8 whitespace-pre-wrap min-h-[3.75rem]">
-                      <p className="text-base font-semibold">{l1Bidder?.name || '____________________'}</p>
-                      <p className="text-base">{l1Bidder?.address || '____________________'}</p>
+                  <div className="ml-8 whitespace-pre-wrap min-h-[5rem]">
+                      <p className="text-lg font-semibold">{l1Bidder?.name || '____________________'}</p>
+                      <p className="text-lg">{l1Bidder?.address || '____________________'}</p>
                   </div>
               </div>
               
               <p>സർ,</p>
 
                <div className="grid grid-cols-[auto,1fr] gap-x-2">
-                    <span className="font-semibold">വിഷയം:</span>
+                    <span>വിഷയം:</span>
                     <span className="text-justify">{tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് {workOrderTitle} നൽകുന്നത്– സംബന്ധിച്ച്.</span>
                 </div>
                 <div className="grid grid-cols-[auto,1fr] gap-x-2">
-                    <span className="font-semibold">സൂചന:</span>
+                    <span>സൂചന:</span>
                     <span className="flex flex-col">
                         <span>1. ഈ ഓഫീസിലെ {formatDateSafe(tender.dateOfOpeningBid) || '__________'} തീയതിയിലെ ടെണ്ടർ നമ്പർ {tender.eTenderNo || '__________'}</span>
                         <span>2. വർക്ക് എഗ്രിമെന്റ് നമ്പർ {tender.eTenderNo || '__________'} തീയതി {formatDateSafe(tender.agreementDate) || '__________'}</span>
