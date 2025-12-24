@@ -51,17 +51,26 @@ export default function WorkOrderPrintPage() {
     const mainParagraph = `മേൽ സൂചന പ്രകാരം ${tender.nameOfWorkMalayalam || tender.nameOfWork} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ ഷെഡ്യൂൾ പ്രവൃത്തികൾ ഏറ്റെടുത്ത് നിശ്ചിത സമയപരിധിയായ <span>${tender.periodOfCompletion || '___'}</span> ദിവസത്തിനുള്ളിൽ ഈ ഓഫീസിലെ <span>${supervisorListText}</span> എന്നിവരുടെ മേൽനോട്ടത്തിൽ വിജയകരമായി പൂർത്തിയാക്കി പൂർത്തീകരണ റിപ്പോർട്ടും വർക്ക് ബില്ലും ഓഫീസിൽ ഹാജരാക്കേണ്ടതാണ്.`;
     
     const copyToList = useMemo(() => {
-        const aee = allStaffMembers.find(s => s.designation === "Assistant Executive Engineer");
-        const ae = allStaffMembers.find(s => s.name === "ശ്രീ. മനു പി. എസ്.");
-        const masterDriller = allStaffMembers.find(s => s.name === "ശ്രീ. ബിജുകുമാർ ഡബ്ല്യൂ .");
-        
-        const orderedList: StaffMember[] = [];
-        if (aee) orderedList.push(aee);
-        if (ae) orderedList.push(ae);
-        if (masterDriller) orderedList.push(masterDriller);
+        const uniqueStaff = new Map<string, StaffMember>();
 
-        return orderedList.filter((p): p is StaffMember => !!p);
-    }, [allStaffMembers]);
+        // Add static members first to set the order
+        const staticNames = ["ബിനി ഹെറിക്ക്", "മനു പി. എസ്.", "ബിജുകുമാർ ഡബ്ല്യൂ ."];
+        staticNames.forEach(name => {
+            const staff = allStaffMembers.find(s => (s.name || '').trim() === name.trim());
+            if (staff && !uniqueStaff.has(staff.id)) {
+                uniqueStaff.set(staff.id, staff);
+            }
+        });
+        
+        // Add dynamic members (measurer and supervisors) if they aren't already in the list
+        [measurer, supervisor1, supervisor2, supervisor3].forEach(staff => {
+            if (staff && !uniqueStaff.has(staff.id)) {
+                uniqueStaff.set(staff.id, staff);
+            }
+        });
+
+        return Array.from(uniqueStaff.values());
+    }, [allStaffMembers, measurer, supervisor1, supervisor2, supervisor3]);
 
 
     return (
@@ -87,14 +96,14 @@ export default function WorkOrderPrintPage() {
 
                <div className="pt-4">
                   <p>പ്രേഷകൻ</p>
-                  <p className="ml-8">ജില്ലാ ആഫീസർ</p>
+                  <p className="ml-8">ജില്ലാ ഓഫീസർ</p>
               </div>
               
               <div>
                   <p>സ്വീകർത്താവ്</p>
-                  <div className="ml-8 whitespace-pre-wrap min-h-[6rem]">
-                      <p className="font-semibold text-lg">{l1Bidder?.name || '____________________'}</p>
-                      <p className="text-lg">{l1Bidder?.address || '____________________'}</p>
+                   <div className="ml-8 whitespace-pre-wrap min-h-[6rem]">
+                      <p className="font-semibold">{l1Bidder?.name || '____________________'}</p>
+                      <p>{l1Bidder?.address || '____________________'}</p>
                   </div>
               </div>
               
@@ -136,14 +145,14 @@ export default function WorkOrderPrintPage() {
                     <li>ഒരു കാരണവശാലും സ്‌کീമിന്റെ അന്തസത്തയ്ക്ക് കാതലായ മാറ്റം വരുത്തുന്ന രീതിയിലുള്ള രൂപഭേദങ്ങൾ വരുത്താൻ പാടില്ല.</li>
                     <li>പ്രവൃത്തിയെക്കുറിച്ചുള്ള ഏതൊരു അന്തിמ തീരുമാനവും ജില്ലാ ഓഫീസറിൽ നിക്ഷിപ്തമായിരിക്കും.</li>
                     <li>കരാറുടമ്പടി പ്രകാരം പ്രവൃത്തി പൂർത്തിയാക്കുന്നതിൽ കരാറുകാരൻ വീഴ്ച വരുത്തുകയാണെങ്കിൽ നിയമനുസൃതം നോട്ടീസ് അയച്ച് പതിന്നാല് ദിവസങ്ങൾക്ക് ശേഷം കരാർ റദ്ദാക്കാവുന്നതും മറ്റൊരു കരാറുകാരൻ വഴി പ്രവൃത്തി പൂർത്തിയാക്കാവുന്നതുമാണ്. അങ്ങനെ ചെയ്യുമ്പോൾ ഉണ്ടാകുന്ന അധിക ചെലവ് മുഴുവൻ കരാറുകാരന്റെ ബിൽ തുകയിൽ നിന്നും, ജാമ്യ നിക്ഷേപത്തിൽ നിന്നും, സ്ഥาวര ജംഗമ സ്വത്തുക്കളിൽ നിന്നും വസൂലാക്കുന്നതാണ്.</li>
-                    <li>തൃപ്തികരമല്ലെന്ന് കാണുന്ന പ്രവൃത്തിയോ അല്ലെങ്കിൽ ഗുണനിലവാരമില്ലാത്ത സാധനങ്ങൾ ഉപയോഗിച്ചു കൊണ്ടുള്ള പ്രവൃത്തിയോ വകുപ്പ് നിർദ്ദേശിക്കുന്ന രീതിയിൽ പൊളിച്ചു മാറ്റി, ഗുണനിലവാരമുള്ള സാധനങ്ങൾ ഉപയോഗിച്ചു കൊണ്ട് കരാറുടമ്പടിയിൽ నిഷ്കർഷിക്കുന്ന രൂപത്തിലും ഘടനയിലും പുനർനിർമ്മിക്കുന്നതിന് കരാറുകാരൻ బాധ്യസ്ഥനാണ്. അല്ലാത്ത പക്ഷം വകുപ്പിന്റെ യുക്തം പോലെ പിഴ ചുമത്തുന്നതാണ്.</li>
+                    <li>തൃപ്തികരമല്ലെന്ന് കാണുന്ന പ്രവൃത്തിയോ അല്ലെങ്കിൽ ഗുണനിലവാരമില്ലാത്ത സാധനങ്ങൾ ഉപയോഗിച്ചു കൊണ്ടുള്ള പ്രവൃത്തിയോ വകുപ്പ് നിർദ്ദേശിക്കുന്ന രീതിയിൽ പൊളിച്ചു മാറ്റി, ഗുണനിലവാരമുള്ള സാധനങ്ങൾ ഉപയോഗിച്ചു കൊണ്ട് കരാറുടമ്പടിയിൽ నిഷ്کർഷിക്കുന്ന രൂപത്തിലും ഘടനയിലും പുനർനിർമ്മിക്കുന്നതിന് കരാറുകാരൻ బాധ്യസ്ഥനാണ്. അല്ലാത്ത പക്ഷം വകുപ്പിന്റെ യുക്തം പോലെ പിഴ ചുമത്തുന്നതാണ്.</li>
                 </ol>
               </div>
 
               <div className="pt-8 text-right">
                   <p>വിശ്വസ്തതയോടെ</p>
                   <div className="h-12" />
-                  <p className="font-semibold">ജില്ലാ ആഫീസർ</p>
+                  <p className="font-semibold">ജില്ലാ ഓഫീസർ</p>
               </div>
 
               <div className="space-y-1 pt-6">
