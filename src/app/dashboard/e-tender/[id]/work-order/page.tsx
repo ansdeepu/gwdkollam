@@ -56,10 +56,10 @@ export default function WorkOrderPrintPage() {
     }, [measurer, supervisor1, supervisor2, supervisor3]);
     
     const supervisorListText = supervisors.length > 0 
-        ? supervisors.map(s => `${s.nameMalayalam || s.name}, ${s.designationMalayalam || s.designation}<span class="text-base font-semibold">${s.phoneNo ? ` (ഫോൺ നമ്പർ: ${s.phoneNo})` : ''}</span>`).join(', ') 
+        ? supervisors.map(s => `${s.nameMalayalam || s.name}, ${s.designationMalayalam || s.designation}${s.phoneNo ? ` (ഫോൺ നമ്പർ: ${s.phoneNo})` : ''}`).join(', ') 
         : '____________________';
 
-    const mainParagraph = `മേൽ സൂചന പ്രകാരം ${tender.nameOfWorkMalayalam || tender.nameOfWork} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ ഷെഡ്യൂൾ പ്രവൃത്തികൾ ഏറ്റെടുത്ത് നിശ്ചിത സമയപരിധിയായ <span class="text-base font-semibold">${tender.periodOfCompletion || '___'}</span> ദിവസത്തിനുള്ളിൽ ഈ ഓഫീസിലെ <span class="text-base font-semibold">${supervisorListText}</span> എന്നിവരുടെ മേൽനോട്ടത്തിൽ വിജയകരമായി പൂർത്തിയാക്കി പൂർത്തീകരണ റിപ്പോർട്ടും വർക്ക് ബില്ലും ഓഫീസിൽ ഹാജരാക്കേണ്ടതാണ്.`;
+    const mainParagraph = `മേൽ സൂചന പ്രകാരം ${tender.nameOfWorkMalayalam || tender.nameOfWork} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ ഷെഡ്യൂൾ പ്രവൃത്തികൾ ഏറ്റെടുത്ത് നിശ്ചിത സമയപരിധിയായ <span class="font-semibold">${tender.periodOfCompletion || '___'}</span> ദിവസത്തിനുള്ളിൽ ഈ ഓഫീസിലെ ${supervisorListText} എന്നിവരുടെ മേൽനോട്ടത്തിൽ വിജയകരമായി പൂർത്തിയാക്കി പൂർത്തീകരണ റിപ്പോർട്ടും വർക്ക് ബില്ലും ഓഫീസിൽ ഹാജരാക്കേണ്ടതാണ്.`;
     
     const copyToList = useMemo(() => {
         const uniqueStaff = new Map<string, StaffMember>();
@@ -96,8 +96,8 @@ export default function WorkOrderPrintPage() {
                   <div className="text-right">
                       <p className="whitespace-pre-wrap">{officeAddress?.officeNameMalayalam || 'ജില്ലാ ഓഫീസറുടെ കാര്യാലയം, ഭൂജലവകുപ്പ്'}</p>
                       <p className="whitespace-pre-wrap">{officeAddress?.addressMalayalam || 'ഹൈസ്കൂൾ ജംഗ്ഷൻ, തേവള്ളി പി. ഓ., കൊല്ലം - 691009'}</p>
-                      <p>ഫോൺനമ്പർ. <span className="text-base font-semibold">{officeAddress?.phoneNo || '0474 - 2790313'}</span></p>
-                      <p><span className="text-base font-semibold">{officeAddress?.email || 'gwdklm@gmail.com'}</span></p>
+                      <p>ഫോൺനമ്പർ. {officeAddress?.phoneNo || '0474 - 2790313'}</p>
+                      <p>ഇമെയിൽ: {officeAddress?.email || 'gwdklm@gmail.com'}</p>
                       <p>തീയതി: {formatDateSafe(tender.dateWorkOrder) || '__________'}</p>
                   </div>
               </div>
@@ -110,8 +110,8 @@ export default function WorkOrderPrintPage() {
               <div>
                   <p>സ്വീകർത്താവ്</p>
                    <div className="ml-8 whitespace-pre-wrap min-h-[6rem]">
-                      <p className="font-bold">{l1Bidder?.name || '____________________'}</p>
-                      <p className="whitespace-pre-wrap">{l1Bidder?.address || '____________________'}</p>
+                      <p className="font-bold text-lg">{l1Bidder?.name || '____________________'}</p>
+                      <p className="whitespace-pre-wrap text-lg">{l1Bidder?.address || '____________________'}</p>
                   </div>
               </div>
               
@@ -131,7 +131,7 @@ export default function WorkOrderPrintPage() {
               
               <p className="leading-normal text-justify indent-8" dangerouslySetInnerHTML={{ __html: mainParagraph }}></p>
 
-              <div className='pl-8 space-y-1'>
+              <div className='pl-8 space-y-1 font-bold'>
                 <p>എസ്റ്റിമേറ്റ് തുക : {tender.estimateAmount?.toLocaleString('en-IN') || '0'} രൂപ</p>
                 <p>എഗ്രിമെന്റ് തുക: {l1Bidder?.quotedAmount?.toLocaleString('en-IN') || '0'} രൂപ</p>
               </div>
