@@ -82,12 +82,12 @@ export default function SelectionNoticePrintPage() {
 
     return (
         <div className="-m-6 bg-white min-h-screen">
-          <div className="max-w-4xl mx-auto p-12 space-y-4 font-serif">
+          <div className="max-w-4xl mx-auto p-12 space-y-4 font-serif text-base">
               <div className="text-center">
-                  <h1 className="text-lg font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
+                  <h1 className="font-bold underline">"ഭരണഭാഷ-മാതൃഭാഷ"</h1>
               </div>
               
-              <div className="text-sm flex justify-between pt-2">
+              <div className="flex justify-between pt-2">
                   <div>
                       <p>നമ്പർ: ജി.കെ.റ്റി / {tender.fileNo || '__________'}</p>
                       <p>ടെണ്ടർ നമ്പർ : {tender.eTenderNo || '__________'}</p>

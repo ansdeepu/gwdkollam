@@ -47,7 +47,7 @@ export default function SupplyOrderPrintPage() {
 
     return (
         <div className="-m-6 bg-white min-h-screen">
-          <div className="max-w-5xl mx-auto p-12 text-black text-xl font-mono">
+          <div className="max-w-5xl mx-auto p-12 text-black font-mono text-base">
             {/* Page 1 */}
             <div className="space-y-6">
                 <div className="flex justify-between">
@@ -124,7 +124,7 @@ export default function SupplyOrderPrintPage() {
                 </div>
                 <div className="text-center pt-4">
                     <h2 className="font-bold underline">List of items to be supplied</h2>
-                     <table className="w-full mt-2 border-collapse border border-black text-base">
+                     <table className="w-full mt-2 border-collapse border border-black">
                         <thead>
                             <tr className="border border-black">
                                 <th className="border border-black p-1">Item No</th>
