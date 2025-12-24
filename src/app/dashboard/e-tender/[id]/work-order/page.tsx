@@ -37,23 +37,34 @@ export default function WorkOrderPrintPage() {
     const supervisor2 = allStaffMembers.find(s => s.id === tender.supervisor2Id);
     const supervisor3 = allStaffMembers.find(s => s.id === tender.supervisor3Id);
 
-    const supervisors = [
-        measurer,
-        supervisor1,
-        supervisor2,
-        supervisor3
-    ].filter((s): s is StaffMember => !!s);
+    const supervisors = useMemo(() => {
+        const uniqueStaff = new Map<string, StaffMember>();
+        
+        // Add measurer first if they exist
+        if (measurer && !uniqueStaff.has(measurer.id)) {
+            uniqueStaff.set(measurer.id, measurer);
+        }
+
+        // Add supervisors if they exist and are not already added
+        [supervisor1, supervisor2, supervisor3].forEach(staff => {
+            if (staff && !uniqueStaff.has(staff.id)) {
+                uniqueStaff.set(staff.id, staff);
+            }
+        });
+        
+        return Array.from(uniqueStaff.values());
+    }, [measurer, supervisor1, supervisor2, supervisor3]);
     
     const supervisorListText = supervisors.length > 0 
-        ? supervisors.map(s => `${s.nameMalayalam || s.name}, ${s.designationMalayalam || s.designation}<span class="text-base">${s.phoneNo ? ` (ഫോൺ നമ്പർ: ${s.phoneNo})` : ''}</span>`).join(', ') 
+        ? supervisors.map(s => `${s.nameMalayalam || s.name}, ${s.designationMalayalam || s.designation}<span class="text-base font-semibold">${s.phoneNo ? ` (ഫോൺ നമ്പർ: ${s.phoneNo})` : ''}</span>`).join(', ') 
         : '____________________';
 
-    const mainParagraph = `മേൽ സൂചന പ്രകാരം ${tender.nameOfWorkMalayalam || tender.nameOfWork} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ ഷെഡ്യൂൾ പ്രവൃത്തികൾ ഏറ്റെടുത്ത് നിശ്ചിത സമയപരിധിയായ <span>${tender.periodOfCompletion || '___'}</span> ദിവസത്തിനുള്ളിൽ ഈ ഓഫീസിലെ <span>${supervisorListText}</span> എന്നിവരുടെ മേൽനോട്ടത്തിൽ വിജയകരമായി പൂർത്തിയാക്കി പൂർത്തീകരണ റിപ്പോർട്ടും വർക്ക് ബില്ലും ഓഫീസിൽ ഹാജരാക്കേണ്ടതാണ്.`;
+    const mainParagraph = `മേൽ സൂചന പ്രകാരം ${tender.nameOfWorkMalayalam || tender.nameOfWork} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ ഷെഡ്യൂൾ പ്രവൃത്തികൾ ഏറ്റെടുത്ത് നിശ്ചിത സമയപരിധിയായ <span class="text-base font-semibold">${tender.periodOfCompletion || '___'}</span> ദിവസത്തിനുള്ളിൽ ഈ ഓഫീസിലെ <span class="text-base font-semibold">${supervisorListText}</span> എന്നിവരുടെ മേൽനോട്ടത്തിൽ വിജയകരമായി പൂർത്തിയാക്കി പൂർത്തീകരണ റിപ്പോർട്ടും വർക്ക് ബില്ലും ഓഫീസിൽ ഹാജരാക്കേണ്ടതാണ്.`;
     
     const copyToList = useMemo(() => {
         const uniqueStaff = new Map<string, StaffMember>();
 
-        // Add static members first to set the order
+        // Define the static list of names to ensure they appear first and in order
         const staticNames = ["ബിനി ഹെറിക്ക്", "മനു പി. എസ്.", "ബിജുകുമാർ ഡബ്ല്യൂ ."];
         staticNames.forEach(name => {
             const staff = allStaffMembers.find(s => (s.name || '').trim() === name.trim());
@@ -88,8 +99,8 @@ export default function WorkOrderPrintPage() {
                   <div className="text-right">
                       <p className="whitespace-pre-wrap">{officeAddress?.officeNameMalayalam || 'ജില്ലാ ഓഫീസറുടെ കാര്യാലയം, ഭൂജലവകുപ്പ്'}</p>
                       <p className="whitespace-pre-wrap">{officeAddress?.addressMalayalam || 'ഹൈസ്കൂൾ ജംഗ്ഷൻ, തേവള്ളി പി. ഓ., കൊല്ലം - 691009'}</p>
-                      <p>ഫോൺനമ്പർ. {officeAddress?.phoneNo || '0474 - 2790313'}</p>
-                      <p>{officeAddress?.email || 'gwdklm@gmail.com'}</p>
+                      <p>ഫോൺനമ്പർ. <span className="text-base font-semibold">{officeAddress?.phoneNo || '0474 - 2790313'}</span></p>
+                      <p><span className="text-base font-semibold">{officeAddress?.email || 'gwdklm@gmail.com'}</span></p>
                       <p>തീയതി: {formatDateSafe(tender.dateWorkOrder) || '__________'}</p>
                   </div>
               </div>
@@ -102,19 +113,19 @@ export default function WorkOrderPrintPage() {
               <div>
                   <p>സ്വീകർത്താവ്</p>
                    <div className="ml-8 whitespace-pre-wrap min-h-[6rem]">
-                      <p className="font-semibold">{l1Bidder?.name || '____________________'}</p>
-                      <p>{l1Bidder?.address || '____________________'}</p>
+                      <p className="text-lg font-semibold">{l1Bidder?.name || '____________________'}</p>
+                      <p className="text-lg">{l1Bidder?.address || '____________________'}</p>
                   </div>
               </div>
               
               <p>സർ,</p>
 
                <div className="grid grid-cols-[auto,1fr] gap-x-2">
-                    <span>വിഷയം</span>
+                    <span>വിഷയം:</span>
                     <span className="text-justify">{tender.nameOfWorkMalayalam || tender.nameOfWork} - ടെണ്ടർ അംഗീകരിച്ച് {workOrderTitle} നൽകുന്നത്– സംബന്ധിച്ച്.</span>
                 </div>
                 <div className="grid grid-cols-[auto,1fr] gap-x-2">
-                    <span>സൂചന</span>
+                    <span>സൂചന:</span>
                     <span className="flex flex-col">
                         <span>1. ഈ ഓഫീസിലെ {formatDateSafe(tender.dateOfOpeningBid) || '__________'} തീയതിയിലെ ടെണ്ടർ നമ്പർ {tender.eTenderNo || '__________'}</span>
                         <span>2. വർക്ക് എഗ്രിമെന്റ് നമ്പർ {tender.eTenderNo || '__________'} തീയതി {formatDateSafe(tender.agreementDate) || '__________'}</span>
@@ -133,7 +144,7 @@ export default function WorkOrderPrintPage() {
                 <ol className="list-decimal list-outside ml-12 space-y-1 text-justify leading-normal">
                     <li>എല്ലാ വർക്കുകളും തുടങ്ങേണ്ടതും പൂർത്തീകരിക്കേണ്ടതും വകുപ്പ് സൂപ്പർവിഷന് നിയോഗിക്കുന്ന ഉദ്യോഗസ്ഥന്റെ സാന്നിധ്യത്തിൽ ആയിരിക്കണം.</li>
                     <li>കുഴൽകിണർ നിർമ്മാണം, ട്യൂബ് വെൽ നിർമ്മാണം, കുടിവെള്ള പദ്ധതി, കൃത്രിമ ഭൂജലസംപോഷണ പദ്ധതി എന്നിവയ്ക്കായി ഉപയോഗിക്കുന്ന പൈപ്പുകളുടെ  ISI മുദ്ര, ബ്യൂറോ ഓഫ് ഇന്ത്യൻ స్టാൻഡേർഡ്‌സ്‌ അംഗീകരിച്ചിട്ടുള്ള ലിസ്റ്റിൽ ഉൾപ്പെടുന്നതായിരിക്കണം. ആയത് സംബന്ധിച്ച ഗുണനിലവാര സർട്ടിഫിക്കറ്റ് പ്രവൃത്തി നിർവഹണത്തിന് മുന്നോടിയായി ഓഫീസിൽ സമർപ്പിക്കേണ്ടതാണ്.</li>
-                    <li>വർക്ക് ഓർഡർ ലഭിച്ചതിന് <span>5</span> ദിവസത്തിനകം വർക്ക് തുടങ്ങിയിരിക്കേണ്ടതും, വർക്ക് ഓർഡറിൽ പറഞ്ഞിരിക്കുന്ന നിശ്ചിത ദിവസത്തിനകം വർക്ക് പൂർത്തീകരിക്കുകയും ചെയ്യേണ്ടതാണ്.</li>
+                    <li>വർക്ക് ഓർഡർ ലഭിച്ചതിന് <span className="font-semibold">5</span> ദിവസത്തിനകം വർക്ക് തുടങ്ങിയിരിക്കേണ്ടതും, വർക്ക് ഓർഡറിൽ പറഞ്ഞിരിക്കുന്ന നിശ്ചിത ദിവസത്തിനകം വർക്ക് പൂർത്തീകരിക്കുകയും ചെയ്യേണ്ടതാണ്.</li>
                     <li>കുടിവെള്ളപദ്ധതികൾക്കായി വാട്ടർ ടാങ്ക് സ്ഥാപിക്കുന്ന ആംഗിൾ അയൺ അഥവാ കോൺക്രീറ്റ് സ്ട്രക്ച്ചർ / കോൺക്രീറ്റ് അഥവാ സ്റ്റീൽ പമ്പ് ഹൌസ് / ഹൈഡ്രന്റ് / വെൽ പ്രൊട്ടക്ഷൻ കവർ തുടങ്ങിയ എല്ലാ പ്രവൃത്തികളും പൂർത്തികരിക്കുന്നത് എസ്റ്റിമേറ്റിൽ പറഞ്ഞിരിക്കുന്ന അളവിലും തന്നിരിക്കുന്ന ഡ്രോയിംഗിന്റെ അടിസ്ഥാനത്തിലും ആയിരിക്കണം.</li>
                     <li>എസ്റ്റിമേറ്റിൽ പറഞ്ഞിരിക്കുന്ന സ്പെസിഫിക്കേഷൻ പ്രകാരം ഉള്ള വസ്തുക്കൾ മാത്രമാണ് പ്രവൃത്തിയ്ക്ക് ഉപയോഗിക്കേണ്ടത്.</li>
                     <li>വർക്ക് പൂർത്തീകരിച്ച് കംപ്ലീഷൻ സർട്ടിഫിക്കറ്റ് ഉൾപ്പെടെ ബിൽ സമർപ്പിക്കേണ്ടതാണ്. ഫണ്ടിന്റെ ലഭ്യത അനുസരിച്ചാണ്  ബിൽ തുക മാറി നൽകുന്നത്.</li>
