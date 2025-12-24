@@ -50,10 +50,18 @@ export default function WorkOrderPrintPage() {
 
     const mainParagraph = `മേൽ സൂചന പ്രകാരം ${tender.nameOfWorkMalayalam || tender.nameOfWork} നടപ്പിലാക്കുന്നതിന് വേണ്ടി താങ്കൾ സമർപ്പിച്ചിട്ടുള്ള ടെണ്ടർ അംഗീകരിച്ചു. ടെണ്ടർ ഷെഡ്യൂൾ പ്രവൃത്തികൾ ഏറ്റെടുത്ത് നിശ്ചിത സമയപരിധിയായ <span>${tender.periodOfCompletion || '___'}</span> ദിവസത്തിനുള്ളിൽ ഈ ഓഫീസിലെ <span>${supervisorListText}</span> എന്നിവരുടെ മേൽനോട്ടത്തിൽ വിജയകരമായി പൂർത്തിയാക്കി പൂർത്തീകരണ റിപ്പോർട്ടും വർക്ക് ബില്ലും ഓഫീസിൽ ഹാജരാക്കേണ്ടതാണ്.`;
     
-    const copyToList = [
-        ...supervisors,
-        allStaffMembers.find(s => s.designation === "Assistant Executive Engineer"), // AEE
-    ].filter((p): p is StaffMember => !!p);
+    const copyToList = useMemo(() => {
+        const aee = allStaffMembers.find(s => s.designation === "Assistant Executive Engineer");
+        const ae = allStaffMembers.find(s => s.name === "ശ്രീ. മനു പി. എസ്.");
+        const masterDriller = allStaffMembers.find(s => s.name === "ശ്രീ. ബിജുകുമാർ ഡബ്ല്യൂ .");
+        
+        const orderedList: StaffMember[] = [];
+        if (aee) orderedList.push(aee);
+        if (ae) orderedList.push(ae);
+        if (masterDriller) orderedList.push(masterDriller);
+
+        return orderedList.filter((p): p is StaffMember => !!p);
+    }, [allStaffMembers]);
 
 
     return (
