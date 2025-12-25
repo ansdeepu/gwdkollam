@@ -196,7 +196,17 @@ export default function ArsEntryPage() {
         return [...allE_tenders].sort((a, b) => {
             const dateA = toDateOrNull(a.tenderDate)?.getTime() ?? 0;
             const dateB = toDateOrNull(b.tenderDate)?.getTime() ?? 0;
-            return dateB - dateA;
+            if (dateA !== dateB) return dateB - dateA;
+
+            const getTenderNumber = (tenderNo: string | undefined | null): number => {
+                if (!tenderNo) return 0;
+                const match = tenderNo.match(/T-(\d+)/);
+                return match ? parseInt(match[1], 10) : 0;
+            };
+
+            const numA = getTenderNumber(a.eTenderNo);
+            const numB = getTenderNumber(b.eTenderNo);
+            return numB - numA;
         });
     }, [allE_tenders]);
 
@@ -581,3 +591,5 @@ export default function ArsEntryPage() {
         </div>
     );
 }
+
+    

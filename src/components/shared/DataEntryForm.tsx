@@ -184,6 +184,20 @@ const formatDateForInput = (date: Date | string | null | undefined): string => {
     try { return format(new Date(date), 'yyyy-MM-dd'); } catch { return ""; }
 };
 
+const toDateOrNull = (value: any): Date | null => {
+    if (!value) return null;
+    if (value instanceof Date && isValid(value)) return value;
+    if (typeof value === 'object' && value !== null && typeof value.seconds === 'number') {
+        const d = new Date(value.seconds * 1000 + (value.nanoseconds || 0) / 1e6);
+        if (isValid(d)) return d;
+    }
+    if (typeof value === 'string') {
+        let d = new Date(value);
+        if (isValid(d)) return d;
+    }
+    return null;
+};
+
 // Dialog Content Components
 const ApplicationDialogContent = ({ initialData, onConfirm, onCancel, formOptions }: { initialData: any, onConfirm: (data: any) => void, onCancel: () => void, formOptions: readonly ApplicationType[] | ApplicationType[] }) => {
     const [data, setData] = useState(initialData);
@@ -383,9 +397,19 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
     
     const sortedTenders = useMemo(() => {
         return [...allE_tenders].sort((a, b) => {
-            const dateA = a.tenderDate ? new Date(a.tenderDate).getTime() : 0;
-            const dateB = b.tenderDate ? new Date(b.tenderDate).getTime() : 0;
-            return dateB - dateA;
+            const dateA = toDateOrNull(a.tenderDate)?.getTime() ?? 0;
+            const dateB = toDateOrNull(b.tenderDate)?.getTime() ?? 0;
+            if(dateA !== dateB) return dateB - dateA;
+
+            const getTenderNumber = (tenderNo: string | undefined | null): number => {
+                if (!tenderNo) return 0;
+                const match = tenderNo.match(/T-(\d+)/);
+                return match ? parseInt(match[1], 10) : 0;
+            };
+
+            const numA = getTenderNumber(a.eTenderNo);
+            const numB = getTenderNumber(b.eTenderNo);
+            return numB - numA;
         });
     }, [allE_tenders]);
 
