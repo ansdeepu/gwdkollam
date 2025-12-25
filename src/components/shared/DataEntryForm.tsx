@@ -381,6 +381,14 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
         onConfirm(data);
     };
     
+    const sortedTenders = useMemo(() => {
+        return [...allE_tenders].sort((a, b) => {
+            const dateA = a.tenderDate ? new Date(a.tenderDate).getTime() : 0;
+            const dateB = b.tenderDate ? new Date(b.tenderDate).getTime() : 0;
+            return dateB - dateA;
+        });
+    }, [allE_tenders]);
+
     const watchedPurpose = watch('purpose');
     const watchedWorkStatus = watch('workStatus');
     const isCompletionDateRequired = watchedWorkStatus && FINAL_WORK_STATUSES.includes(watchedWorkStatus as SiteWorkStatus);
@@ -500,7 +508,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                    <FormField name="estimateAmount" control={control} render={({ field }) => <FormItem><FormLabel>Estimate Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />
                                    <FormField name="remittedAmount" control={control} render={({ field }) => <FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />
                                    <FormField name="tsAmount" control={control} render={({ field }) => <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />
-                                   <FormField name="tenderNo" control={control} render={({ field }) => ( <FormItem> <FormLabel>Tender No.</FormLabel> <Select onValueChange={(value) => field.onChange(value === '_clear_' ? '' : value)} value={field.value || ''} disabled={isFieldReadOnly(false)}> <FormControl><SelectTrigger><SelectValue placeholder="Select a Tender" /></SelectTrigger></FormControl> <SelectContent> <SelectItem value="_clear_">-- Clear Selection --</SelectItem> {allE_tenders .filter(t => t.eTenderNo) .map(t => ( <SelectItem key={t.id} value={t.eTenderNo!}>{t.eTenderNo}</SelectItem> ))} </SelectContent> </Select> <FormMessage /> </FormItem> )} />
+                                   <FormField name="tenderNo" control={control} render={({ field }) => ( <FormItem> <FormLabel>Tender No.</FormLabel> <Select onValueChange={(value) => field.onChange(value === '_clear_' ? '' : value)} value={field.value || ''} disabled={isFieldReadOnly(false)}> <FormControl><SelectTrigger><SelectValue placeholder="Select a Tender" /></SelectTrigger></FormControl> <SelectContent> <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(''); }}>-- Clear Selection --</SelectItem> {sortedTenders .filter(t => t.eTenderNo) .map(t => ( <SelectItem key={t.id} value={t.eTenderNo!}>{t.eTenderNo}</SelectItem> ))} </SelectContent> </Select> <FormMessage /> </FormItem> )} />
                                    <FormField name="contractorName" control={control} render={({ field }) => <FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage/></FormItem>} />
                                    <FormField
                                       name="supervisorUid"

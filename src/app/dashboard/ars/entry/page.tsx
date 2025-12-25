@@ -191,6 +191,14 @@ export default function ArsEntryPage() {
     
         return true; // Default to read-only for any other unhandled case
     };
+    
+    const sortedTenders = useMemo(() => {
+        return [...allE_tenders].sort((a, b) => {
+            const dateA = toDateOrNull(a.tenderDate)?.getTime() ?? 0;
+            const dateB = toDateOrNull(b.tenderDate)?.getTime() ?? 0;
+            return dateB - dateA;
+        });
+    }, [allE_tenders]);
 
     const constituencyOptionsForLsg = useMemo(() => {
         if (!watchedLsg) return [];
@@ -503,8 +511,8 @@ export default function ArsEntryPage() {
                                   <Select onValueChange={(value) => field.onChange(value === '_clear_' ? '' : value)} value={field.value ?? ''} disabled={isFieldReadOnly('arsTenderNo')}>
                                       <FormControl><SelectTrigger><SelectValue placeholder="Select a Tender" /></SelectTrigger></FormControl>
                                       <SelectContent>
-                                          <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
-                                          {allE_tenders.filter(t => t.eTenderNo).map(t => <SelectItem key={t.id} value={t.eTenderNo!}>{t.eTenderNo}</SelectItem>)}
+                                          <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(''); }}>-- Clear Selection --</SelectItem>
+                                          {sortedTenders.filter(t => t.eTenderNo).map(t => <SelectItem key={t.id} value={t.eTenderNo!}>{t.eTenderNo}</SelectItem>)}
                                       </SelectContent>
                                   </Select>
                                   <FormMessage />
