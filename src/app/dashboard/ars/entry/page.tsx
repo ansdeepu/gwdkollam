@@ -140,7 +140,7 @@ export default function ArsEntryPage() {
     const { user, fetchAllUsers } = useAuth();
     const { staffMembers, isLoading: staffIsLoading } = useStaffMembers();
     const [allUsers, setAllUsers] = useState<UserProfile[]>([]);
-    const { allLsgConstituencyMaps } = useDataStore();
+    const { allLsgConstituencyMaps, allE_tenders } = useDataStore();
     
     const entryIdToEdit = searchParams?.get('id');
     const approveUpdateId = searchParams?.get("approveUpdateId");
@@ -496,7 +496,7 @@ export default function ArsEntryPage() {
                             />
                           <FormField name="arsTenderedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Tendered Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('arsTenderedAmount')}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsAwardedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Awarded Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('arsAwardedAmount')}/></FormControl><FormMessage /></FormItem>)} />
-                          <FormField name="arsTenderNo" control={form.control} render={({ field }) => (<FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('arsTenderNo')} /></FormControl><FormMessage /></FormItem>)} />
+                          <FormField name="arsTenderNo" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Tender No.</FormLabel><Select onValueChange={field.onChange} value={field.value ?? ''} disabled={isFieldReadOnly('arsTenderNo')}> <FormControl><SelectTrigger><SelectValue placeholder="Select a Tender" /></SelectTrigger></FormControl><SelectContent><SelectItem value="">-- Clear Selection --</SelectItem>{allE_tenders.map(t => <SelectItem key={t.id} value={t.eTenderNo || ''}>{t.eTenderNo}</SelectItem>)}</SelectContent></Select><FormMessage /></FormItem> )} />
                           <FormField name="arsContractorName" control={form.control} render={({ field }) => (<FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('arsContractorName')} /></FormControl><FormMessage /></FormItem>)} />
                            <FormField
                                 control={form.control}
