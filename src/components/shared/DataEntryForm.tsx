@@ -1,4 +1,3 @@
-
 // src/components/shared/DataEntryForm.tsx
 "use client";
 
@@ -399,7 +398,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
         return [...allE_tenders].sort((a, b) => {
             const dateA = toDateOrNull(a.tenderDate)?.getTime() ?? 0;
             const dateB = toDateOrNull(b.tenderDate)?.getTime() ?? 0;
-            if(dateA !== dateB) return dateB - dateA;
+            if (dateA !== dateB) return dateB - dateA;
 
             const getTenderNumber = (tenderNo: string | undefined | null): number => {
                 if (!tenderNo) return 0;
@@ -513,7 +512,8 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
     useEffect(() => {
         const selectedTender = allE_tenders.find(t => t.eTenderNo === watchedTenderNo);
         if (selectedTender) {
-            const l1Bidder = selectedTender.bidders?.find(b => b.status === 'Accepted');
+            const validBidders = (selectedTender.bidders || []).filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
+            const l1Bidder = validBidders.length > 0 ? validBidders.reduce((lowest, current) => (current.quotedAmount! < lowest.quotedAmount!) ? current : lowest) : null;
             setValue('contractorName', l1Bidder ? `${l1Bidder.name}, ${l1Bidder.address}` : '');
 
             if (tenderSupervisors.length === 1) {

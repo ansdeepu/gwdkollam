@@ -1,4 +1,3 @@
-
 // src/app/dashboard/ars/entry/page.tsx
 "use client";
 
@@ -175,8 +174,8 @@ export default function ArsEntryPage() {
     });
 
     const { watch } = form;
-    const watchedArsStatus = useWatch({ control: form.control, name: 'arsStatus' });
-    const watchedLsg = useWatch({ control: form.control, name: "localSelfGovt" });
+    const watchedArsStatus = useWatch({ control, name: 'arsStatus' });
+    const watchedLsg = useWatch({ control, name: "localSelfGovt" });
     const watchedTenderNo = watch('arsTenderNo');
     const isSupervisorDropdownDisabled = false;
 
@@ -369,7 +368,8 @@ export default function ArsEntryPage() {
     useEffect(() => {
         const selectedTender = allE_tenders.find(t => t.eTenderNo === watchedTenderNo);
         if (selectedTender) {
-            const l1Bidder = selectedTender.bidders?.find(b => b.status === 'Accepted');
+            const validBidders = (selectedTender.bidders || []).filter(b => b.quotedAmount);
+            const l1Bidder = validBidders.length > 0 ? validBidders.reduce((lowest, current) => (current.quotedAmount! < lowest.quotedAmount!) ? current : lowest) : null;
             form.setValue('arsContractorName', l1Bidder ? `${l1Bidder.name}, ${l1Bidder.address}` : '');
 
             if (tenderSupervisors.length === 1) {
@@ -625,7 +625,3 @@ export default function ArsEntryPage() {
         </div>
     );
 }
-
-    
-
-    
