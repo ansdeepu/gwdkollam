@@ -1,3 +1,4 @@
+
 // src/hooks/use-data-store.tsx
 "use client";
 
@@ -288,7 +289,7 @@ export function DataStoreProvider({ children, user }: { children: ReactNode, use
             unsubscribes.forEach(unsub => unsub());
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user, refetchCounters]);
+    }, [user]);
 
     const isLoading = Object.values(loadingStates).some(Boolean);
 
