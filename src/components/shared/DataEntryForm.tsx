@@ -53,6 +53,7 @@ import {
   PRIVATE_APPLICATION_TYPES,
   COLLECTOR_APPLICATION_TYPES,
   PLAN_FUND_APPLICATION_TYPES,
+  type Bidder,
 } from "@/lib/schemas";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useEffect, useCallback, useMemo } from "react";
@@ -519,7 +520,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
     useEffect(() => {
         const selectedTender = allE_tenders.find(t => t.eTenderNo === watchedTenderNo);
         if (selectedTender) {
-            const validBidders = (selectedTender.bidders || []).filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
+            const validBidders = (selectedTender.bidders || []).filter((b: Bidder) => typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
             const l1Bidder = validBidders.length > 0 
                 ? validBidders.reduce((lowest, current) => (lowest.quotedAmount! < current.quotedAmount!) ? lowest : current)
                 : null;
@@ -612,7 +613,13 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                             </FormItem>
                                         )}/>
                                     ) : (
-                                        <FormField name="supervisorName" control={form.control} render={({ field }) => <FormItem><FormLabel>Supervisor</FormLabel><FormControl><Textarea {...field} value={getValues('supervisorName') ? `${getValues('supervisorName')}, ${getValues('supervisorDesignation') || ''}` : ''} readOnly className="bg-muted min-h-[40px]" /></FormControl><FormMessage /></FormItem>} />
+                                      <FormItem>
+                                        <FormLabel>Supervisor</FormLabel>
+                                        <FormControl>
+                                          <Textarea value={getValues('supervisorName') ? `${getValues('supervisorName')}, ${getValues('supervisorDesignation') || ''}` : ''} readOnly className="bg-muted min-h-[40px]" />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
                                     )}
                                    <FormField name="implementationRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Implementation Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                 </div>

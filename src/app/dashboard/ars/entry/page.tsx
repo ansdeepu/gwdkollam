@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams, useRouter } from 'next/navigation';
-import { ArsEntrySchema, type ArsEntryFormData, constituencyOptions, arsTypeOfSchemeOptions, type StaffMember, type SiteWorkStatus, type Constituency, arsStatusOptions } from "@/lib/schemas";
+import { ArsEntrySchema, type ArsEntryFormData, constituencyOptions, arsTypeOfSchemeOptions, type StaffMember, type SiteWorkStatus, type Constituency, arsStatusOptions, type Bidder } from "@/lib/schemas";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -252,25 +252,21 @@ export default function ArsEntryPage() {
         }
     }, [canEdit, fetchAllUsers]);
     
-    const { supervisorList, staffMap } = React.useMemo(() => {
-        if (!canEdit) return { supervisorList: [], staffMap: new Map() };
-        
-        const list = allUsers
+    const staffMap = React.useMemo(() => {
+        if (!canEdit) return new Map();
+        const map = new Map<string, StaffMember & { uid: string }>();
+        allUsers
             .filter(u => u.role === 'supervisor' && u.isApproved && u.staffId)
-            .map(u => {
+            .forEach(u => {
                 const staffInfo = staffMembers.find(s => s.id === u.staffId && s.status === 'Active');
                 if (staffInfo) {
-                    return { ...staffInfo, uid: u.uid, name: staffInfo.name };
+                    map.set(staffInfo.id, { ...staffInfo, uid: u.uid });
                 }
-                return null;
-            })
-            .filter((s): s is StaffMember & { uid: string; name: string } => s !== null);
-
-        const map = new Map<string, StaffMember & { uid: string }>();
-        list.forEach(item => map.set(item.id, item));
-
-        return { supervisorList: list, staffMap: map };
+            });
+        return map;
     }, [allUsers, staffMembers, canEdit]);
+
+    const supervisorList = useMemo(() => Array.from(staffMap.values()), [staffMap]);
     
     const handleLsgChange = useCallback((lsgName: string) => {
         form.setValue('localSelfGovt', lsgName);
@@ -377,7 +373,7 @@ export default function ArsEntryPage() {
     useEffect(() => {
         const selectedTender = allE_tenders.find(t => t.eTenderNo === watchedTenderNo);
         if (selectedTender) {
-             const validBidders = (selectedTender.bidders || []).filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
+             const validBidders = (selectedTender.bidders || []).filter((b: Bidder) => typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
             const l1Bidder = validBidders.length > 0 
                 ? validBidders.reduce((lowest, current) => (lowest.quotedAmount! < current.quotedAmount!) ? lowest : current)
                 : null;
@@ -604,7 +600,13 @@ export default function ArsEntryPage() {
                                 </FormItem>
                             )}/>
                             ) : (
-                               <FormField name="supervisorName" control={form.control} render={({ field }) => (<FormItem><FormLabel>Supervisor</FormLabel><FormControl><Textarea {...field} value={form.getValues('supervisorName') ? `${form.getValues('supervisorName')}, ${supervisorList.find(s => s.uid === form.getValues('supervisorUid'))?.designation || ''}` : ''} readOnly className="bg-muted min-h-[40px]" /></FormControl><FormMessage /></FormItem>)}/>
+                               <FormItem>
+                                    <FormLabel>Supervisor</FormLabel>
+                                    <FormControl>
+                                        <Textarea value={form.getValues('supervisorName') ? `${form.getValues('supervisorName')}, ${supervisorList.find(s => s.uid === form.getValues('supervisorUid'))?.designation || ''}` : ''} readOnly className="bg-muted min-h-[40px]" />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
                             )}
                            <FormField name="arsStatus" control={form.control} render={({ field }) => (
                                 <FormItem>
