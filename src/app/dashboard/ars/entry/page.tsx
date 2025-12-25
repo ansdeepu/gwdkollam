@@ -173,7 +173,7 @@ export default function ArsEntryPage() {
         },
     });
 
-    const { watch } = form;
+    const { control, watch } = form;
     const watchedArsStatus = useWatch({ control, name: 'arsStatus' });
     const watchedLsg = useWatch({ control, name: "localSelfGovt" });
     const watchedTenderNo = watch('arsTenderNo');
@@ -340,36 +340,48 @@ export default function ArsEntryPage() {
         }
     }, [isEditing, entryIdToEdit, approveUpdateId, getArsEntryById, getPendingUpdateById, form, router, toast, isApprovingUpdate, isSupervisor, user, hasPendingUpdateForFile]);
     
+    const staffMap = useMemo(() => {
+        const map = new Map<string, StaffMember & { id: string; name: string }>();
+        supervisorList.forEach(s => map.set(s.id, s));
+        return map;
+    }, [supervisorList]);
+
     const tenderSupervisors = useMemo(() => {
         if (!watchedTenderNo) return [];
         const tender = allE_tenders.find(t => t.eTenderNo === watchedTenderNo);
         if (!tender) return [];
 
         const supervisors: { id: string; name: string; designation?: string }[] = [];
-        const addedNames = new Set<string>();
+        const addedUids = new Set<string>();
 
-        const addSupervisor = (name: string | undefined, id?: string | null) => {
-            if (name && !addedNames.has(name)) {
-                const staff = supervisorList.find(s => (id && s.id === id) || s.name === name);
+        const addSupervisor = (staffId: string | null | undefined) => {
+            if (staffId && !addedUids.has(staffId)) {
+                const staff = staffMap.get(staffId);
                 if (staff) {
-                    supervisors.push({ id: staff.id, name: staff.name, designation: staff.designation as string });
-                    addedNames.add(name);
+                    supervisors.push({ id: staff.id, name: staff.name, designation: staff.designation });
+                    addedUids.add(staffId);
                 }
             }
         };
-        addSupervisor(tender.nameOfAssistantEngineer);
-        addSupervisor(tender.supervisor1Name, tender.supervisor1Id);
-        addSupervisor(tender.supervisor2Name, tender.supervisor2Id);
-        addSupervisor(tender.supervisor3Name, tender.supervisor3Id);
+
+        if (tender.nameOfAssistantEngineer) {
+            const ae = supervisorList.find(s => s.name === tender.nameOfAssistantEngineer);
+            if(ae) addSupervisor(ae.id);
+        }
+        addSupervisor(tender.supervisor1Id);
+        addSupervisor(tender.supervisor2Id);
+        addSupervisor(tender.supervisor3Id);
 
         return supervisors;
-    }, [watchedTenderNo, allE_tenders, supervisorList]);
+    }, [watchedTenderNo, allE_tenders, supervisorList, staffMap]);
 
     useEffect(() => {
         const selectedTender = allE_tenders.find(t => t.eTenderNo === watchedTenderNo);
         if (selectedTender) {
-            const validBidders = (selectedTender.bidders || []).filter(b => b.quotedAmount);
-            const l1Bidder = validBidders.length > 0 ? validBidders.reduce((lowest, current) => (current.quotedAmount! < lowest.quotedAmount!) ? current : lowest) : null;
+             const validBidders = (selectedTender.bidders || []).filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
+            const l1Bidder = validBidders.length > 0 
+                ? validBidders.reduce((lowest, current) => (lowest.quotedAmount! < current.quotedAmount!) ? lowest : current)
+                : null;
             form.setValue('arsContractorName', l1Bidder ? `${l1Bidder.name}, ${l1Bidder.address}` : '');
 
             if (tenderSupervisors.length === 1) {
