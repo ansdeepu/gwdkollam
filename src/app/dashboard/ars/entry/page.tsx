@@ -259,11 +259,11 @@ export default function ArsEntryPage() {
             .map(u => {
                 const staffInfo = staffMembers.find(s => s.id === u.staffId && s.status === 'Active');
                 if (staffInfo) {
-                    return { ...staffInfo, id: u.uid, name: staffInfo.name };
+                    return { ...staffInfo, uid: u.uid, name: staffInfo.name };
                 }
                 return null;
             })
-            .filter((s): s is StaffMember & { id: string; name: string } => s !== null);
+            .filter((s): s is StaffMember & { uid: string; name: string } => s !== null);
     }, [allUsers, staffMembers, canEdit]);
     
     const handleLsgChange = useCallback((lsgName: string) => {
@@ -339,12 +339,6 @@ export default function ArsEntryPage() {
           loadArsEntry();
         }
     }, [isEditing, entryIdToEdit, approveUpdateId, getArsEntryById, getPendingUpdateById, form, router, toast, isApprovingUpdate, isSupervisor, user, hasPendingUpdateForFile]);
-    
-    const staffMap = useMemo(() => {
-        const map = new Map<string, StaffMember & { id: string; name: string }>();
-        supervisorList.forEach(s => map.set(s.id, s));
-        return map;
-    }, [supervisorList]);
 
     const tenderSupervisors = useMemo(() => {
         if (!watchedTenderNo) return [];
@@ -355,25 +349,25 @@ export default function ArsEntryPage() {
         const addedUids = new Set<string>();
 
         const addSupervisor = (staffId: string | null | undefined) => {
-            if (staffId && !addedUids.has(staffId)) {
-                const staff = staffMap.get(staffId);
-                if (staff) {
-                    supervisors.push({ id: staff.id, name: staff.name, designation: staff.designation });
-                    addedUids.add(staffId);
-                }
+            if (!staffId || addedUids.has(staffId)) return;
+            
+            const supervisorUser = supervisorList.find(s => s.id === staffId);
+            if (supervisorUser) {
+                supervisors.push({ id: supervisorUser.uid, name: supervisorUser.name, designation: supervisorUser.designation });
+                addedUids.add(staffId);
             }
         };
 
         if (tender.nameOfAssistantEngineer) {
             const ae = supervisorList.find(s => s.name === tender.nameOfAssistantEngineer);
-            if(ae) addSupervisor(ae.id);
+            if (ae) addSupervisor(ae.id);
         }
         addSupervisor(tender.supervisor1Id);
         addSupervisor(tender.supervisor2Id);
         addSupervisor(tender.supervisor3Id);
 
         return supervisors;
-    }, [watchedTenderNo, allE_tenders, supervisorList, staffMap]);
+    }, [watchedTenderNo, allE_tenders, supervisorList]);
 
     useEffect(() => {
         const selectedTender = allE_tenders.find(t => t.eTenderNo === watchedTenderNo);
@@ -396,7 +390,7 @@ export default function ArsEntryPage() {
     }, [watchedTenderNo, allE_tenders, form, tenderSupervisors]);
 
     const handleSupervisorDropdownChange = (uid: string) => {
-        const staff = supervisorList.find(s => s.id === uid);
+        const staff = supervisorList.find(s => s.uid === uid);
         form.setValue('supervisorUid', uid);
         form.setValue('supervisorName', staff?.name || null);
     };
@@ -582,7 +576,7 @@ export default function ArsEntryPage() {
                                   <FormLabel>Tender No.</FormLabel>
                                   <Select onValueChange={(value) => field.onChange(value === '_clear_' ? '' : value)} value={field.value ?? ''} disabled={isFieldReadOnly('arsTenderNo')}>
                                       <FormControl><SelectTrigger><SelectValue placeholder="Select a Tender" /></SelectTrigger></FormControl>
-                                      <SelectContent>
+                                      <SelectContent className="max-h-80">
                                           <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(''); }}>-- Clear Selection --</SelectItem>
                                           {sortedTenders.filter(t => t.eTenderNo).map(t => <SelectItem key={t.id} value={t.eTenderNo!}>{t.eTenderNo}</SelectItem>)}
                                       </SelectContent>
@@ -590,7 +584,7 @@ export default function ArsEntryPage() {
                                   <FormMessage />
                               </FormItem>
                           )} />
-                           <FormField name="arsContractorName" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly className="bg-muted"/></FormControl><FormMessage/></FormItem> )}/>
+                           <FormField name="arsContractorName" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Contractor</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly className="bg-muted min-h-[40px]"/></FormControl><FormMessage/></FormItem> )}/>
                            {tenderSupervisors.length > 1 ? (
                               <FormField name="supervisorUid" control={form.control} render={({ field }) => (
                                 <FormItem>
@@ -605,7 +599,7 @@ export default function ArsEntryPage() {
                                 </FormItem>
                             )}/>
                             ) : (
-                               <FormField name="supervisorName" control={form.control} render={({ field }) => (<FormItem><FormLabel>Supervisor</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly className="bg-muted" /></FormControl><FormMessage /></FormItem>)}/>
+                               <FormField name="supervisorName" control={form.control} render={({ field }) => (<FormItem><FormLabel>Supervisor</FormLabel><FormControl><Textarea {...field} value={form.getValues('supervisorName') ? `${form.getValues('supervisorName')}, ${supervisorList.find(s => s.uid === form.getValues('supervisorUid'))?.designation || ''}` : ''} readOnly className="bg-muted min-h-[40px]" /></FormControl><FormMessage /></FormItem>)}/>
                             )}
                            <FormField name="arsStatus" control={form.control} render={({ field }) => (
                                 <FormItem>

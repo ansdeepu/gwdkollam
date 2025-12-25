@@ -481,12 +481,6 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
         }
         return false; // Editor can edit everything
     };
-    
-    const staffMap = useMemo(() => {
-        const map = new Map<string, StaffMember & { uid: string; name: string }>();
-        supervisorList.forEach(s => map.set(s.uid, s));
-        return map;
-    }, [supervisorList]);
 
     const tenderSupervisors = useMemo(() => {
         if (!watchedTenderNo) return [];
@@ -497,25 +491,26 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
         const addedUids = new Set<string>();
 
         const addSupervisor = (staffId: string | null | undefined) => {
-            if (staffId && !addedUids.has(staffId)) {
-                const staff = staffMap.get(staffId);
-                if (staff) {
-                    supervisors.push({ id: staff.uid, name: staff.name, designation: staff.designation });
-                    addedUids.add(staffId);
-                }
+            if (!staffId || addedUids.has(staffId)) return;
+            
+            // Find the user profile that is linked to this staff member
+            const supervisorUser = supervisorList.find(s => s.id === staffId);
+            if (supervisorUser) {
+                supervisors.push({ id: supervisorUser.uid, name: supervisorUser.name, designation: supervisorUser.designation });
+                addedUids.add(staffId);
             }
         };
 
         if (tender.nameOfAssistantEngineer) {
             const ae = supervisorList.find(s => s.name === tender.nameOfAssistantEngineer);
-            if (ae) addSupervisor(ae.uid);
+            if (ae) addSupervisor(ae.id);
         }
         addSupervisor(tender.supervisor1Id);
         addSupervisor(tender.supervisor2Id);
         addSupervisor(tender.supervisor3Id);
 
         return supervisors;
-    }, [watchedTenderNo, allE_tenders, supervisorList, staffMap]);
+    }, [watchedTenderNo, allE_tenders, supervisorList]);
 
     useEffect(() => {
         const selectedTender = allE_tenders.find(t => t.eTenderNo === watchedTenderNo);
@@ -597,7 +592,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                    <FormField name="estimateAmount" control={control} render={({ field }) => <FormItem><FormLabel>Estimate Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />
                                    <FormField name="remittedAmount" control={control} render={({ field }) => <FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />
                                    <FormField name="tsAmount" control={control} render={({ field }) => <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />
-                                   <FormField name="tenderNo" control={control} render={({ field }) => ( <FormItem> <FormLabel>Tender No.</FormLabel> <Select onValueChange={(value) => field.onChange(value === '_clear_' ? '' : value)} value={field.value || ''} disabled={isFieldReadOnly(false)}> <FormControl><SelectTrigger><SelectValue placeholder="Select a Tender" /></SelectTrigger></FormControl> <SelectContent> <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(''); }}>-- Clear Selection --</SelectItem> {sortedTenders.filter(t => t.eTenderNo).map(t => ( <SelectItem key={t.id} value={t.eTenderNo!}>{t.eTenderNo}</SelectItem> ))} </SelectContent> </Select> <FormMessage /> </FormItem> )} />
+                                   <FormField name="tenderNo" control={control} render={({ field }) => ( <FormItem> <FormLabel>Tender No.</FormLabel> <Select onValueChange={(value) => field.onChange(value === '_clear_' ? '' : value)} value={field.value || ''} disabled={isFieldReadOnly(false)}> <FormControl><SelectTrigger><SelectValue placeholder="Select a Tender" /></SelectTrigger></FormControl> <SelectContent className="max-h-80"> <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(''); }}>-- Clear Selection --</SelectItem> {sortedTenders.filter(t => t.eTenderNo).map(t => ( <SelectItem key={t.id} value={t.eTenderNo!}>{t.eTenderNo}</SelectItem> ))} </SelectContent> </Select> <FormMessage /> </FormItem> )} />
                                    <FormField name="contractorName" control={control} render={({ field }) => <FormItem><FormLabel>Contractor</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly className="bg-muted min-h-[40px]"/></FormControl><FormMessage/></FormItem>} />
                                    {tenderSupervisors.length > 1 ? (
                                         <FormField name="supervisorUid" control={form.control} render={({ field }) => (
@@ -713,8 +708,8 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
 export default function DataEntryFormComponent({ fileNoToEdit, initialData, supervisorList, userRole, workTypeContext, returnPath, pageToReturnTo, isFormDisabled = false }: DataEntryFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const fileIdToEdit = searchParams?.get("id");
-  const approveUpdateId = searchParams?.get("approveUpdateId");
+  const fileIdToEdit = searchParams.get("id");
+  const approveUpdateId = searchParams.get("approveUpdateId");
 
   const { addFileEntry, updateFileEntry } = useFileEntries();
   const { createPendingUpdate } = usePendingUpdates();
