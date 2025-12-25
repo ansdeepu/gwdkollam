@@ -176,6 +176,7 @@ export default function ArsEntryPage() {
 
     const watchedArsStatus = useWatch({ control: form.control, name: 'arsStatus' });
     const watchedLsg = useWatch({ control: form.control, name: "localSelfGovt" });
+    const watchedTenderNo = watch('arsTenderNo');
     const isSupervisorDropdownDisabled = false;
 
     const isFieldReadOnly = (fieldName: keyof ArsEntryFormData): boolean => {
@@ -338,6 +339,54 @@ export default function ArsEntryPage() {
           loadArsEntry();
         }
     }, [isEditing, entryIdToEdit, approveUpdateId, getArsEntryById, getPendingUpdateById, form, router, toast, isApprovingUpdate, isSupervisor, user, hasPendingUpdateForFile]);
+    
+    const tenderSupervisors = useMemo(() => {
+        if (!watchedTenderNo) return [];
+        const tender = allE_tenders.find(t => t.eTenderNo === watchedTenderNo);
+        if (!tender) return [];
+
+        const supervisors: { id: string; name: string; designation?: string }[] = [];
+        const addedNames = new Set<string>();
+
+        const addSupervisor = (name: string | undefined, id?: string | null) => {
+            if (name && !addedNames.has(name)) {
+                const staff = supervisorList.find(s => (id && s.id === id) || s.name === name);
+                if (staff) {
+                    supervisors.push({ id: staff.id, name: staff.name, designation: staff.designation as string });
+                    addedNames.add(name);
+                }
+            }
+        };
+        addSupervisor(tender.nameOfAssistantEngineer);
+        addSupervisor(tender.supervisor1Name, tender.supervisor1Id);
+        addSupervisor(tender.supervisor2Name, tender.supervisor2Id);
+        addSupervisor(tender.supervisor3Name, tender.supervisor3Id);
+
+        return supervisors;
+    }, [watchedTenderNo, allE_tenders, supervisorList]);
+
+    useEffect(() => {
+        const selectedTender = allE_tenders.find(t => t.eTenderNo === watchedTenderNo);
+        if (selectedTender) {
+            const l1Bidder = selectedTender.bidders?.find(b => b.status === 'Accepted');
+            form.setValue('arsContractorName', l1Bidder ? `${l1Bidder.name}, ${l1Bidder.address}` : '');
+
+            if (tenderSupervisors.length === 1) {
+                const supervisor = tenderSupervisors[0];
+                form.setValue('supervisorUid', supervisor.id);
+                form.setValue('supervisorName', supervisor.name);
+            } else {
+                form.setValue('supervisorUid', null);
+                form.setValue('supervisorName', null);
+            }
+        }
+    }, [watchedTenderNo, allE_tenders, form, tenderSupervisors]);
+
+    const handleSupervisorDropdownChange = (uid: string) => {
+        const staff = supervisorList.find(s => s.id === uid);
+        form.setValue('supervisorUid', uid);
+        form.setValue('supervisorName', staff?.name || null);
+    };
 
     const handleFormSubmit = async (data: ArsEntryFormData) => {
         if (!user || isViewer) {
@@ -514,7 +563,7 @@ export default function ArsEntryPage() {
                               )}
                             />
                           <FormField name="arsTenderedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Tendered Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('arsTenderedAmount')}/></FormControl><FormMessage /></FormItem>)} />
-                          <FormField name="arsAwardedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Awarded Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('arsAwardedAmount')}/></FormControl><FormMessage /></FormItem>)} />
+                          <FormField name="arsAwardedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Awarded Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('arsAwardedAmount')}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsTenderNo" control={form.control} render={({ field }) => (
                               <FormItem>
                                   <FormLabel>Tender No.</FormLabel>
@@ -528,39 +577,23 @@ export default function ArsEntryPage() {
                                   <FormMessage />
                               </FormItem>
                           )} />
-                          <FormField name="arsContractorName" control={form.control} render={({ field }) => (<FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('arsContractorName')} /></FormControl><FormMessage /></FormItem>)} />
-                           <FormField
-                                control={form.control}
-                                name="supervisorUid"
-                                render={({ field }) => (
+                           <FormField name="arsContractorName" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly className="bg-muted"/></FormControl><FormMessage/></FormItem> )}/>
+                           {tenderSupervisors.length > 1 ? (
+                              <FormField name="supervisorUid" control={form.control} render={({ field }) => (
                                 <FormItem>
-                                <FormLabel>Supervisor</FormLabel>
-                                    {isFieldReadOnly('supervisorUid') ? (
-                                        <Input
-                                            readOnly
-                                            value={form.getValues('supervisorName') || "Not Assigned"}
-                                            className="bg-muted/50"
-                                        />
-                                    ) : (
-                                        <Select
-                                            onValueChange={(value) => {
-                                                const selectedStaff = supervisorList.find(s => s.id === value);
-                                                form.setValue('supervisorUid', selectedStaff?.id || null);
-                                                form.setValue('supervisorName', selectedStaff?.name || null);
-                                            }}
-                                            value={field.value || ''}
-                                            disabled={isSupervisorDropdownDisabled}
-                                        >
-                                        <FormControl><SelectTrigger><SelectValue placeholder="Assign a Supervisor" /></SelectTrigger></FormControl>
+                                    <FormLabel>Supervisor</FormLabel>
+                                    <Select onValueChange={(uid) => handleSupervisorDropdownChange(uid)} value={field.value || ""}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select a Supervisor" /></SelectTrigger></FormControl>
                                         <SelectContent>
-                                            <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); form.setValue('supervisorUid', null); form.setValue('supervisorName', null); }}>-- Unassign --</SelectItem>
-                                            {supervisorList.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.designation})</SelectItem>)}
+                                            {tenderSupervisors.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name} ({s.designation})</SelectItem>))}
                                         </SelectContent>
-                                        </Select>
-                                    )}
-                                <FormMessage />
+                                    </Select>
+                                    <FormMessage />
                                 </FormItem>
                             )}/>
+                            ) : (
+                               <FormField name="supervisorName" control={form.control} render={({ field }) => (<FormItem><FormLabel>Supervisor</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly className="bg-muted" /></FormControl><FormMessage /></FormItem>)}/>
+                            )}
                            <FormField name="arsStatus" control={form.control} render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>ARS Status <span className="text-destructive">*</span></FormLabel>

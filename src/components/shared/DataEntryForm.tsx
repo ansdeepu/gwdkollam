@@ -415,6 +415,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
 
     const watchedPurpose = watch('purpose');
     const watchedWorkStatus = watch('workStatus');
+    const watchedTenderNo = watch('tenderNo');
     const isCompletionDateRequired = watchedWorkStatus && FINAL_WORK_STATUSES.includes(watchedWorkStatus as SiteWorkStatus);
     
     const wellConstructionPurposes: SitePurpose[] = ["BWC", "TWC", "FPW"];
@@ -482,6 +483,60 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
         return false; // Editor can edit everything
     };
 
+    const tenderSupervisors = useMemo(() => {
+        if (!watchedTenderNo) return [];
+        const tender = allE_tenders.find(t => t.eTenderNo === watchedTenderNo);
+        if (!tender) return [];
+
+        const supervisors: { id: string; name: string; designation?: Designation }[] = [];
+        const addedNames = new Set<string>();
+
+        const addSupervisor = (name: string | undefined, id?: string | null) => {
+            if (name && !addedNames.has(name)) {
+                const staff = supervisorList.find(s => (id && s.uid === id) || s.name === name);
+                if (staff) {
+                    supervisors.push({ id: staff.uid, name: staff.name, designation: staff.designation as Designation });
+                    addedNames.add(name);
+                }
+            }
+        };
+
+        addSupervisor(tender.nameOfAssistantEngineer);
+        addSupervisor(tender.supervisor1Name, tender.supervisor1Id);
+        addSupervisor(tender.supervisor2Name, tender.supervisor2Id);
+        addSupervisor(tender.supervisor3Name, tender.supervisor3Id);
+
+        return supervisors;
+    }, [watchedTenderNo, allE_tenders, supervisorList]);
+
+
+    useEffect(() => {
+        const selectedTender = allE_tenders.find(t => t.eTenderNo === watchedTenderNo);
+        if (selectedTender) {
+            const l1Bidder = selectedTender.bidders?.find(b => b.status === 'Accepted');
+            setValue('contractorName', l1Bidder ? `${l1Bidder.name}, ${l1Bidder.address}` : '');
+
+            if (tenderSupervisors.length === 1) {
+                const supervisor = tenderSupervisors[0];
+                setValue('supervisorUid', supervisor.id);
+                setValue('supervisorName', supervisor.name);
+                setValue('supervisorDesignation', supervisor.designation);
+            } else {
+                 // Clear supervisor fields if more than one or none are found
+                setValue('supervisorUid', undefined);
+                setValue('supervisorName', '');
+                setValue('supervisorDesignation', undefined);
+            }
+        }
+    }, [watchedTenderNo, allE_tenders, setValue, tenderSupervisors]);
+
+    const handleSupervisorDropdownChange = (uid: string) => {
+        const staff = supervisorList.find(s => s.uid === uid);
+        setValue('supervisorUid', uid);
+        setValue('supervisorName', staff?.name || '');
+        setValue('supervisorDesignation', staff?.designation as Designation || undefined);
+    };
+
     return (
         <div className="flex flex-col h-full overflow-hidden">
             <DialogHeader className="p-6 pb-4 shrink-0">
@@ -532,46 +587,24 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                    <FormField name="estimateAmount" control={control} render={({ field }) => <FormItem><FormLabel>Estimate Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />
                                    <FormField name="remittedAmount" control={control} render={({ field }) => <FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />
                                    <FormField name="tsAmount" control={control} render={({ field }) => <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />
-                                   <FormField name="tenderNo" control={control} render={({ field }) => ( <FormItem> <FormLabel>Tender No.</FormLabel> <Select onValueChange={(value) => field.onChange(value === '_clear_' ? '' : value)} value={field.value || ''} disabled={isFieldReadOnly(false)}> <FormControl><SelectTrigger><SelectValue placeholder="Select a Tender" /></SelectTrigger></FormControl> <SelectContent> <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(''); }}>-- Clear Selection --</SelectItem> {sortedTenders .filter(t => t.eTenderNo) .map(t => ( <SelectItem key={t.id} value={t.eTenderNo!}>{t.eTenderNo}</SelectItem> ))} </SelectContent> </Select> <FormMessage /> </FormItem> )} />
-                                   <FormField name="contractorName" control={control} render={({ field }) => <FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage/></FormItem>} />
-                                   <FormField
-                                      name="supervisorUid"
-                                      control={form.control}
-                                      render={({ field }) => (
-                                          <FormItem>
-                                              <FormLabel>Supervisor</FormLabel>
-                                              {isFieldReadOnly(false) ? ( 
-                                                  <Input
-                                                      readOnly
-                                                      value={getValues('supervisorName') || "Not Assigned"}
-                                                      className="bg-muted/50"
-                                                  />
-                                              ) : (
-                                                  <Select
-                                                      onValueChange={(value) => {
-                                                          if (value === '_clear_') {
-                                                              field.onChange(undefined);
-                                                              setValue("supervisorName", "");
-                                                              setValue("supervisorDesignation", undefined);
-                                                          } else {
-                                                              const staff = supervisorList.find((s) => s.uid === value);
-                                                              field.onChange(value);
-                                                              setValue("supervisorName", staff?.name || "");
-                                                              setValue("supervisorDesignation", staff?.designation || undefined);
-                                                          }
-                                                      }}
-                                                      value={field.value || ""}>
-                                                      <FormControl><SelectTrigger><SelectValue placeholder="Assign a Supervisor" /></SelectTrigger></FormControl>
-                                                      <SelectContent>
-                                                          <SelectItem value="_clear_">-- Clear Selection --</SelectItem>
-                                                          {supervisorList.map((s) => (<SelectItem key={s.uid} value={s.uid}>{s.name} ({s.designation})</SelectItem>))}
-                                                      </SelectContent>
-                                                  </Select>
-                                              )}
-                                              <FormMessage />
-                                          </FormItem>
-                                      )}
-                                  />
+                                   <FormField name="tenderNo" control={control} render={({ field }) => ( <FormItem> <FormLabel>Tender No.</FormLabel> <Select onValueChange={(value) => field.onChange(value === '_clear_' ? '' : value)} value={field.value || ''} disabled={isFieldReadOnly(false)}> <FormControl><SelectTrigger><SelectValue placeholder="Select a Tender" /></SelectTrigger></FormControl> <SelectContent> <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(''); }}>-- Clear Selection --</SelectItem> {sortedTenders.filter(t => t.eTenderNo).map(t => ( <SelectItem key={t.id} value={t.eTenderNo!}>{t.eTenderNo}</SelectItem> ))} </SelectContent> </Select> <FormMessage /> </FormItem> )} />
+                                   <FormField name="contractorName" control={control} render={({ field }) => <FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly className="bg-muted" /></FormControl><FormMessage/></FormItem>} />
+                                   {tenderSupervisors.length > 1 ? (
+                                        <FormField name="supervisorUid" control={form.control} render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Supervisor</FormLabel>
+                                                <Select onValueChange={(uid) => handleSupervisorDropdownChange(uid)} value={field.value || ""}>
+                                                    <FormControl><SelectTrigger><SelectValue placeholder="Select a Supervisor" /></SelectTrigger></FormControl>
+                                                    <SelectContent>
+                                                        {tenderSupervisors.map((s) => (<SelectItem key={s.id} value={s.id}>{s.name} ({s.designation})</SelectItem>))}
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}/>
+                                    ) : (
+                                        <FormField name="supervisorName" control={form.control} render={({ field }) => <FormItem><FormLabel>Supervisor</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly className="bg-muted" /></FormControl><FormMessage /></FormItem>} />
+                                    )}
                                    <FormField name="implementationRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Implementation Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                 </div>
                             </CardContent></Card>
