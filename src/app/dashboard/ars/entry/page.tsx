@@ -173,10 +173,10 @@ export default function ArsEntryPage() {
         },
     });
 
-    const { control, watch } = form;
+    const { control, watch: formWatch } = form;
     const watchedArsStatus = useWatch({ control, name: 'arsStatus' });
     const watchedLsg = useWatch({ control, name: "localSelfGovt" });
-    const watchedTenderNo = watch('arsTenderNo');
+    const watchedTenderNo = formWatch('arsTenderNo');
     const isSupervisorDropdownDisabled = false;
 
     const isFieldReadOnly = (fieldName: keyof ArsEntryFormData): boolean => {
@@ -375,7 +375,7 @@ export default function ArsEntryPage() {
         if (selectedTender) {
              const validBidders = (selectedTender.bidders || []).filter((b: Bidder) => typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
             const l1Bidder = validBidders.length > 0 
-                ? validBidders.reduce((lowest, current) => (lowest.quotedAmount! < current.quotedAmount!) ? lowest : current)
+                ? validBidders.reduce((lowest: Bidder, current: Bidder) => (lowest.quotedAmount! < current.quotedAmount!) ? lowest : current)
                 : null;
             form.setValue('arsContractorName', l1Bidder ? `${l1Bidder.name}, ${l1Bidder.address}` : '');
 

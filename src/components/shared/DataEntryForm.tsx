@@ -522,7 +522,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
         if (selectedTender) {
             const validBidders = (selectedTender.bidders || []).filter((b: Bidder) => typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
             const l1Bidder = validBidders.length > 0 
-                ? validBidders.reduce((lowest, current) => (lowest.quotedAmount! < current.quotedAmount!) ? lowest : current)
+                ? validBidders.reduce((lowest: Bidder, current: Bidder) => (lowest.quotedAmount! < current.quotedAmount!) ? lowest : current)
                 : null;
             setValue('contractorName', l1Bidder ? `${l1Bidder.name}, ${l1Bidder.address}` : '');
 
