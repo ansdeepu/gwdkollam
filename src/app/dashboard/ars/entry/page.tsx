@@ -174,6 +174,7 @@ export default function ArsEntryPage() {
         },
     });
 
+    const { watch } = form;
     const watchedArsStatus = useWatch({ control: form.control, name: 'arsStatus' });
     const watchedLsg = useWatch({ control: form.control, name: "localSelfGovt" });
     const watchedTenderNo = watch('arsTenderNo');
@@ -624,5 +625,7 @@ export default function ArsEntryPage() {
         </div>
     );
 }
+
+    
 
     
