@@ -481,6 +481,12 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
         }
         return false; // Editor can edit everything
     };
+    
+    const staffMap = useMemo(() => {
+        const map = new Map<string, StaffMember & { uid: string }>();
+        supervisorList.forEach(item => map.set(item.id, item));
+        return map;
+    }, [supervisorList]);
 
     const tenderSupervisors = useMemo(() => {
         if (!watchedTenderNo) return [];
@@ -492,9 +498,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
 
         const addSupervisor = (staffId: string | null | undefined) => {
             if (!staffId || addedUids.has(staffId)) return;
-            
-            // Find the user profile that is linked to this staff member
-            const supervisorUser = supervisorList.find(s => s.id === staffId);
+            const supervisorUser = staffMap.get(staffId);
             if (supervisorUser) {
                 supervisors.push({ id: supervisorUser.uid, name: supervisorUser.name, designation: supervisorUser.designation });
                 addedUids.add(staffId);
@@ -502,7 +506,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
         };
 
         if (tender.nameOfAssistantEngineer) {
-            const ae = supervisorList.find(s => s.name === tender.nameOfAssistantEngineer);
+            const ae = Array.from(staffMap.values()).find(s => s.name === tender.nameOfAssistantEngineer);
             if (ae) addSupervisor(ae.id);
         }
         addSupervisor(tender.supervisor1Id);
@@ -510,7 +514,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
         addSupervisor(tender.supervisor3Id);
 
         return supervisors;
-    }, [watchedTenderNo, allE_tenders, supervisorList]);
+    }, [watchedTenderNo, allE_tenders, staffMap]);
 
     useEffect(() => {
         const selectedTender = allE_tenders.find(t => t.eTenderNo === watchedTenderNo);

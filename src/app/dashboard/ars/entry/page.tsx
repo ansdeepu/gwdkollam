@@ -251,10 +251,11 @@ export default function ArsEntryPage() {
             fetchAllUsers().then(setAllUsers);
         }
     }, [canEdit, fetchAllUsers]);
-
-    const supervisorList = React.useMemo(() => {
-        if (!canEdit) return [];
-        return allUsers
+    
+    const { supervisorList, staffMap } = React.useMemo(() => {
+        if (!canEdit) return { supervisorList: [], staffMap: new Map() };
+        
+        const list = allUsers
             .filter(u => u.role === 'supervisor' && u.isApproved && u.staffId)
             .map(u => {
                 const staffInfo = staffMembers.find(s => s.id === u.staffId && s.status === 'Active');
@@ -264,6 +265,11 @@ export default function ArsEntryPage() {
                 return null;
             })
             .filter((s): s is StaffMember & { uid: string; name: string } => s !== null);
+
+        const map = new Map<string, StaffMember & { uid: string }>();
+        list.forEach(item => map.set(item.id, item));
+
+        return { supervisorList: list, staffMap: map };
     }, [allUsers, staffMembers, canEdit]);
     
     const handleLsgChange = useCallback((lsgName: string) => {
@@ -350,8 +356,7 @@ export default function ArsEntryPage() {
 
         const addSupervisor = (staffId: string | null | undefined) => {
             if (!staffId || addedUids.has(staffId)) return;
-            
-            const supervisorUser = supervisorList.find(s => s.id === staffId);
+            const supervisorUser = staffMap.get(staffId);
             if (supervisorUser) {
                 supervisors.push({ id: supervisorUser.uid, name: supervisorUser.name, designation: supervisorUser.designation });
                 addedUids.add(staffId);
@@ -359,7 +364,7 @@ export default function ArsEntryPage() {
         };
 
         if (tender.nameOfAssistantEngineer) {
-            const ae = supervisorList.find(s => s.name === tender.nameOfAssistantEngineer);
+            const ae = Array.from(staffMap.values()).find(s => s.name === tender.nameOfAssistantEngineer);
             if (ae) addSupervisor(ae.id);
         }
         addSupervisor(tender.supervisor1Id);
@@ -367,7 +372,7 @@ export default function ArsEntryPage() {
         addSupervisor(tender.supervisor3Id);
 
         return supervisors;
-    }, [watchedTenderNo, allE_tenders, supervisorList]);
+    }, [watchedTenderNo, allE_tenders, staffMap]);
 
     useEffect(() => {
         const selectedTender = allE_tenders.find(t => t.eTenderNo === watchedTenderNo);
