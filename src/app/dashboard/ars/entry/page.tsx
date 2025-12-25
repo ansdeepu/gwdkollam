@@ -166,7 +166,7 @@ export default function ArsEntryPage() {
           arsBlock: "", latitude: undefined, longitude: undefined, arsNumberOfStructures: undefined,
           arsStorageCapacity: undefined, arsNumberOfFillings: undefined, estimateAmount: undefined,
           arsAsTsDetails: "", tsAmount: undefined, arsSanctionedDate: undefined, arsTenderedAmount: undefined,
-          arsAwardedAmount: undefined, arsStatus: undefined, dateOfCompletion: undefined,
+          arsAwardedAmount: undefined, arsTenderNo: "", arsContractorName: "", arsStatus: undefined, dateOfCompletion: undefined,
           totalExpenditure: undefined, noOfBeneficiary: "", workRemarks: "",
           supervisorUid: null,
           supervisorName: null,
@@ -496,23 +496,8 @@ export default function ArsEntryPage() {
                             />
                           <FormField name="arsTenderedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Tendered Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('arsTenderedAmount')}/></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="arsAwardedAmount" control={form.control} render={({ field }) => (<FormItem><FormLabel>Awarded Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('arsAwardedAmount')}/></FormControl><FormMessage /></FormItem>)} />
-                           <FormField name="arsStatus" control={form.control} render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>ARS Status <span className="text-destructive">*</span></FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value} disabled={isFieldReadOnly('arsStatus')}>
-                                        <FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl>
-                                        <SelectContent>
-                                            {supervisorWorkStatusOptions.map(o => (
-                                                <SelectItem key={o} value={o}>{o}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}/>
-                            <CompletionDateField isFieldReadOnly={isFieldReadOnly} />
-                          <FormField name="totalExpenditure" control={form.control} render={({ field }) => (<FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('totalExpenditure')}/></FormControl><FormMessage /></FormItem>)} />
-                          <FormField name="noOfBeneficiary" control={form.control} render={({ field }) => (<FormItem><FormLabel>No. of Beneficiaries</FormLabel><FormControl><Input placeholder="e.g., 50 Families" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('noOfBeneficiary')} /></FormControl><FormMessage /></FormItem>)} />
+                          <FormField name="arsTenderNo" control={form.control} render={({ field }) => (<FormItem><FormLabel>Tender No.</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('arsTenderNo')} /></FormControl><FormMessage /></FormItem>)} />
+                          <FormField name="arsContractorName" control={form.control} render={({ field }) => (<FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('arsContractorName')} /></FormControl><FormMessage /></FormItem>)} />
                            <FormField
                                 control={form.control}
                                 name="supervisorUid"
@@ -545,6 +530,23 @@ export default function ArsEntryPage() {
                                 <FormMessage />
                                 </FormItem>
                             )}/>
+                           <FormField name="arsStatus" control={form.control} render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>ARS Status <span className="text-destructive">*</span></FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value} disabled={isFieldReadOnly('arsStatus')}>
+                                        <FormControl><SelectTrigger><SelectValue placeholder="Select Status" /></SelectTrigger></FormControl>
+                                        <SelectContent>
+                                            {supervisorWorkStatusOptions.map(o => (
+                                                <SelectItem key={o} value={o}>{o}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}/>
+                            <CompletionDateField isFieldReadOnly={isFieldReadOnly} />
+                          <FormField name="totalExpenditure" control={form.control} render={({ field }) => (<FormItem><FormLabel>Expenditure (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly('totalExpenditure')}/></FormControl><FormMessage /></FormItem>)} />
+                          <FormField name="noOfBeneficiary" control={form.control} render={({ field }) => (<FormItem><FormLabel>No. of Beneficiaries</FormLabel><FormControl><Input placeholder="e.g., 50 Families" {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('noOfBeneficiary')} /></FormControl><FormMessage /></FormItem>)} />
                           <FormField name="workRemarks" control={form.control} render={({ field }) => (<FormItem className="md:col-span-3"><FormLabel>Remarks</FormLabel><FormControl><Textarea placeholder="Additional remarks..." {...field} value={field.value ?? ""} readOnly={isFieldReadOnly('workRemarks')} /></FormControl><FormMessage /></FormItem>)} />
                         </div>
                         <div className="flex justify-end pt-8 space-x-3">

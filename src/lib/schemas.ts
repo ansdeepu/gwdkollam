@@ -192,6 +192,8 @@ export const ArsEntrySchema = z.object({
   arsSanctionedDate: optionalDateSchema,
   arsTenderedAmount: optionalNumber(),
   arsAwardedAmount: optionalNumber(),
+  arsTenderNo: z.string().optional(),
+  arsContractorName: z.string().optional(),
   arsStatus: z.enum(arsStatusOptions, { required_error: "ARS status is required." }),
   dateOfCompletion: optionalDateSchema,
   totalExpenditure: optionalNumber(),
@@ -296,8 +298,8 @@ export const reportableFields: Array<{ id: string; label: string; accessor: (ent
   { id: 'siteEstimateAmount', label: 'Site Estimate (₹)', accessor: (entry) => (entry as any).estimateAmount, arsApplicable: true },
   { id: 'siteRemittedAmount', label: 'Site Remitted (₹)', accessor: (entry) => (entry as any).remittedAmount, arsApplicable: false },
   { id: 'siteTsAmount', label: 'TS Amount (₹)', accessor: (entry) => (entry as any).tsAmount, arsApplicable: true },
-  { id: 'siteTenderNo', label: 'Tender No.', accessor: (entry) => (entry as any).tenderNo, arsApplicable: false },
-  { id: 'siteContractorName', label: 'Contractor', accessor: (entry) => (entry as any).contractorName, arsApplicable: false },
+  { id: 'siteTenderNo', label: 'Tender No.', accessor: (entry) => (entry as any).tenderNo || (entry as any).arsTenderNo, arsApplicable: true },
+  { id: 'siteContractorName', label: 'Contractor', accessor: (entry) => (entry as any).contractorName || (entry as any).arsContractorName, arsApplicable: true },
   { id: 'siteSupervisorName', label: 'Supervisor', accessor: (entry) => (entry as any).supervisorName, arsApplicable: true },
 
   // --- Survey Details ---

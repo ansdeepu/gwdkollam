@@ -324,7 +324,7 @@ export default function ArsPage() {
       "Sl. No.", "File No", "Name of Site", "Constituency (LAC)", "Type of Scheme", 
       "Local Self Govt.", "Block", "Latitude", "Longitude", "Number of Structures", 
       "Storage Capacity (m3)", "No. of Fillings", "AS/TS Accorded Details", 
-      "AS/TS Amount (₹)", "Sanctioned Date", "Tendered Amount (₹)", "Awarded Amount (₹)", 
+      "AS/TS Amount (₹)", "Sanctioned Date", "Tender No.", "Contractor", "Tendered Amount (₹)", "Awarded Amount (₹)", 
       "Present Status", "Completion Date", "No. of Beneficiaries", "Remarks"
     ];
 
@@ -344,6 +344,8 @@ export default function ArsPage() {
       "AS/TS Accorded Details": site.arsAsTsDetails || 'N/A',
       "AS/TS Amount (₹)": site.tsAmount ?? 'N/A',
       "Sanctioned Date": formatDateSafe(site.arsSanctionedDate),
+      "Tender No.": site.arsTenderNo || 'N/A',
+      "Contractor": site.arsContractorName || 'N/A',
       "Tendered Amount (₹)": site.arsTenderedAmount ?? 'N/A',
       "Awarded Amount (₹)": site.arsAwardedAmount ?? 'N/A',
       "Present Status": site.arsStatus || 'N/A',
@@ -360,9 +362,9 @@ export default function ArsPage() {
     worksheet.addRow([`Report generated on: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`]).commit();
     worksheet.addRow([]).commit(); // Spacer
 
-    worksheet.mergeCells('A1:U1');
-    worksheet.mergeCells('A2:U2');
-    worksheet.mergeCells('A3:U3');
+    worksheet.mergeCells('A1:W1');
+    worksheet.mergeCells('A2:W2');
+    worksheet.mergeCells('A3:W3');
     worksheet.getCell('A1').alignment = { horizontal: 'center' };
     worksheet.getCell('A2').alignment = { horizontal: 'center' };
     worksheet.getCell('A3').alignment = { horizontal: 'center' };
