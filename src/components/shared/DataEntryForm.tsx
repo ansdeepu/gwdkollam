@@ -488,14 +488,14 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
         const tender = allE_tenders.find(t => t.eTenderNo === watchedTenderNo);
         if (!tender) return [];
 
-        const supervisors: { id: string; name: string; designation?: Designation }[] = [];
+        const supervisors: { id: string; name: string; designation?: string }[] = [];
         const addedNames = new Set<string>();
 
         const addSupervisor = (name: string | undefined, id?: string | null) => {
             if (name && !addedNames.has(name)) {
                 const staff = supervisorList.find(s => (id && s.uid === id) || s.name === name);
                 if (staff) {
-                    supervisors.push({ id: staff.uid, name: staff.name, designation: staff.designation as Designation });
+                    supervisors.push({ id: staff.uid, name: staff.name, designation: staff.designation });
                     addedNames.add(name);
                 }
             }
@@ -534,7 +534,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
         const staff = supervisorList.find(s => s.uid === uid);
         setValue('supervisorUid', uid);
         setValue('supervisorName', staff?.name || '');
-        setValue('supervisorDesignation', staff?.designation as Designation || undefined);
+        setValue('supervisorDesignation', staff?.designation as string || undefined);
     };
 
     return (
@@ -588,7 +588,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                    <FormField name="remittedAmount" control={control} render={({ field }) => <FormItem><FormLabel>Remitted Amount (₹)</FormLabel><FormControl><Input type="number" step="any" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />
                                    <FormField name="tsAmount" control={control} render={({ field }) => <FormItem><FormLabel>TS Amount (₹)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? undefined : +e.target.value)} readOnly={isFieldReadOnly(false)} /></FormControl><FormMessage /></FormItem>} />
                                    <FormField name="tenderNo" control={control} render={({ field }) => ( <FormItem> <FormLabel>Tender No.</FormLabel> <Select onValueChange={(value) => field.onChange(value === '_clear_' ? '' : value)} value={field.value || ''} disabled={isFieldReadOnly(false)}> <FormControl><SelectTrigger><SelectValue placeholder="Select a Tender" /></SelectTrigger></FormControl> <SelectContent> <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); field.onChange(''); }}>-- Clear Selection --</SelectItem> {sortedTenders.filter(t => t.eTenderNo).map(t => ( <SelectItem key={t.id} value={t.eTenderNo!}>{t.eTenderNo}</SelectItem> ))} </SelectContent> </Select> <FormMessage /> </FormItem> )} />
-                                   <FormField name="contractorName" control={control} render={({ field }) => <FormItem><FormLabel>Contractor</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly className="bg-muted" /></FormControl><FormMessage/></FormItem>} />
+                                   <FormField name="contractorName" control={control} render={({ field }) => <FormItem><FormLabel>Contractor</FormLabel><FormControl><Textarea {...field} value={field.value || ''} readOnly className="bg-muted min-h-[40px]"/></FormControl><FormMessage/></FormItem>} />
                                    {tenderSupervisors.length > 1 ? (
                                         <FormField name="supervisorUid" control={form.control} render={({ field }) => (
                                             <FormItem>
@@ -603,7 +603,7 @@ const SiteDialogContent = ({ initialData, onConfirm, onCancel, supervisorList, i
                                             </FormItem>
                                         )}/>
                                     ) : (
-                                        <FormField name="supervisorName" control={form.control} render={({ field }) => <FormItem><FormLabel>Supervisor</FormLabel><FormControl><Input {...field} value={field.value || ''} readOnly className="bg-muted" /></FormControl><FormMessage /></FormItem>} />
+                                        <FormField name="supervisorName" control={form.control} render={({ field }) => <FormItem><FormLabel>Supervisor</FormLabel><FormControl><Textarea {...field} value={getValues('supervisorName') ? `${getValues('supervisorName')}, ${getValues('supervisorDesignation') || ''}` : ''} readOnly className="bg-muted min-h-[40px]" /></FormControl><FormMessage /></FormItem>} />
                                     )}
                                    <FormField name="implementationRemarks" control={control} render={({ field }) => <FormItem><FormLabel>Implementation Remarks</FormLabel><FormControl><Textarea {...field} value={field.value ?? ""} readOnly={isFieldReadOnly(true)} /></FormControl><FormMessage /></FormItem>} />
                                 </div>
