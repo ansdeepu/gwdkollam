@@ -11,10 +11,11 @@ const nextConfig = {
     ignoreDuringBuilds: false,
   },
   experimental: {
-    allowedDevOrigins: [
-      "https://6000-firebase-gwd-kollam1812252-1766645722275.cluster-sumfw3zmzzhzkx4mpvz3ogth4y.cloudworkstations.dev",
-    ],
+    // The allowedDevOrigins key has been moved out as per the build warning.
   },
+  allowedDevOrigins: [
+    "https://6000-firebase-gwd-kollam1812252-1766645722275.cluster-sumfw3zmzzhzkx4mpvz3ogth4y.cloudworkstations.dev",
+  ],
   images: {
     remotePatterns: [
       {
