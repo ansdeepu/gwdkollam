@@ -35,7 +35,7 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
     }
 
     const fileNo = tender.fileNo || '__________';
-    const eTenderNo = formatTenderNoForFilename(tender.eTenderNo);
+    const eTenderNo = tender.eTenderNo || '__________';
     const bidderDetails = (l1Bidder && l1Bidder.name) ? `${l1Bidder.name}, ${l1Bidder.address || ''}` : '____________________';
     
     let workName = tender.nameOfWork || '____________________';
