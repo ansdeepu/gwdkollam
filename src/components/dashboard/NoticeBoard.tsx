@@ -136,7 +136,7 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
             </div>
           </div>
           <DialogContent>
-            <div className="p-4 flex flex-col items-center text-center relative overflow-hidden">
+            <div className="p-4 flex flex-col items-center text-center relative overflow-hidden bg-gradient-to-br from-blue-50 via-pink-50 to-indigo-50">
                 <PartyPopper className="absolute top-2 left-4 h-6 w-6 text-yellow-400 -rotate-45" />
                 <PartyPopper className="absolute top-8 right-6 h-5 w-5 text-blue-400 rotate-12" />
                 <PartyPopper className="absolute bottom-6 left-8 h-5 w-5 text-red-400 rotate-6" />
