@@ -1,5 +1,5 @@
 // src/components/e-tender/pdf/generators/workAgreementGenerator.ts
-import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb, PageSizes, TextAlignment } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { format, isValid } from 'date-fns';
 import { formatTenderNoForFilename } from '../../utils';
@@ -94,15 +94,34 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
     }
     lines.push(currentLine);
 
-    lines.forEach((line) => {
-        page.drawText(line, {
-            x: leftMargin,
-            y: currentY,
-            font: timesRomanFont,
-            size: regularFontSize,
-            maxWidth: paragraphWidth,
-            color: rgb(0, 0, 0),
+    lines.forEach((line, index) => {
+        const isLastLine = index === lines.length - 1;
+        const lineWords = line.trim().split(' ');
+        const textWidth = timesRomanFont.widthOfTextAtSize(line, regularFontSize);
+        const wordCount = lineWords.length;
+        
+        let spaceWidth = 0;
+        if (!isLastLine && wordCount > 1) {
+            spaceWidth = (paragraphWidth - textWidth) / (wordCount - 1);
+        }
+
+        let xOffset = (line.startsWith(paragraphIndent) && index === 0) ? timesRomanFont.widthOfTextAtSize(paragraphIndent, regularFontSize) : 0;
+        
+        if (line.startsWith(paragraphIndent)) {
+            page.drawText(paragraphIndent, { x: leftMargin, y: currentY, font: timesRomanFont, size: regularFontSize, color: rgb(0, 0, 0) });
+        }
+
+        lineWords.forEach((word, wordIndex) => {
+            page.drawText(word, {
+                x: leftMargin + xOffset,
+                y: currentY,
+                font: timesRomanFont,
+                size: regularFontSize,
+                color: rgb(0, 0, 0),
+            });
+            xOffset += timesRomanFont.widthOfTextAtSize(word, regularFontSize) + spaceWidth;
         });
+
         currentY -= paragraphLineHeight;
     });
 
@@ -119,20 +138,7 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
       color: rgb(0, 0, 0),
     });
     
-    const signatureText = "District Officer";
-    const signatureWidth = timesRomanBoldFont.widthOfTextAtSize(signatureText, regularFontSize);
-    const signatureX = width - rightMargin - signatureWidth;
-    
-    page.drawText(signatureText, {
-        x: signatureX,
-        y: currentY,
-        font: timesRomanBoldFont,
-        size: regularFontSize,
-        color: rgb(0, 0, 0),
-    });
-
-
-    // 4. No attached files text for this document.
+    // Intentionally removed the "District Officer" text block that was here.
 
     return await pdfDoc.save();
 }
