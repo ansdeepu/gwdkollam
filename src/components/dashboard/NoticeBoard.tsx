@@ -1,3 +1,4 @@
+
 // src/components/dashboard/NoticeBoard.tsx
 "use client";
 
@@ -140,12 +141,6 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
                 <PartyPopper className="absolute top-8 right-6 h-5 w-5 text-blue-400 rotate-12" />
                 <PartyPopper className="absolute bottom-6 left-8 h-5 w-5 text-red-400 rotate-6" />
                 <PartyPopper className="absolute bottom-2 right-4 h-6 w-6 text-green-400 -rotate-12" />
-                <PartyPopper className="absolute top-20 left-2 h-4 w-4 text-purple-400 rotate-45" />
-                <PartyPopper className="absolute bottom-20 right-2 h-4 w-4 text-orange-400 -rotate-12" />
-                <PartyPopper className="absolute top-1/2 left-2 h-5 w-5 text-teal-400 rotate-12" />
-                <PartyPopper className="absolute top-1/2 right-2 h-5 w-5 text-fuchsia-400 -rotate-12" />
-                <PartyPopper className="absolute top-4 right-1/4 h-4 w-4 text-sky-400 rotate-25" />
-                <PartyPopper className="absolute bottom-4 left-1/4 h-4 w-4 text-rose-400 -rotate-25" />
                 <div className="relative z-10 flex flex-col items-center">
                     <Avatar className="h-32 w-32 mb-4 border-2 p-1 border-primary/50 shadow-lg bg-gradient-to-br from-pink-300 via-purple-300 to-indigo-400">
                       <AvatarImage src={selectedBirthday?.photoUrl || undefined} alt={selectedBirthday?.name} />
