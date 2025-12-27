@@ -1,4 +1,3 @@
-
 // src/components/e-tender/pdf/generators/workAgreementGenerator.ts
 import { PDFDocument, StandardFonts, rgb, PageSizes } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
@@ -53,12 +52,12 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
 
     // 1. Draw the heading at exactly 17cm from the top
     let currentY = height - cm(17);
-    const headingIndentText = "          "; // 10 spaces
-    const headingIndentWidth = timesRomanBoldFont.widthOfTextAtSize(headingIndentText, headingFontSize);
     const headingText = `AGREEMENT NO. GKT/${fileNo}/${eTenderNo} DATED ${agreementDateForHeading}`;
+    const headingTextWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
+    const headingX = (width - headingTextWidth) / 2; // Center alignment
     
     page.drawText(headingText, {
-        x: leftMargin + headingIndentWidth,
+        x: headingX,
         y: currentY,
         font: timesRomanBoldFont,
         size: headingFontSize,
@@ -67,8 +66,8 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
     
     const textWidth = timesRomanBoldFont.widthOfTextAtSize(headingText, headingFontSize);
     page.drawLine({
-        start: { x: leftMargin + headingIndentWidth, y: currentY - 2 },
-        end: { x: leftMargin + headingIndentWidth + textWidth, y: currentY - 2 },
+        start: { x: headingX, y: currentY - 2 },
+        end: { x: headingX + textWidth, y: currentY - 2 },
         thickness: 1,
         color: rgb(0, 0, 0),
     });
@@ -119,6 +118,19 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
       lineHeight: paragraphLineHeight,
       color: rgb(0, 0, 0),
     });
+    
+    const signatureText = "District Officer";
+    const signatureWidth = timesRomanBoldFont.widthOfTextAtSize(signatureText, regularFontSize);
+    const signatureX = width - rightMargin - signatureWidth;
+    
+    page.drawText(signatureText, {
+        x: signatureX,
+        y: currentY,
+        font: timesRomanBoldFont,
+        size: regularFontSize,
+        color: rgb(0, 0, 0),
+    });
+
 
     // 4. No attached files text for this document.
 
