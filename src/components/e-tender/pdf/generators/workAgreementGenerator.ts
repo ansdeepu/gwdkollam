@@ -97,23 +97,28 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
     lines.forEach((line, index) => {
         const isLastLine = index === lines.length - 1;
         const lineWords = line.trim().split(' ');
-        const textWidth = timesRomanFont.widthOfTextAtSize(line, regularFontSize);
-        const wordCount = lineWords.length;
         
+        let wordsWidth = 0;
+        lineWords.forEach(word => {
+            wordsWidth += timesRomanFont.widthOfTextAtSize(word, regularFontSize);
+        });
+
         let spaceWidth = 0;
-        if (!isLastLine && wordCount > 1) {
-            spaceWidth = (paragraphWidth - textWidth) / (wordCount - 1);
+        if (!isLastLine && lineWords.length > 1) {
+            const totalSpacing = paragraphWidth - wordsWidth - (line.startsWith(paragraphIndent) ? timesRomanFont.widthOfTextAtSize(paragraphIndent, regularFontSize) : 0);
+            spaceWidth = totalSpacing / (lineWords.length - 1);
+        } else {
+            spaceWidth = timesRomanFont.widthOfTextAtSize(' ', regularFontSize);
         }
 
-        let xOffset = (line.startsWith(paragraphIndent) && index === 0) ? timesRomanFont.widthOfTextAtSize(paragraphIndent, regularFontSize) : 0;
-        
+        let xOffset = leftMargin;
         if (line.startsWith(paragraphIndent)) {
-            page.drawText(paragraphIndent, { x: leftMargin, y: currentY, font: timesRomanFont, size: regularFontSize, color: rgb(0, 0, 0) });
+            xOffset += timesRomanFont.widthOfTextAtSize(paragraphIndent, regularFontSize);
         }
 
-        lineWords.forEach((word, wordIndex) => {
+        lineWords.forEach((word) => {
             page.drawText(word, {
-                x: leftMargin + xOffset,
+                x: xOffset,
                 y: currentY,
                 font: timesRomanFont,
                 size: regularFontSize,
