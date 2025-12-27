@@ -106,15 +106,15 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
         <CardTitle className="flex items-center gap-2"><Megaphone className="h-5 w-5 text-primary" />Birthday Updates</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-4 pt-0 min-h-0">
-        <div className={cn("border rounded-lg p-3 bg-background flex flex-col")}>
-          <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Cake className="h-4 w-4 text-pink-500" />Today's Birthdays ({noticeData.todaysBirthdays.length})</h3>
-           <div className={cn("pr-3", enableTodayScrolling ? "h-28 marquee-container-birthdays" : "h-auto")}>
-            {todayBirthdayList.length > 0 ? (
-              <div className={cn("space-y-3", enableTodayScrolling && "marquee-content-birthdays")}>
-                <Dialog open={!!selectedBirthday} onOpenChange={() => setSelectedBirthday(null)}>
+        <Dialog open={!!selectedBirthday} onOpenChange={(isOpen) => !isOpen && setSelectedBirthday(null)}>
+          <div className={cn("border rounded-lg p-3 bg-background flex flex-col")}>
+            <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Cake className="h-4 w-4 text-pink-500" />Today's Birthdays ({noticeData.todaysBirthdays.length})</h3>
+            <div className={cn("pr-3", enableTodayScrolling ? "h-28 marquee-container-birthdays" : "h-auto")}>
+              {todayBirthdayList.length > 0 ? (
+                <div className={cn("space-y-3", enableTodayScrolling && "marquee-content-birthdays")}>
                   {todayBirthdayList.map((staff, index) => (
                     <DialogTrigger key={index} asChild>
-                      <button key={index} onClick={() => setSelectedBirthday(staff)} className="w-full p-2 rounded-md bg-pink-500/10 hover:bg-pink-500/20 transition-colors flex items-center gap-3 text-left">
+                      <button onClick={() => setSelectedBirthday(staff)} className="w-full p-2 rounded-md bg-pink-500/10 hover:bg-pink-500/20 transition-colors flex items-center gap-3 text-left">
                         <Avatar className="h-10 w-10 border-2 border-pink-200">
                           <AvatarImage src={staff.photoUrl || undefined} alt={staff.name} />
                           <AvatarFallback className="bg-pink-100 text-pink-700 font-bold">{getInitials(staff.name)}</AvatarFallback>
@@ -126,26 +126,26 @@ export default function NoticeBoard({ staffMembers }: NoticeBoardProps) {
                       </button>
                     </DialogTrigger>
                   ))}
-                  <DialogContent>
-                    <div className="p-4 flex flex-col items-center text-center relative overflow-hidden">
-                      <PartyPopper className="absolute top-2 left-4 h-6 w-6 text-yellow-400 -rotate-45" /><PartyPopper className="absolute top-8 right-6 h-5 w-5 text-blue-400 rotate-12" /><PartyPopper className="absolute bottom-6 left-8 h-5 w-5 text-red-400 rotate-6" /><PartyPopper className="absolute bottom-2 right-4 h-6 w-6 text-green-400 -rotate-12" /><PartyPopper className="absolute top-20 left-2 h-4 w-4 text-purple-400 rotate-45" /><PartyPopper className="absolute bottom-20 right-2 h-4 w-4 text-orange-400 -rotate-12" />
-                      <Avatar className="h-32 w-32 mb-4 border-2 p-1 border-primary/50 shadow-lg bg-gradient-to-br from-pink-300 via-purple-300 to-indigo-400">
-                        <AvatarImage src={selectedBirthday?.photoUrl || undefined} alt={selectedBirthday?.name} />
-                        <AvatarFallback className="text-4xl">{getInitials(selectedBirthday?.name)}</AvatarFallback>
-                      </Avatar>
-                      <h2 className="text-2xl font-bold text-primary">Happy Birthday!</h2>
-                      <p className="mt-4 text-foreground">Wishing you a fantastic day filled with joy and celebration!</p>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            ) : (
-              <div className="h-full flex items-center justify-center py-6">
-                <p className="text-sm text-muted-foreground italic">No birthdays today.</p>
-              </div>
-            )}
-           </div>
-        </div>
+                </div>
+              ) : (
+                <div className="h-full flex items-center justify-center py-6">
+                  <p className="text-sm text-muted-foreground italic">No birthdays today.</p>
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogContent>
+            <div className="p-4 flex flex-col items-center text-center relative overflow-hidden">
+              <PartyPopper className="absolute top-2 left-4 h-6 w-6 text-yellow-400 -rotate-45" /><PartyPopper className="absolute top-8 right-6 h-5 w-5 text-blue-400 rotate-12" /><PartyPopper className="absolute bottom-6 left-8 h-5 w-5 text-red-400 rotate-6" /><PartyPopper className="absolute bottom-2 right-4 h-6 w-6 text-green-400 -rotate-12" /><PartyPopper className="absolute top-20 left-2 h-4 w-4 text-purple-400 rotate-45" /><PartyPopper className="absolute bottom-20 right-2 h-4 w-4 text-orange-400 -rotate-12" />
+              <Avatar className="h-32 w-32 mb-4 border-2 p-1 border-primary/50 shadow-lg bg-gradient-to-br from-pink-300 via-purple-300 to-indigo-400">
+                <AvatarImage src={selectedBirthday?.photoUrl || undefined} alt={selectedBirthday?.name} />
+                <AvatarFallback className="text-4xl">{getInitials(selectedBirthday?.name)}</AvatarFallback>
+              </Avatar>
+              <h2 className="text-2xl font-bold text-primary">Happy Birthday!</h2>
+              <p className="mt-4 text-foreground">Wishing you a fantastic day filled with joy and celebration!</p>
+            </div>
+          </DialogContent>
+        </Dialog>
         
         <div className={cn("border rounded-lg p-3 bg-background flex flex-col flex-1 min-h-0")}>
           <h3 className="text-sm font-semibold mb-2 flex items-center gap-2"><Gift className="h-4 w-4 text-indigo-500" />Upcoming Birthdays ({noticeData.upcomingBirthdays.length})</h3>
