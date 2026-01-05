@@ -359,6 +359,7 @@ export default function ReportsPage() {
     applicationTypeFilter, typeOfRigFilter, constituencyFilter, searchParams
   ]);
 
+  // This effect runs once on mount to set initial filter states from URL
   useEffect(() => {
     if (!entriesLoading && !authIsLoading) {
       const statusFromQuery = searchParams?.get("status");
@@ -368,10 +369,23 @@ export default function ReportsPage() {
       setStatusFilter(statusFromQuery && fileStatusOptions.includes(statusFromQuery as any) ? statusFromQuery : "all");
       setWorkCategoryFilter(workCategoryFromQuery && siteWorkStatusOptions.includes(workCategoryFromQuery as any) ? workCategoryFromQuery : "all");
       setServiceTypeFilter(serviceTypeFromQuery && (sitePurposeOptions.includes(serviceTypeFromQuery as any) || serviceTypeFromQuery === 'all') ? serviceTypeFromQuery : "all");
-      
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, entriesLoading, authIsLoading]);
+
+  // This effect runs whenever filters change to re-generate the report
+  useEffect(() => {
+    if (!entriesLoading && !authIsLoading) {
       applyFilters();
     }
-  }, [searchParams, entriesLoading, authIsLoading, applyFilters]);
+  }, [
+    fileEntries, // Re-run when base data changes
+    searchTerm, statusFilter, serviceTypeFilter, workCategoryFilter, 
+    startDate, endDate, dateFilterType,
+    applicationTypeFilter, typeOfRigFilter, constituencyFilter, 
+    entriesLoading, authIsLoading,
+    applyFilters // The memoized function
+  ]);
   
   useEffect(() => {
     setCurrentPage(1);
