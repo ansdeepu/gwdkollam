@@ -222,10 +222,12 @@ export function DataStoreProvider({ children, user }: { children: ReactNode, use
 
         const unsubscribes = Object.entries(collections).map(([key, { setter, loaderKey, collectionName }]) => {
             let q;
-            if(collectionName === 'bidders' || collectionName === 'eTenders'){
-                 q = query(collection(db, collectionName), orderBy("tenderDate", "desc"));
+            if (collectionName === 'bidders') {
+                q = query(collection(db, collectionName), orderBy("order"));
+            } else if (collectionName === 'eTenders') {
+                q = query(collection(db, collectionName), orderBy("tenderDate", "desc"));
             } else {
-                 q = getQueryForCollection(collectionName);
+                q = getQueryForCollection(collectionName);
             }
             
             return onSnapshot(
@@ -248,12 +250,6 @@ export function DataStoreProvider({ children, user }: { children: ReactNode, use
                             const doc = snapshot.docs[0];
                             setter({ id: doc.id, ...doc.data() } as OfficeAddress);
                         }
-                    } else if (collectionName === 'bidders' || collectionName === 'eTenders') {
-                        const data = snapshot.docs.map(doc => ({
-                            ...doc.data(),
-                            id: doc.id,
-                        })) as (MasterBidder[] | E_tender[]);
-                        setter(data);
                     } else {
                         const data = snapshot.docs.map(doc => {
                             const docData = doc.data();
@@ -289,7 +285,7 @@ export function DataStoreProvider({ children, user }: { children: ReactNode, use
             unsubscribes.forEach(unsub => unsub());
         };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [user]);
+    }, [user, refetchCounters]);
 
     const isLoading = Object.values(loadingStates).some(Boolean);
 
