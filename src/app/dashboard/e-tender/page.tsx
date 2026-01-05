@@ -24,7 +24,7 @@ import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/comp
 import PaginationControls from '@/components/shared/PaginationControls';
 
 const Loader2 = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
 );
 const PlusCircle = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
@@ -311,7 +311,8 @@ export default function ETenderListPage() {
                             <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-gray-400"></div><span>Tender Process</span></div>
                             <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-orange-400"></div><span>Bid Opened</span></div>
                             <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-blue-400"></div><span>Selection Notice</span></div>
-                            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-400"></div><span>Work/Supply Order</span></div>
+                            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-green-400"></div><span>Work Order</span></div>
+                            <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-purple-400"></div><span>Supply Order</span></div>
                             <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-yellow-400"></div><span>Retender</span></div>
                             <div className="flex items-center gap-1"><div className="w-3 h-3 rounded-full bg-red-400"></div><span>Cancelled</span></div>
                         </div>
@@ -441,3 +442,4 @@ export default function ETenderListPage() {
 }
 
     
+
