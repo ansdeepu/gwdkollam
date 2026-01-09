@@ -35,7 +35,8 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
 
     const fileNo = tender.fileNo || '__________';
     const eTenderNo = tender.eTenderNo || '__________';
-    const bidderDetails = (l1Bidder && l1Bidder.name) ? `${l1Bidder.name}, ${l1Bidder.address || ''}` : '____________________';
+    const bidderNameAndAddress = (l1Bidder && l1Bidder.name) ? `${l1Bidder.name}, ${l1Bidder.address || ''}` : '____________________';
+    const bidderDetails = bidderNameAndAddress.replace(/\n/g, ', ');
     
     let workName = tender.nameOfWork || '____________________';
     if (workName.endsWith('.')) {
@@ -113,6 +114,13 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
 
         let xOffset = leftMargin;
         if (line.startsWith(paragraphIndent)) {
+            page.drawText(paragraphIndent, {
+                x: leftMargin,
+                y: currentY,
+                font: timesRomanFont,
+                size: regularFontSize,
+                color: rgb(0,0,0),
+            });
             xOffset += timesRomanFont.widthOfTextAtSize(paragraphIndent, regularFontSize);
         }
 
@@ -142,8 +150,6 @@ export async function generateWorkAgreement(tender: E_tender, allStaffMembers?: 
       lineHeight: paragraphLineHeight,
       color: rgb(0, 0, 0),
     });
-    
-    // Intentionally removed the "District Officer" text block that was here.
 
     return await pdfDoc.save();
 }
