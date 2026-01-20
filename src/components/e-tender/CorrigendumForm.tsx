@@ -1,4 +1,3 @@
-
 // src/components/e-tender/CorrigendumForm.tsx
 "use client";
 
@@ -67,7 +66,7 @@ export default function CorrigendumForm({ onSubmit, onCancel, isSubmitting, init
                                 <FormField name="corrigendumType" control={form.control} render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Type</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
+                                        <Select onValueChange={field.onChange} value={field.value ?? ''}>
                                             <FormControl><SelectTrigger><SelectValue placeholder="Select Type"/></SelectTrigger></FormControl>
                                             <SelectContent>{corrigendumTypeOptions.map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
                                         </Select>
@@ -106,5 +105,3 @@ export default function CorrigendumForm({ onSubmit, onCancel, isSubmitting, init
         </FormProvider>
     );
 }
-
-    
