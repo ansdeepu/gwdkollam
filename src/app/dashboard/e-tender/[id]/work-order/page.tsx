@@ -1,4 +1,3 @@
-
 // src/app/dashboard/e-tender/[id]/work-order/page.tsx
 "use client";
 
@@ -23,7 +22,7 @@ export default function WorkOrderPrintPage() {
 
     const l1Bidder = useMemo(() => {
         if (!tender.bidders || tender.bidders.length === 0) return null;
-        const validBidders = tender.bidders.filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
+        const validBidders = tender.bidders.filter(b => b.status === 'Accepted' && typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
         if (validBidders.length === 0) return null;
         return validBidders.reduce((lowest, current) =>
             (current.quotedAmount! < lowest.quotedAmount!) ? current : lowest

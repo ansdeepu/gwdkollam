@@ -1,4 +1,3 @@
-
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -391,7 +390,7 @@ export default function TenderDetails() {
 
     const l1Bidder = useMemo(() => {
         if (!bidderFields || bidderFields.length === 0) return null;
-        const validBidders = bidderFields.filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
+        const validBidders = bidderFields.filter(b => b.status === 'Accepted' && typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
         if (validBidders.length === 0) return null;
         return validBidders.reduce((lowest, current) => 
             (current.quotedAmount! < lowest.quotedAmount!) ? current : lowest
