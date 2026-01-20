@@ -32,12 +32,17 @@ export async function generateBidOpeningSummary(tender: E_tender, allStaffMember
     const numRejectedInWords = numberToWords(numRejected);
     
     const l1Bidder = acceptedBidders.length > 0 ? acceptedBidders.reduce((lowest, current) => (current.quotedAmount! < lowest.quotedAmount!) ? current : lowest) : null;
+    
+    const totalBidWord = numTotalBidders === 1 ? 'bid was' : 'bids were';
+    const acceptedBidWord = numAccepted === 1 ? 'bid was' : 'bids were';
 
-    let bidOpeningText = `     ${numTotalBiddersInWords} bids were received. Upon opening, ${numAcceptedInWords} bids were found to be admissible and accepted for further evaluation.`;
+    let bidOpeningText = `     ${numTotalBiddersInWords} ${totalBidWord} received. Upon opening, ${numAcceptedInWords} ${acceptedBidWord} found to be admissible and accepted for further evaluation.`;
     
     if (rejectedBidders.length > 0) {
         const rejectionDetails = rejectedBidders.map(b => `${b.name || 'A bidder'} (Reason: ${b.remarks || 'Not specified'})`).join('; ');
-        bidOpeningText += ` ${numRejectedInWords} bids were rejected. The reasons are as follows: ${rejectionDetails}.`;
+        const rejectedBidWord = numRejected === 1 ? 'bid was' : 'bids were';
+        const rejectedText = `${numRejectedInWords} ${rejectedBidWord} rejected.`;
+        bidOpeningText += ` ${rejectedText} The reasons are as follows: ${rejectionDetails}.`;
     }
     
     if (l1Bidder && l1Bidder.quotedPercentage !== undefined && l1Bidder.aboveBelow) {
