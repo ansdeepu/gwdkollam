@@ -45,6 +45,8 @@ const SELECTION_NOTICE_CLEAR_DATA: Partial<E_tenderFormData> = {
   performanceGuaranteeAmount: null,
   additionalPerformanceGuaranteeAmount: null,
   stampPaperAmount: null,
+  agreedPercentage: null,
+  agreedAmount: null,
   performanceGuaranteeDescription: null,
   additionalPerformanceGuaranteeDescription: null,
   stampPaperDescription: null,
@@ -354,7 +356,11 @@ export default function TenderDetails() {
         return bidderFields.length > 0;
     }, [bidderFields]);
 
-    const watchedSelectionNoticeFields = watch(['selectionNoticeDate', 'performanceGuaranteeAmount', 'additionalPerformanceGuaranteeAmount', 'stampPaperAmount']);
+    const hasRejectedBids = useMemo(() => {
+        return bidderFields.some(b => b.status === 'Rejected');
+    }, [bidderFields]);
+
+    const watchedSelectionNoticeFields = watch(['selectionNoticeDate', 'performanceGuaranteeAmount', 'additionalPerformanceGuaranteeAmount', 'stampPaperAmount', 'agreedPercentage', 'agreedAmount']);
     const hasAnySelectionNoticeData = useMemo(() => {
         return watchedSelectionNoticeFields.some(v => v);
     }, [watchedSelectionNoticeFields]);
@@ -649,8 +655,10 @@ export default function TenderDetails() {
                                 </CardHeader>
                                 {hasAnySelectionNoticeData ? (
                                     <CardContent className="p-6 pt-0">
-                                        <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3 pt-4 border-t">
+                                        <dl className="grid grid-cols-1 md:grid-cols-3 gap-x-4 gap-y-3 pt-4 border-t">
                                             <DetailRow label="Selection Notice Date" value={watch('selectionNoticeDate')} />
+                                            {hasRejectedBids && <DetailRow label="Agreed Percentage" value={watch('agreedPercentage') ? `${watch('agreedPercentage')}%` : null} />}
+                                            {hasRejectedBids && <DetailRow label="Agreed Amount" value={watch('agreedAmount')} isCurrency />}
                                             <DetailRow label="Performance Guarantee Amount" value={watch('performanceGuaranteeAmount')} isCurrency />
                                             <DetailRow label="Additional Performance Guarantee Amount" value={watch('additionalPerformanceGuaranteeAmount')} isCurrency />
                                             <DetailRow label="Stamp Paper required" value={watch('stampPaperAmount')} isCurrency />
@@ -801,7 +809,13 @@ export default function TenderDetails() {
                 </Dialog>
                 <Dialog open={activeModal === 'selectionNotice'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-2xl flex flex-col p-0">
-                        <SelectionNoticeForm onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting} l1Amount={l1Bidder?.quotedAmount} />
+                        <SelectionNoticeForm
+                           onSubmit={handleSave}
+                           onCancel={() => setActiveModal(null)}
+                           isSubmitting={isSubmitting}
+                           l1Amount={l1Bidder?.quotedAmount}
+                           hasRejectedBids={hasRejectedBids}
+                        />
                     </DialogContent>
                 </Dialog>
                 <Dialog open={activeModal === 'workOrder'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>

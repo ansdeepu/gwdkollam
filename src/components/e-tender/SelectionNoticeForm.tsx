@@ -13,12 +13,15 @@ import { SelectionNoticeDetailsSchema, type E_tenderFormData, type SelectionNoti
 import { formatDateForInput } from './utils';
 import { useDataStore, defaultRateDescriptions } from '@/hooks/use-data-store';
 import { useTenderData } from './TenderDataContext';
+import { cn } from '@/lib/utils';
+import { Separator } from '../ui/separator';
 
 interface SelectionNoticeFormProps {
     onSubmit: (data: Partial<E_tenderFormData>) => void;
     onCancel: () => void;
     isSubmitting: boolean;
     l1Amount?: number;
+    hasRejectedBids?: boolean;
 }
 
 const parseStampPaperLogic = (description: string) => {
@@ -55,7 +58,7 @@ const parseAdditionalPerformanceGuaranteeLogic = (description: string) => {
 };
 
 
-export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, l1Amount }: SelectionNoticeFormProps) {
+export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, l1Amount, hasRejectedBids }: SelectionNoticeFormProps) {
     const { tender } = useTenderData();
     const { allRateDescriptions } = useDataStore();
     const isNewTender = tender?.id === 'new';
@@ -103,22 +106,31 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
             performanceGuaranteeAmount: tender?.performanceGuaranteeAmount,
             additionalPerformanceGuaranteeAmount: tender?.additionalPerformanceGuaranteeAmount,
             stampPaperAmount: tender?.stampPaperAmount,
+            agreedPercentage: tender?.agreedPercentage,
+            agreedAmount: tender?.agreedAmount,
         }
     });
     
-    const { handleSubmit, setValue } = form;
+    const { handleSubmit, setValue, watch, getValues } = form;
+    const agreedAmountFromForm = watch('agreedAmount');
 
     useEffect(() => {
-        const pg = l1Amount ? Math.ceil((l1Amount * 0.05) / 100) * 100 : 0;
-        const stamp = calculateStampPaperValue(l1Amount);
-        const additionalPg = calculateAdditionalPG(tender?.estimateAmount, l1Amount);
+        const contractAmount = agreedAmountFromForm || l1Amount;
 
-        setValue('selectionNoticeDate', formatDateForInput(tender?.selectionNoticeDate) || '');
-        setValue('performanceGuaranteeAmount', pg, { shouldValidate: true });
-        setValue('additionalPerformanceGuaranteeAmount', additionalPg, { shouldValidate: true });
-        setValue('stampPaperAmount', stamp, { shouldValidate: true });
+        const pg = contractAmount ? Math.ceil((contractAmount * 0.05) / 100) * 100 : 0;
+        const stamp = calculateStampPaperValue(contractAmount);
+        const additionalPg = calculateAdditionalPG(tender?.estimateAmount, contractAmount);
 
-    }, [tender, l1Amount, calculateStampPaperValue, calculateAdditionalPG, setValue]);
+        if (!getValues('selectionNoticeDate')) {
+            setValue('selectionNoticeDate', formatDateForInput(tender?.selectionNoticeDate) || '');
+        }
+        
+        setValue('performanceGuaranteeAmount', pg, { shouldValidate: true, shouldDirty: true });
+        setValue('additionalPerformanceGuaranteeAmount', additionalPg, { shouldValidate: true, shouldDirty: true });
+        setValue('stampPaperAmount', stamp, { shouldValidate: true, shouldDirty: true });
+
+    }, [tender, l1Amount, agreedAmountFromForm, calculateStampPaperValue, calculateAdditionalPG, setValue, getValues]);
+
 
     const handleFormSubmit = (data: SelectionNoticeDetailsFormData) => {
         const formData: Partial<E_tenderFormData> = { ...data };
@@ -145,31 +157,42 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
                 <div className="flex-1 min-h-0">
                     <ScrollArea className="h-full px-6 py-4">
                         <div className="space-y-4">
-                            <FormField name="selectionNoticeDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Selection Notice Date</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} /></FormControl><FormMessage /></FormItem> )}/>
-                            <FormField name="performanceGuaranteeAmount" control={form.control} render={({ field }) => ( 
-                                <FormItem>
-                                    <FormLabel>Performance Guarantee Amount</FormLabel>
-                                    <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} readOnly className="bg-muted/50" /></FormControl>
-                                    <FormDescription className="text-xs">Based on 5% of the L1 contract value (rounded up).</FormDescription>
-                                    <FormMessage />
-                                </FormItem> 
-                            )}/>
-                            <FormField name="additionalPerformanceGuaranteeAmount" control={form.control} render={({ field }) => ( 
-                                <FormItem>
-                                    <FormLabel>Additional Performance Guarantee Amount</FormLabel>
-                                    <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} readOnly className="bg-muted/50" /></FormControl>
-                                    <FormDescription className="text-xs">Required for bids over 10% below estimate; calculated on the excess percentage of the estimate amount.</FormDescription>
-                                    <FormMessage />
-                                </FormItem> 
-                            )}/>
-                            <FormField name="stampPaperAmount" control={form.control} render={({ field }) => ( 
-                                <FormItem>
-                                    <FormLabel>Stamp Paper required</FormLabel>
-                                    <FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50"/></FormControl>
-                                    <FormDescription className="text-xs">Based on the L1 contract amount.</FormDescription>
-                                    <FormMessage />
-                                </FormItem> 
-                            )}/>
+                             <div className={cn("grid grid-cols-1 gap-4", hasRejectedBids && "md:grid-cols-3")}>
+                                <FormField name="selectionNoticeDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Selection Notice Date</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} /></FormControl><FormMessage /></FormItem> )}/>
+                                {hasRejectedBids && (
+                                    <>
+                                        <FormField name="agreedPercentage" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Agreed Percentage</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                        <FormField name="agreedAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Agreed Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                    </>
+                                )}
+                            </div>
+                            <Separator />
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <FormField name="performanceGuaranteeAmount" control={form.control} render={({ field }) => ( 
+                                    <FormItem>
+                                        <FormLabel>Performance Guarantee Amount</FormLabel>
+                                        <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} readOnly className="bg-muted/50" /></FormControl>
+                                        <FormDescription className="text-xs">Based on 5% of the contract value (rounded up).</FormDescription>
+                                        <FormMessage />
+                                    </FormItem> 
+                                )}/>
+                                <FormField name="additionalPerformanceGuaranteeAmount" control={form.control} render={({ field }) => ( 
+                                    <FormItem>
+                                        <FormLabel>Additional Performance Guarantee Amount</FormLabel>
+                                        <FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} readOnly className="bg-muted/50" /></FormControl>
+                                        <FormDescription className="text-xs">Required for bids over 10% below estimate; calculated on the excess percentage of the estimate amount.</FormDescription>
+                                        <FormMessage />
+                                    </FormItem> 
+                                )}/>
+                                <FormField name="stampPaperAmount" control={form.control} render={({ field }) => ( 
+                                    <FormItem>
+                                        <FormLabel>Stamp Paper required</FormLabel>
+                                        <FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50"/></FormControl>
+                                        <FormDescription className="text-xs">Based on the contract amount.</FormDescription>
+                                        <FormMessage />
+                                    </FormItem> 
+                                )}/>
+                            </div>
                         </div>
                     </ScrollArea>
                 </div>

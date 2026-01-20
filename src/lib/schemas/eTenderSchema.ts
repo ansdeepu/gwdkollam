@@ -1,4 +1,3 @@
-
 // src/lib/schemas/eTenderSchema.ts
 import { z } from 'zod';
 
@@ -157,6 +156,8 @@ export const SelectionNoticeDetailsSchema = z.object({
     performanceGuaranteeAmount: optionalNumberSchema,
     additionalPerformanceGuaranteeAmount: optionalNumberSchema,
     stampPaperAmount: optionalNumberSchema,
+    agreedPercentage: optionalNumberSchema,
+    agreedAmount: optionalNumberSchema,
     // Descriptions for historical context
     performanceGuaranteeDescription: z.string().optional(),
     additionalPerformanceGuaranteeDescription: z.string().optional(),
@@ -199,6 +200,8 @@ export const E_tenderSchema = z.object({
     performanceGuaranteeAmount: optionalNumberSchema,
     additionalPerformanceGuaranteeAmount: optionalNumberSchema,
     stampPaperAmount: optionalNumberSchema,
+    agreedPercentage: optionalNumberSchema,
+    agreedAmount: optionalNumberSchema,
     
     agreementDate: z.any().optional().nullable(),
     dateWorkOrder: z.any().optional().nullable(),
