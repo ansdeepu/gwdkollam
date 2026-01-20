@@ -128,7 +128,7 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
         if (hasRejectedBids && lowestBidderOfAll) {
             setValue('agreedPercentage', lowestBidderOfAll.quotedPercentage);
             setValue('agreedAmount', lowestBidderOfAll.quotedAmount);
-            contractAmount = lowestBidderOfAll.quotedAmount; // Use this for calculations
+            contractAmount = lowestBidderOfAll.quotedAmount ?? undefined; // Use this for calculations
         } else {
              setValue('agreedPercentage', undefined);
              setValue('agreedAmount', undefined);

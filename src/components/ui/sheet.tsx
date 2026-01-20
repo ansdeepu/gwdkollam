@@ -11,7 +11,12 @@ const Sheet = SheetPrimitive.Root
 
 const SheetTrigger = SheetPrimitive.Trigger
 
-const SheetClose = SheetPrimitive.Close
+const SheetClose = React.forwardRef<
+  React.ElementRef<typeof SheetPrimitive.Close>,
+  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Close>
+>((props, ref) => <SheetPrimitive.Close ref={ref} {...props} />);
+SheetClose.displayName = SheetPrimitive.Close.displayName;
+
 
 const SheetPortal = SheetPrimitive.Portal
 
