@@ -1,4 +1,3 @@
-
 // src/components/e-tender/SelectionNoticeForm.tsx
 
 import React, { useEffect, useMemo, useCallback } from 'react';
@@ -38,16 +37,21 @@ const parseStampPaperLogic = (description: string) => {
 };
 
 const parseAdditionalPerformanceGuaranteeLogic = (description: string) => {
-    const apgRequiredThresholdMatch = description.match(/between\s+([\d.]+)%\s+and\s+([\d.]+)%/);
+    const apgRequiredThresholdMatch = description.match(/between\s+([\d.]+)%\s+and\s*([\d.]+)%/);
     const noApgThresholdMatch = description.match(/up to ([\d.]+)%/);
+    const moreThanMatch = description.match(/more than ([\d.]+)%/);
 
-    let threshold = 0.10; // Default threshold
-    if (noApgThresholdMatch) {
-        threshold = parseFloat(noApgThresholdMatch[1]) / 100;
-    } else if (apgRequiredThresholdMatch) {
-        threshold = parseFloat(apgRequiredThresholdMatch[1]) / 100;
+    if (moreThanMatch) {
+        return { threshold: parseFloat(moreThanMatch[1]) / 100 };
     }
-    return { threshold };
+    if (apgRequiredThresholdMatch) {
+        return { threshold: parseFloat(apgRequiredThresholdMatch[1]) / 100 };
+    }
+    if (noApgThresholdMatch) {
+        return { threshold: parseFloat(noApgThresholdMatch[1]) / 100 };
+    }
+    
+    return { threshold: 0.15 }; // Default to 15% to match the default text.
 };
 
 
@@ -181,5 +185,3 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
         </FormProvider>
     );
 }
-
-    

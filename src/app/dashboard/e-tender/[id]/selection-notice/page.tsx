@@ -1,4 +1,3 @@
-
 // src/app/dashboard/e-tender/[id]/selection-notice/page.tsx
 "use client";
 
@@ -30,8 +29,16 @@ export default function SelectionNoticePrintPage() {
     
     const apgThreshold = useMemo(() => {
         const description = tender.additionalPerformanceGuaranteeDescription || '';
-        const thresholdMatch = description.match(/between\s*([\d.]+)%\s+and\s*([\d.]+)%/);
-        return thresholdMatch ? parseFloat(thresholdMatch[1]) / 100 : 0.15;
+        const moreThanMatch = description.match(/more than ([\d.]+)%/);
+        if (moreThanMatch) {
+            return parseFloat(moreThanMatch[1]) / 100;
+        }
+        const betweenMatch = description.match(/between\s*([\d.]+)%\s+and\s*([\d.]+)%/);
+        if (betweenMatch) {
+            return parseFloat(betweenMatch[1]) / 100;
+        }
+        // Fallback if no pattern matches, using the common 15% rule
+        return 0.15;
     }, [tender.additionalPerformanceGuaranteeDescription]);
     
     const isApgRequired = useMemo(() => {
