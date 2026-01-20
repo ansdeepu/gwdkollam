@@ -42,35 +42,35 @@ type ModalType = 'basic' | 'opening' | 'bidders' | 'addBidder' | 'editBidder' | 
 
 const SELECTION_NOTICE_CLEAR_DATA: Partial<E_tenderFormData> = {
   selectionNoticeDate: null,
-  performanceGuaranteeAmount: undefined,
-  additionalPerformanceGuaranteeAmount: undefined,
-  stampPaperAmount: undefined,
-  performanceGuaranteeDescription: undefined,
-  additionalPerformanceGuaranteeDescription: undefined,
-  stampPaperDescription: undefined,
+  performanceGuaranteeAmount: null,
+  additionalPerformanceGuaranteeAmount: null,
+  stampPaperAmount: null,
+  performanceGuaranteeDescription: null,
+  additionalPerformanceGuaranteeDescription: null,
+  stampPaperDescription: null,
 };
 
 const OPENING_DETAILS_CLEAR_DATA: Partial<E_tenderFormData> = {
   dateOfOpeningBid: null,
   dateOfTechnicalAndFinancialBidOpening: null,
-  technicalCommitteeMember1: undefined,
-  technicalCommitteeMember2: undefined,
-  technicalCommitteeMember3: undefined,
+  technicalCommitteeMember1: null,
+  technicalCommitteeMember2: null,
+  technicalCommitteeMember3: null,
 };
 
 const WORK_ORDER_CLEAR_DATA: Partial<E_tenderFormData> = {
     agreementDate: null,
     dateWorkOrder: null,
-    nameOfAssistantEngineer: undefined,
-    supervisor1Id: undefined,
-    supervisor1Name: undefined,
-    supervisor1Phone: undefined,
-    supervisor2Id: undefined,
-    supervisor2Name: undefined,
-    supervisor2Phone: undefined,
-    supervisor3Id: undefined,
-    supervisor3Name: undefined,
-    supervisor3Phone: undefined,
+    nameOfAssistantEngineer: null,
+    supervisor1Id: null,
+    supervisor1Name: null,
+    supervisor1Phone: null,
+    supervisor2Id: null,
+    supervisor2Name: null,
+    supervisor2Phone: null,
+    supervisor3Id: null,
+    supervisor3Name: null,
+    supervisor3Phone: null,
 };
 
 
