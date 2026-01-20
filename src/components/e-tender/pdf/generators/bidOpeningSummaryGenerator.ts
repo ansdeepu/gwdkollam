@@ -1,4 +1,3 @@
-
 // src/components/e-tender/pdf/generators/bidOpeningSummaryGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts, TextAlignment, rgb } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
@@ -20,17 +19,26 @@ export async function generateBidOpeningSummary(tender: E_tender, allStaffMember
     const page = pdfDoc.getPages()[0];
     const { width, height } = page.getSize();
 
-    const bidders = tender.bidders || [];
-    const numBidders = bidders.length;
-    const numBiddersInWords = numberToWords(numBidders);
-    
-    const l1Bidder = bidders.length > 0 ? bidders.reduce((lowest, current) => (current.quotedAmount && lowest.quotedAmount && current.quotedAmount < lowest.quotedAmount) ? current : lowest) : null;
+    const allBidders = tender.bidders || [];
+    const acceptedBidders = allBidders.filter(b => b.status === 'Accepted' && typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
+    const rejectedBidders = allBidders.filter(b => b.status === 'Rejected');
 
-    let bidOpeningText = `     ${numBiddersInWords} bids were received and opened as per the prescribed tender procedure. All participating contractors submitted the requisite documents, and the bids were found to be admissible.`;
+    const numTotalBidders = allBidders.length;
+    const numAccepted = acceptedBidders.length;
+    const numRejected = rejectedBidders.length;
+
+    const numTotalBiddersInWords = numberToWords(numTotalBidders);
+    const numAcceptedInWords = numberToWords(numAccepted);
+    const numRejectedInWords = numberToWords(numRejected);
+    
+    const l1Bidder = acceptedBidders.length > 0 ? acceptedBidders.reduce((lowest, current) => (current.quotedAmount! < lowest.quotedAmount!) ? current : lowest) : null;
+
+    let bidOpeningText = `     ${numTotalBiddersInWords} bids were received. Upon opening, ${numAcceptedInWords} bids were found to be admissible and accepted for further evaluation. ${numRejected > 0 ? `${numRejectedInWords} bids were rejected.` : ''}`;
+    
     if (l1Bidder && l1Bidder.quotedPercentage !== undefined && l1Bidder.aboveBelow) {
-        bidOpeningText += ` The lowest quoted rate, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was submitted by ${l1Bidder.name || 'N/A'}.`;
+        bidOpeningText += ` The lowest quoted rate among the accepted bids, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was submitted by ${l1Bidder.name || 'N/A'}.`;
     }
-    bidOpeningText += ' Accordingly, the bids are recommended for technical and financial evaluation.';
+    bidOpeningText += ' The accepted bids are recommended for technical and financial evaluation.';
     
     const boldFields = ['file_no_header', 'e_tender_no_header', 'tender_date_header'];
 

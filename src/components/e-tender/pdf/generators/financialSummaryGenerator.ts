@@ -1,4 +1,3 @@
-
 // src/components/e-tender/pdf/generators/financialSummaryGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts, rgb } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
@@ -20,15 +19,18 @@ export async function generateFinancialSummary(tender: E_tender, allStaffMembers
     const page = pdfDoc.getPages()[0];
     const { width, height } = page.getSize();
 
-    const bidders = [...(tender.bidders || [])].filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0).sort((a, b) => a.quotedAmount! - b.quotedAmount!);
-    const l1Bidder = bidders[0];
-    const ranks = bidders.map((_, i) => `L${i + 1}`).join(' and ');
+    const acceptedBidders = [...(tender.bidders || [])]
+        .filter(b => b.status === 'Accepted' && typeof b.quotedAmount === 'number' && b.quotedAmount > 0)
+        .sort((a, b) => a.quotedAmount! - b.quotedAmount!);
+    
+    const l1Bidder = acceptedBidders[0];
+    const ranks = acceptedBidders.map((_, i) => `L${i + 1}`).join(' and ');
     const INDENT = "     ";
 
-    let finSummaryText = `${INDENT}The technically qualified bids were scrutinized, and all the contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${ranks}.`;
+    let finSummaryText = `${INDENT}The technically qualified bids were scrutinized, and all participating contractors remitted the required tender fee and EMD. All bids were found to be financially qualified. The bids were evaluated, and the lowest quoted bid was accepted and ranked accordingly as ${ranks}.`;
     
     const header = "Sl. No.    Name of Bidder                                Quoted Amount (Rs.)     Rank";
-    const bidderRows = bidders.map((bidder, index) => {
+    const bidderRows = acceptedBidders.map((bidder, index) => {
         const sl = `${index + 1}.`.padEnd(10);
         const name = (bidder.name || 'N/A').padEnd(45);
         const amount = (bidder.quotedAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).padStart(25);

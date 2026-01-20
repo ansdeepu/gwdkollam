@@ -1,10 +1,9 @@
-
 // src/components/e-tender/pdf/generators/technicalSummaryGenerator.ts
 import { PDFDocument, PDFTextField, StandardFonts, TextAlignment, rgb } from 'pdf-lib';
 import type { E_tender } from '@/hooks/useE_tenders';
 import { formatDateSafe, formatTenderNoForFilename } from '../../utils';
 import type { StaffMember } from '@/lib/schemas';
-import { getAttachedFilesString } from './utils';
+import { getAttachedFilesString, numberToWords } from './utils';
 
 export async function generateTechnicalSummary(tender: E_tender, allStaffMembers?: StaffMember[]): Promise<Uint8Array> {
     const templatePath = '/Technical-Summary.pdf';
@@ -19,9 +18,11 @@ export async function generateTechnicalSummary(tender: E_tender, allStaffMembers
     const form = pdfDoc.getForm();
     const page = pdfDoc.getPages()[0];
     const { width, height } = page.getSize();
+    
+    const acceptedBidders = (tender.bidders || []).filter(b => b.status === 'Accepted');
+    const l1Bidder = acceptedBidders.length > 0 ? acceptedBidders.filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0).reduce((lowest, current) => (current.quotedAmount! < lowest.quotedAmount!) ? current : lowest) : null;
 
-    const l1Bidder = (tender.bidders || []).length > 0 ? (tender.bidders || []).reduce((lowest, current) => (current.quotedAmount && lowest.quotedAmount && current.quotedAmount < lowest.quotedAmount) ? current : lowest) : null;
-    let techSummaryText = `     The bids received were scrutinized and all participating contractors submitted the required documents. Upon verification, all bids were found to be technically qualified and hence accepted.`;
+    let techSummaryText = `     The bids received were scrutinized. Upon verification, ${numberToWords(acceptedBidders.length)} bids were found to be technically qualified and hence accepted.`;
     if (l1Bidder && l1Bidder.quotedPercentage !== undefined && l1Bidder.aboveBelow) {
         techSummaryText += ` The lowest rate, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was quoted by ${l1Bidder.name || 'N/A'}.`;
     }
