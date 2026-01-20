@@ -827,7 +827,7 @@ export default function TenderDetails() {
                 </Dialog>
                 <Dialog open={activeModal === 'workOrder'} onOpenChange={(isOpen) => !isOpen && setActiveModal(null)}>
                     <DialogContent onPointerDownOutside={(e) => e.preventDefault()} className="max-w-5xl h-[90vh] flex flex-col p-0">
-                        <WorkOrderDetailsForm initialData={tender} onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting} tenderType={tenderType}/>
+                        <WorkOrderDetailsForm initialData={tender} onSubmit={handleSave} onCancel={() => setActiveModal(null)} isSubmitting={isSubmitting} tenderType={tenderType ?? undefined}/>
                     </DialogContent>
                 </Dialog>
                 
