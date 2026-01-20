@@ -1,3 +1,4 @@
+
 // src/components/e-tender/BiddersForm.tsx
 "use client";
 
@@ -32,6 +33,7 @@ const createDefaultBidder = (): Bidder => ({
     quotedPercentage: undefined,
     aboveBelow: undefined,
     status: undefined,
+    remarks: '',
 });
 
 export default function BiddersForm({ onSubmit, onCancel, isSubmitting, initialBidders, tenderAmount }: BiddersFormProps) {
@@ -125,6 +127,17 @@ export default function BiddersForm({ onSubmit, onCancel, isSubmitting, initialB
                                         <FormField name={`bidders.${index}.quotedAmount`} control={control} render={({ field }) => ( <FormItem><FormLabel>Quoted Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50" /></FormControl><FormMessage /></FormItem> )}/>
                                         <FormField name={`bidders.${index}.status`} control={control} render={({ field }) => ( <FormItem><FormLabel>Status</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger></FormControl><SelectContent><SelectItem value="Accepted">Accepted</SelectItem><SelectItem value="Rejected">Rejected</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
                                    </div>
+                                   {watch(`bidders.${index}.status`) === 'Rejected' && (
+                                        <FormField name={`bidders.${index}.remarks`} control={control} render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Rejection Remarks</FormLabel>
+                                                <FormControl>
+                                                    <Textarea {...field} value={field.value ?? ""} placeholder="Enter reason for rejection..." />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}/>
+                                   )}
                                 </div>
                             ))}
                             {fields.length === 0 && <p className="text-center text-muted-foreground py-8">No bidders added.</p>}

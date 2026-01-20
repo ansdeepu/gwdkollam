@@ -106,6 +106,7 @@ export const BidderSchema = NewBidderSchema.extend({
   quotedPercentage: optionalNumberSchema,
   aboveBelow: z.enum(['Above', 'Below']).optional(),
   status: z.enum(['Accepted', 'Rejected']).optional(),
+  remarks: z.string().optional(),
   // Deprecated fields - keep for compatibility if needed
   securityDepositType: z.string().optional(),
   securityDepositAmount: optionalNumberSchema,

@@ -33,6 +33,7 @@ const createDefaultBidder = (): Bidder => ({
     quotedPercentage: undefined,
     aboveBelow: undefined,
     status: undefined,
+    remarks: '',
 });
 
 export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialData, tenderAmount }: BidderFormProps) {
@@ -44,7 +45,7 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
     });
 
     const { control, setValue, watch, reset } = form;
-    const [quotedPercentage, aboveBelow, selectedBidderName] = watch(['quotedPercentage', 'aboveBelow', 'name']);
+    const [quotedPercentage, aboveBelow, selectedBidderName, status] = watch(['quotedPercentage', 'aboveBelow', 'name', 'status']);
 
 
     useEffect(() => {
@@ -120,6 +121,17 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
                                 <FormField name="quotedAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Quoted Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50" /></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField name="status" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Status</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger></FormControl><SelectContent><SelectItem value="Accepted">Accepted</SelectItem><SelectItem value="Rejected">Rejected</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
                            </div>
+                           {status === 'Rejected' && (
+                                <FormField name="remarks" control={control} render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Rejection Remarks</FormLabel>
+                                        <FormControl>
+                                            <Textarea {...field} value={field.value ?? ""} placeholder="Enter reason for rejection..." />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}/>
+                           )}
                         </div>
                     </ScrollArea>
                 </div>
@@ -135,5 +147,3 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
         </FormProvider>
     );
 }
-
-    
