@@ -102,25 +102,25 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                     <ScrollArea className="h-full px-6 py-4">
                         <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <FormField name="eTenderNo" control={control} render={({ field }) => ( <FormItem><FormLabel>eTender No.</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="eTenderNo" control={control} render={({ field }) => ( <FormItem><FormLabel>eTender No.</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField name="tenderDate" control={control} render={({ field }) => ( <FormItem><FormLabel>Tender Date</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} onChange={(e) => field.onChange(e.target.value || null)}/></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <FormField name="fileNo" control={control} render={({ field }) => ( <FormItem><FormLabel>File No. 1</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="fileNo2" control={control} render={({ field }) => ( <FormItem><FormLabel>File No. 2</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="fileNo3" control={control} render={({ field }) => ( <FormItem><FormLabel>File No. 3</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="fileNo4" control={control} render={({ field }) => ( <FormItem><FormLabel>File No. 4</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="fileNo" control={control} render={({ field }) => ( <FormItem><FormLabel>File No. 1</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="fileNo2" control={control} render={({ field }) => ( <FormItem><FormLabel>File No. 2</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="fileNo3" control={control} render={({ field }) => ( <FormItem><FormLabel>File No. 3</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="fileNo4" control={control} render={({ field }) => ( <FormItem><FormLabel>File No. 4</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                             <div className="grid grid-cols-1 gap-4">
-                               <FormField name="nameOfWork" control={control} render={({ field }) => ( <FormItem><FormLabel>Name of Work</FormLabel><FormControl><Textarea {...field} className="min-h-[60px]"/></FormControl><FormMessage /></FormItem> )}/>
-                               <FormField name="nameOfWorkMalayalam" control={control} render={({ field }) => ( <FormItem><FormLabel>Name of Work (in Malayalam)</FormLabel><FormControl><Textarea {...field} className="min-h-[60px]"/></FormControl><FormMessage /></FormItem> )}/>
+                               <FormField name="nameOfWork" control={control} render={({ field }) => ( <FormItem><FormLabel>Name of Work</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} className="min-h-[60px]"/></FormControl><FormMessage /></FormItem> )}/>
+                               <FormField name="nameOfWorkMalayalam" control={control} render={({ field }) => ( <FormItem><FormLabel>Name of Work (in Malayalam)</FormLabel><FormControl><Textarea {...field} value={field.value ?? ''} className="min-h-[60px]"/></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <FormField name="location" control={control} render={({ field }) => ( <FormItem><FormLabel>Location</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="location" control={control} render={({ field }) => ( <FormItem><FormLabel>Location</FormLabel><FormControl><Input {...field} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField name="tenderType" control={control} render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Type of Tender</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
+                                        <Select onValueChange={field.onChange} value={field.value ?? undefined}>
                                             <FormControl><SelectTrigger><SelectValue placeholder="Select Type" /></SelectTrigger></FormControl>
                                             <SelectContent>
                                                 <SelectItem value="Work">Work</SelectItem>
@@ -130,10 +130,10 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                                         <FormMessage />
                                     </FormItem>
                                 )}/>
-                                <FormField name="periodOfCompletion" control={control} render={({ field }) => ( <FormItem><FormLabel>Period of Completion (Days)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="periodOfCompletion" control={control} render={({ field }) => ( <FormItem><FormLabel>Period of Completion (Days)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <FormField name="estimateAmount" control={control} render={({ field }) => ( <FormItem><FormLabel>Tender Amount (Rs.)</FormLabel><FormControl><Input type="number" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem> )}/>
+                                <FormField name="estimateAmount" control={control} render={({ field }) => ( <FormItem><FormLabel>Tender Amount (Rs.)</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)} /></FormControl><FormMessage /></FormItem> )}/>
                                 <FormField name="tenderFormFee" control={control} render={({ field }) => ( 
                                     <FormItem>
                                         <FormLabel>Tender Fee (Rs.)</FormLabel>
@@ -158,7 +158,7 @@ export default function BasicDetailsForm({ onSubmit, onCancel, isSubmitting }: B
                             <FormField name="detailedEstimateUrl" control={control} render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>Detailed Estimate PDF Link</FormLabel>
-                                    <FormControl><Input {...field} placeholder="https://docs.google.com/..." /></FormControl>
+                                    <FormControl><Input {...field} value={field.value ?? ''} placeholder="https://docs.google.com/..." /></FormControl>
                                     <FormDescription className="text-xs">Enter a public Google Drive link for the estimate PDF.</FormDescription>
                                     <FormMessage />
                                 </FormItem>
