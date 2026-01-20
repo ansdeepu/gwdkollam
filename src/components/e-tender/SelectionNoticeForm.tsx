@@ -75,6 +75,15 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
         return tender?.additionalPerformanceGuaranteeDescription || allRateDescriptions.additionalPerformanceGuarantee || defaultRateDescriptions.additionalPerformanceGuarantee;
     }, [tender?.additionalPerformanceGuaranteeDescription, allRateDescriptions.additionalPerformanceGuarantee]);
 
+    const lowestBidderOfAll = useMemo(() => {
+        if (!tender.bidders || tender.bidders.length === 0) return null;
+        const validBidders = tender.bidders.filter(b => typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
+        if (validBidders.length === 0) return null;
+        return validBidders.reduce((lowest, current) => 
+            (current.quotedAmount! < lowest.quotedAmount!) ? current : lowest
+        );
+    }, [tender.bidders]);
+
     const calculateStampPaperValue = useCallback((amount?: number): number => {
         const logic = parseStampPaperLogic(stampPaperDescription);
         const { rate, basis, min, max } = logic;
@@ -112,10 +121,18 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
     });
     
     const { handleSubmit, setValue, watch, getValues } = form;
-    const agreedAmountFromForm = watch('agreedAmount');
 
     useEffect(() => {
-        const contractAmount = agreedAmountFromForm || l1Amount;
+        let contractAmount = l1Amount; // Default to L1 (accepted lowest)
+
+        if (hasRejectedBids && lowestBidderOfAll) {
+            setValue('agreedPercentage', lowestBidderOfAll.quotedPercentage);
+            setValue('agreedAmount', lowestBidderOfAll.quotedAmount);
+            contractAmount = lowestBidderOfAll.quotedAmount; // Use this for calculations
+        } else {
+             setValue('agreedPercentage', undefined);
+             setValue('agreedAmount', undefined);
+        }
 
         const pg = contractAmount ? Math.ceil((contractAmount * 0.05) / 100) * 100 : 0;
         const stamp = calculateStampPaperValue(contractAmount);
@@ -129,7 +146,7 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
         setValue('additionalPerformanceGuaranteeAmount', additionalPg, { shouldValidate: true, shouldDirty: true });
         setValue('stampPaperAmount', stamp, { shouldValidate: true, shouldDirty: true });
 
-    }, [tender, l1Amount, agreedAmountFromForm, calculateStampPaperValue, calculateAdditionalPG, setValue, getValues]);
+    }, [tender, l1Amount, hasRejectedBids, lowestBidderOfAll, calculateStampPaperValue, calculateAdditionalPG, setValue, getValues]);
 
 
     const handleFormSubmit = (data: SelectionNoticeDetailsFormData) => {
@@ -161,8 +178,22 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
                                 <FormField name="selectionNoticeDate" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Selection Notice Date</FormLabel><FormControl><Input type="date" {...field} value={formatDateForInput(field.value)} /></FormControl><FormMessage /></FormItem> )}/>
                                 {hasRejectedBids && (
                                     <>
-                                        <FormField name="agreedPercentage" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Agreed Percentage</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                        <FormField name="agreedAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Agreed Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
+                                        <FormField name="agreedPercentage" control={form.control} render={({ field }) => ( 
+                                            <FormItem>
+                                                <FormLabel>Agreed Percentage</FormLabel>
+                                                <FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50 font-semibold" /></FormControl>
+                                                <FormDescription className="text-xs">Lowest of all bids.</FormDescription>
+                                                <FormMessage />
+                                            </FormItem> 
+                                        )}/>
+                                        <FormField name="agreedAmount" control={form.control} render={({ field }) => ( 
+                                            <FormItem>
+                                                <FormLabel>Agreed Amount</FormLabel>
+                                                <FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50 font-semibold" /></FormControl>
+                                                <FormDescription className="text-xs">Lowest of all bids.</FormDescription>
+                                                <FormMessage />
+                                            </FormItem> 
+                                        )}/>
                                     </>
                                 )}
                             </div>
