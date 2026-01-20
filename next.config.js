@@ -10,9 +10,6 @@ const nextConfig = {
     // Set to false to ignore linting errors during build.
     ignoreDuringBuilds: false,
   },
-  experimental: {
-    // The allowedDevOrigins key has been moved out as per the build warning.
-  },
   allowedDevOrigins: [
     "https://6000-firebase-gwd-kollam1812252-1766645722275.cluster-sumfw3zmzzhzkx4mpvz3ogth4y.cloudworkstations.dev",
   ],
@@ -58,5 +55,5 @@ const nextConfig = {
   },
 };
 
-// Force cache invalidation by updating this comment. V7
+// Force cache invalidation by updating this comment. V8
 module.exports = nextConfig;
