@@ -346,6 +346,13 @@ export default function TenderDetails() {
     
     const sortedBidderFields = React.useMemo(() => {
         return [...bidderFields].sort((a, b) => {
+            const statusA = a.status === 'Accepted' ? 1 : 2;
+            const statusB = b.status === 'Accepted' ? 1 : 2;
+
+            if (statusA !== statusB) {
+                return statusA - statusB;
+            }
+
             const amountA = a.quotedAmount ?? Infinity;
             const amountB = b.quotedAmount ?? Infinity;
             return amountA - amountB;
@@ -617,7 +624,7 @@ export default function TenderDetails() {
                                                         <div className="flex items-start justify-between mb-2">
                                                             <div className="flex items-center gap-2">
                                                                 <h5 className="font-bold text-sm">Bidder #{index + 1}: {bidder.name}</h5>
-                                                                {bidder.id === l1Bidder?.id && <Badge className="bg-green-600 text-white">L1</Badge>}
+                                                                {bidder.status === 'Accepted' && bidder.id === l1Bidder?.id && <Badge className="bg-green-600 text-white">L1</Badge>}
                                                                 {bidder.status && <Badge variant={bidder.status === 'Accepted' ? 'default' : 'destructive'} className="mt-1">{bidder.status}</Badge>}
                                                             </div>
                                                             <div className="flex items-center gap-1">
