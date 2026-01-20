@@ -28,6 +28,9 @@ export default function WorkOrderPrintPage() {
             (current.quotedAmount! < lowest.quotedAmount!) ? current : lowest
         );
     }, [tender.bidders]);
+
+    const hasRejectedBids = useMemo(() => tender.bidders?.some(b => b.status === 'Rejected'), [tender.bidders]);
+    const contractAmount = (hasRejectedBids && tender.agreedAmount) ? tender.agreedAmount : l1Bidder?.quotedAmount;
     
     // For "Work" type tenders (Malayalam)
     const workOrderTitle = 'വർക്ക് ഓർഡർ';
@@ -132,7 +135,7 @@ export default function WorkOrderPrintPage() {
 
               <div className='pl-8 space-y-1 font-bold'>
                 <p>എസ്റ്റിമേറ്റ് തുക: {tender.estimateAmount?.toLocaleString('en-IN') || '0'} രൂപ</p>
-                <p>എഗ്രിമെന്റ് തുക: {l1Bidder?.quotedAmount?.toLocaleString('en-IN') || '0'} രൂപ</p>
+                <p>എഗ്രിമെന്റ് തുക: {contractAmount?.toLocaleString('en-IN') || '0'} രൂപ</p>
               </div>
 
               <div>

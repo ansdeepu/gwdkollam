@@ -28,13 +28,16 @@ export default function SupplyOrderPrintPage() {
             (current.quotedAmount! < lowest.quotedAmount!) ? current : lowest
         );
     }, [tender.bidders]);
+
+    const hasRejectedBids = useMemo(() => tender.bidders?.some(b => b.status === 'Rejected'), [tender.bidders]);
+    const contractAmount = (hasRejectedBids && tender.agreedAmount) ? tender.agreedAmount : l1Bidder?.quotedAmount;
     
     const measurer = allStaffMembers.find(s => s.name === tender.nameOfAssistantEngineer);
     const supervisor1 = allStaffMembers.find(s => s.id === tender.supervisor1Id);
     const supervisor2 = allStaffMembers.find(s => s.id === tender.supervisor2Id);
     const supervisor3 = allStaffMembers.find(s => s.id === tender.supervisor3Id);
 
-    const quotedAmountInWords = l1Bidder?.quotedAmount ? numberToWords(Math.floor(l1Bidder.quotedAmount)) : '';
+    const quotedAmountInWords = contractAmount ? numberToWords(Math.floor(contractAmount)) : '';
     const supplySupervisors = [
         measurer?.name,
         supervisor1?.name,
@@ -89,7 +92,7 @@ export default function SupplyOrderPrintPage() {
                     </div>
                 </div>
                 <p className="text-justify leading-relaxed indent-8">As per the 1st reference cited above, e-tender was invited for the purchase of {tender.nameOfWork}.</p>
-                <p className="text-justify leading-relaxed indent-8">Vide the 2nd reference cited, {l1Bidder?.name || 'N/A'}, {l1Bidder?.address || 'N/A'}, submitted the lowest bid of Rs. {l1Bidder?.quotedAmount?.toLocaleString('en-IN') || '0.00'}/- (Rupees {quotedAmountInWords} only) for the aforesaid purchase. Your bid was accepted accordingly.</p>
+                <p className="text-justify leading-relaxed indent-8">Vide the 2nd reference cited, {l1Bidder?.name || 'N/A'}, {l1Bidder?.address || 'N/A'}, submitted the lowest bid of Rs. {contractAmount?.toLocaleString('en-IN') || '0.00'}/- (Rupees {quotedAmountInWords} only) for the aforesaid purchase. Your bid was accepted accordingly.</p>
                 <p className="text-justify leading-relaxed indent-8">You are therefore directed to supply the items as per the schedule and specifications mentioned in the e-tender, and complete the supply within the stipulated period of {tender.periodOfCompletion || '___'} days under the supervision of {supervisorDetailsText}. Thereafter, you shall submit the bill in triplicate to this office for processing of payment.</p>
                 
                  <div className="pt-2 text-right">
@@ -148,11 +151,11 @@ export default function SupplyOrderPrintPage() {
                                 <td className="border border-black p-1 text-center"></td>
                                 <td className="border border-black p-1 text-center"></td>
                                 <td colSpan={2} className="border border-black p-1 text-center">-</td>
-                                <td colSpan={2} className="border border-black p-1 text-center">Rs. {l1Bidder?.quotedAmount?.toLocaleString('en-IN') || ''}/-</td>
+                                <td colSpan={2} className="border border-black p-1 text-center">Rs. {contractAmount?.toLocaleString('en-IN') || ''}/-</td>
                             </tr>
                             <tr className="border-t border-black">
                                 <td colSpan={6} className="text-right p-1 font-bold">Total (Rounded to)</td>
-                                <td colSpan={2} className="p-1 text-center font-bold">Rs. {l1Bidder?.quotedAmount?.toLocaleString('en-IN') || ''}/-</td>
+                                <td colSpan={2} className="p-1 text-center font-bold">Rs. {contractAmount?.toLocaleString('en-IN') || ''}/-</td>
                             </tr>
                             <tr>
                                 <td colSpan={8} className="p-2 text-center font-bold">(Rupees {quotedAmountInWords} only)</td>

@@ -27,6 +27,9 @@ export default function SelectionNoticePrintPage() {
         );
     }, [tender.bidders]);
     
+    const hasRejectedBids = useMemo(() => tender.bidders?.some(b => b.status === 'Rejected'), [tender.bidders]);
+    const contractAmount = (hasRejectedBids && tender.agreedAmount) ? tender.agreedAmount : l1Bidder?.quotedAmount;
+
     const apgThreshold = useMemo(() => {
         const description = tender.additionalPerformanceGuaranteeDescription || '';
         const moreThanMatch = description.match(/more than ([\d.]+)%/);
@@ -42,22 +45,22 @@ export default function SelectionNoticePrintPage() {
     }, [tender.additionalPerformanceGuaranteeDescription]);
     
     const isApgRequired = useMemo(() => {
-        if (!tender.estimateAmount || !l1Bidder?.quotedAmount) return false;
-        if (l1Bidder.quotedAmount >= tender.estimateAmount) return false; // Not below estimate
-        const percentageDifference = (tender.estimateAmount - l1Bidder.quotedAmount) / tender.estimateAmount;
+        if (!tender.estimateAmount || !contractAmount) return false;
+        if (contractAmount >= tender.estimateAmount) return false; // Not below estimate
+        const percentageDifference = (tender.estimateAmount - contractAmount) / tender.estimateAmount;
         return percentageDifference > apgThreshold;
-    }, [tender.estimateAmount, l1Bidder?.quotedAmount, apgThreshold]);
+    }, [tender.estimateAmount, contractAmount, apgThreshold]);
 
     const performanceGuarantee = tender.performanceGuaranteeAmount ?? 0;
     const additionalPerformanceGuarantee = tender.additionalPerformanceGuaranteeAmount ?? 0;
     const stampPaperValue = tender.stampPaperAmount ?? 200;
     
     const excessPercentageText = useMemo(() => {
-        if (!isApgRequired || !tender.estimateAmount || !l1Bidder?.quotedAmount) return '0';
-        const percentageDifference = (tender.estimateAmount - l1Bidder.quotedAmount) / tender.estimateAmount;
+        if (!isApgRequired || !tender.estimateAmount || !contractAmount) return '0';
+        const percentageDifference = (tender.estimateAmount - contractAmount) / tender.estimateAmount;
         const excessPercentage = percentageDifference - apgThreshold;
         return (excessPercentage * 100).toFixed(2);
-    }, [isApgRequired, tender.estimateAmount, l1Bidder?.quotedAmount, apgThreshold]);
+    }, [isApgRequired, tender.estimateAmount, contractAmount, apgThreshold]);
 
 
     const MainContent = () => {
@@ -67,7 +70,7 @@ export default function SelectionNoticePrintPage() {
             return <p className="leading-relaxed text-justify indent-8">ടെണ്ടർ അംഗീകരിച്ചു. ദയവായി മറ്റ് വിവരങ്ങൾ ചേർക്കുക.</p>
         }
 
-        const quotedAmountStr = (l1Bidder.quotedAmount ?? 0).toLocaleString('en-IN');
+        const quotedAmountStr = (contractAmount ?? 0).toLocaleString('en-IN');
         const performanceGuaranteeStr = performanceGuarantee.toLocaleString('en-IN');
         const stampPaperValueStr = stampPaperValue.toLocaleString('en-IN');
 
