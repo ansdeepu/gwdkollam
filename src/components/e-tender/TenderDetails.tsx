@@ -402,10 +402,9 @@ export default function TenderDetails() {
     }, [tenderFormFeeValue]);
 
     const l1Bidder = useMemo(() => {
-        if (!bidderFields || bidderFields.length === 0) return null;
-        const validBidders = bidderFields.filter(b => b.status === 'Accepted' && typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
-        if (validBidders.length === 0) return null;
-        return validBidders.reduce((lowest, current) => 
+        const acceptedBidders = bidderFields.filter(b => b.status === 'Accepted' && typeof b.quotedAmount === 'number' && b.quotedAmount > 0);
+        if (acceptedBidders.length === 0) return null;
+        return acceptedBidders.reduce((lowest, current) => 
             (current.quotedAmount! < lowest.quotedAmount!) ? current : lowest
         );
     }, [bidderFields]);

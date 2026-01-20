@@ -1,7 +1,15 @@
 // src/lib/schemas/eTenderSchema.ts
 import { z } from 'zod';
 
-const optionalNumberSchema = z.preprocess((val) => (val === "" || val === null || val === undefined ? undefined : Number(val)), z.number().optional());
+const optionalNumberSchema = z.preprocess(
+    (val) => {
+        if (val === "" || val === null || val === undefined) return null;
+        const num = Number(val);
+        return isNaN(num) ? val : num;
+    }, 
+    z.number({ invalid_type_error: "Must be a valid number." }).min(0, "Cannot be negative.").nullable().optional()
+);
+
 
 export const eTenderStatusOptions = [
     "Tender Process",
@@ -125,16 +133,16 @@ export const committeeMemberDesignations: Designation[] = [
 export const TenderOpeningDetailsSchema = z.object({
     dateOfOpeningBid: z.any().optional().nullable(),
     dateOfTechnicalAndFinancialBidOpening: z.any().optional().nullable(),
-    technicalCommitteeMember1: z.string().optional(),
-    technicalCommitteeMember2: z.string().optional(),
-    technicalCommitteeMember3: z.string().optional(),
+    technicalCommitteeMember1: z.string().optional().nullable(),
+    technicalCommitteeMember2: z.string().optional().nullable(),
+    technicalCommitteeMember3: z.string().optional().nullable(),
 });
 export type TenderOpeningDetailsFormData = z.infer<typeof TenderOpeningDetailsSchema>;
 
 
 export const WorkOrderDetailsSchema = z.object({
     agreementDate: z.any().optional().nullable(),
-    nameOfAssistantEngineer: z.string().optional(),
+    nameOfAssistantEngineer: z.string().optional().nullable(),
     dateWorkOrder: z.any().optional().nullable(),
     // Supervisor 1
     supervisor1Id: z.string().optional().nullable(),
@@ -159,9 +167,9 @@ export const SelectionNoticeDetailsSchema = z.object({
     agreedPercentage: optionalNumberSchema,
     agreedAmount: optionalNumberSchema,
     // Descriptions for historical context
-    performanceGuaranteeDescription: z.string().optional(),
-    additionalPerformanceGuaranteeDescription: z.string().optional(),
-    stampPaperDescription: z.string().optional(),
+    performanceGuaranteeDescription: z.string().optional().nullable(),
+    additionalPerformanceGuaranteeDescription: z.string().optional().nullable(),
+    stampPaperDescription: z.string().optional().nullable(),
 });
 export type SelectionNoticeDetailsFormData = z.infer<typeof SelectionNoticeDetailsSchema>;
 
@@ -192,9 +200,9 @@ export const E_tenderSchema = z.object({
     
     dateOfOpeningBid: z.any().optional().nullable(),
     dateOfTechnicalAndFinancialBidOpening: z.any().optional().nullable(),
-    technicalCommitteeMember1: z.string().optional(),
-    technicalCommitteeMember2: z.string().optional(),
-    technicalCommitteeMember3: z.string().optional(),
+    technicalCommitteeMember1: z.string().optional().nullable(),
+    technicalCommitteeMember2: z.string().optional().nullable(),
+    technicalCommitteeMember3: z.string().optional().nullable(),
     
     selectionNoticeDate: z.any().optional().nullable(),
     performanceGuaranteeAmount: optionalNumberSchema,
@@ -205,7 +213,7 @@ export const E_tenderSchema = z.object({
     
     agreementDate: z.any().optional().nullable(),
     dateWorkOrder: z.any().optional().nullable(),
-    nameOfAssistantEngineer: z.string().optional(),
+    nameOfAssistantEngineer: z.string().optional().nullable(),
     
     // Supervisor 1
     supervisor1Id: z.string().optional().nullable(),
@@ -224,11 +232,11 @@ export const E_tenderSchema = z.object({
     remarks: z.string().optional(),
     
     // Historical Descriptions
-    tenderFeeDescription: z.string().optional(),
-    emdDescription: z.string().optional(),
-    performanceGuaranteeDescription: z.string().optional(),
-    additionalPerformanceGuaranteeDescription: z.string().optional(),
-    stampPaperDescription: z.string().optional(),
+    tenderFeeDescription: z.string().optional().nullable(),
+    emdDescription: z.string().optional().nullable(),
+    performanceGuaranteeDescription: z.string().optional().nullable(),
+    additionalPerformanceGuaranteeDescription: z.string().optional().nullable(),
+    stampPaperDescription: z.string().optional().nullable(),
     
     // Deprecated fields that may exist in old data
     lastDateOfReceipt: z.any().optional(),
