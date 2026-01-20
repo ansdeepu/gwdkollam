@@ -53,7 +53,7 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
     }, [initialData, reset]);
 
     useEffect(() => {
-        if (tenderAmount && quotedPercentage !== undefined && aboveBelow) {
+        if (tenderAmount && quotedPercentage != null && aboveBelow) {
             const percentage = quotedPercentage / 100;
             let calculatedAmount = 0;
             if (aboveBelow === 'Above') {
@@ -100,7 +100,7 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
                                   render={({ field }) => (
                                     <FormItem>
                                       <FormLabel>Bidder Name</FormLabel>
-                                      <Select onValueChange={(value) => handleBidderSelect(value)} value={field.value}>
+                                      <Select onValueChange={(value) => handleBidderSelect(value)} value={field.value ?? undefined}>
                                         <FormControl><SelectTrigger><SelectValue placeholder="Select a Bidder"/></SelectTrigger></FormControl>
                                         <SelectContent>
                                           <SelectItem value="_clear_" onSelect={(e) => { e.preventDefault(); handleBidderSelect(''); }}>-- Clear Selection --</SelectItem>
@@ -111,15 +111,15 @@ export default function BidderForm({ onSubmit, onCancel, isSubmitting, initialDa
                                     </FormItem>
                                   )}
                                 />
-                               <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[40px]" readOnly disabled={!!selectedBidderName} /></FormControl><FormMessage /></FormItem> )}/>
+                               <FormField name="address" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Address</FormLabel><FormControl><Textarea {...field} className="min-h-[40px]" readOnly disabled={!!selectedBidderName} value={field.value ?? ''} /></FormControl><FormMessage /></FormItem> )}/>
                             </div>
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField name="quotedPercentage" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Quoted Percentage</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} onChange={e => field.onChange(e.target.valueAsNumber)}/></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="aboveBelow" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Above/Below</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger></FormControl><SelectContent><SelectItem value="Above">Above</SelectItem><SelectItem value="Below">Below</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
+                                <FormField name="aboveBelow" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Above/Below</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined}><FormControl><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger></FormControl><SelectContent><SelectItem value="Above">Above</SelectItem><SelectItem value="Below">Below</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <FormField name="quotedAmount" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Quoted Amount</FormLabel><FormControl><Input type="number" {...field} value={field.value ?? ''} readOnly className="bg-muted/50" /></FormControl><FormMessage /></FormItem> )}/>
-                                <FormField name="status" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Status</FormLabel><Select onValueChange={field.onChange} value={field.value}><FormControl><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger></FormControl><SelectContent><SelectItem value="Accepted">Accepted</SelectItem><SelectItem value="Rejected">Rejected</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
+                                <FormField name="status" control={form.control} render={({ field }) => ( <FormItem><FormLabel>Status</FormLabel><Select onValueChange={field.onChange} value={field.value ?? undefined}><FormControl><SelectTrigger><SelectValue placeholder="Select..."/></SelectTrigger></FormControl><SelectContent><SelectItem value="Accepted">Accepted</SelectItem><SelectItem value="Rejected">Rejected</SelectItem></SelectContent></Select><FormMessage /></FormItem> )}/>
                            </div>
                            {status === 'Rejected' && (
                                 <FormField name="remarks" control={control} render={({ field }) => (
