@@ -1,3 +1,4 @@
+
 // src/components/e-tender/TenderDetails.tsx
 "use client";
 
@@ -799,7 +800,7 @@ export default function TenderDetails() {
                            onCancel={() => { setActiveModal(null); setModalData(null); }}
                            isSubmitting={isSubmitting}
                            initialData={modalData}
-                           tenderAmount={getValues('estimateAmount')}
+                           tenderAmount={getValues('estimateAmount') ?? undefined}
                         />
                     </DialogContent>
                 </Dialog>
