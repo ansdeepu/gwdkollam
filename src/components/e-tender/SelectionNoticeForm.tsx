@@ -20,7 +20,7 @@ interface SelectionNoticeFormProps {
     onSubmit: (data: Partial<E_tenderFormData>) => void;
     onCancel: () => void;
     isSubmitting: boolean;
-    l1Amount?: number;
+    l1Amount?: number | null;
     hasRejectedBids?: boolean;
 }
 
@@ -123,7 +123,7 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
     const { handleSubmit, setValue, watch, getValues } = form;
 
     useEffect(() => {
-        let contractAmount: number | undefined = l1Amount;
+        let contractAmount: number | undefined = l1Amount ?? undefined;
 
         if (hasRejectedBids && lowestBidderOfAll) {
             setValue('agreedPercentage', lowestBidderOfAll.quotedPercentage);
@@ -136,7 +136,7 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
 
         const pg = contractAmount ? Math.ceil((contractAmount * 0.05) / 100) * 100 : 0;
         const stamp = calculateStampPaperValue(contractAmount);
-        const additionalPg = calculateAdditionalPG(tender?.estimateAmount, contractAmount);
+        const additionalPg = calculateAdditionalPG(tender?.estimateAmount ?? undefined, contractAmount);
 
         if (!getValues('selectionNoticeDate')) {
             setValue('selectionNoticeDate', formatDateForInput(tender?.selectionNoticeDate) || '');
