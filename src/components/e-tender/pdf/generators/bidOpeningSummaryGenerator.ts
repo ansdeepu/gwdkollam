@@ -33,7 +33,12 @@ export async function generateBidOpeningSummary(tender: E_tender, allStaffMember
     
     const l1Bidder = acceptedBidders.length > 0 ? acceptedBidders.reduce((lowest, current) => (current.quotedAmount! < lowest.quotedAmount!) ? current : lowest) : null;
 
-    let bidOpeningText = `     ${numTotalBiddersInWords} bids were received. Upon opening, ${numAcceptedInWords} bids were found to be admissible and accepted for further evaluation. ${numRejected > 0 ? `${numRejectedInWords} bids were rejected.` : ''}`;
+    let bidOpeningText = `     ${numTotalBiddersInWords} bids were received. Upon opening, ${numAcceptedInWords} bids were found to be admissible and accepted for further evaluation.`;
+    
+    if (rejectedBidders.length > 0) {
+        const rejectionDetails = rejectedBidders.map(b => `${b.name || 'A bidder'} (Reason: ${b.remarks || 'Not specified'})`).join('; ');
+        bidOpeningText += ` ${numRejectedInWords} bids were rejected. The reasons are as follows: ${rejectionDetails}.`;
+    }
     
     if (l1Bidder && l1Bidder.quotedPercentage !== undefined && l1Bidder.aboveBelow) {
         bidOpeningText += ` The lowest quoted rate among the accepted bids, ${l1Bidder.quotedPercentage}% ${l1Bidder.aboveBelow.toLowerCase()} the estimated rate, was submitted by ${l1Bidder.name || 'N/A'}.`;
