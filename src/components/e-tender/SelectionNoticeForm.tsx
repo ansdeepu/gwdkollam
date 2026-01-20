@@ -123,12 +123,12 @@ export default function SelectionNoticeForm({ onSubmit, onCancel, isSubmitting, 
     const { handleSubmit, setValue, watch, getValues } = form;
 
     useEffect(() => {
-        let contractAmount: number | undefined = l1Amount; // Default to L1 (accepted lowest)
+        let contractAmount: number | undefined = l1Amount;
 
         if (hasRejectedBids && lowestBidderOfAll) {
             setValue('agreedPercentage', lowestBidderOfAll.quotedPercentage);
             setValue('agreedAmount', lowestBidderOfAll.quotedAmount);
-            contractAmount = lowestBidderOfAll.quotedAmount ?? undefined; // Use this for calculations
+            contractAmount = lowestBidderOfAll.quotedAmount ?? undefined;
         } else {
              setValue('agreedPercentage', undefined);
              setValue('agreedAmount', undefined);
