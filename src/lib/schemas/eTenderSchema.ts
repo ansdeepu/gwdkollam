@@ -10,6 +10,8 @@ const optionalNumberSchema = z.preprocess(
     z.number({ invalid_type_error: "Must be a valid number." }).min(0, "Cannot be negative.").nullable().optional()
 );
 
+const optionalStringSchema = z.string().optional().nullable();
+
 
 export const eTenderStatusOptions = [
     "Tender Process",
@@ -51,26 +53,26 @@ export const designationOptions = [
 export type Designation = typeof designationOptions[number];
 
 export const BasicDetailsSchema = z.object({
-    eTenderNo: z.string().optional(),
+    eTenderNo: optionalStringSchema,
     tenderDate: z.any().optional().nullable(),
-    fileNo: z.string().optional(),
-    fileNo2: z.string().optional(),
-    fileNo3: z.string().optional(),
-    fileNo4: z.string().optional(),
-    nameOfWork: z.string().optional(),
-    nameOfWorkMalayalam: z.string().optional(),
-    location: z.string().optional(),
+    fileNo: optionalStringSchema,
+    fileNo2: optionalStringSchema,
+    fileNo3: optionalStringSchema,
+    fileNo4: optionalStringSchema,
+    nameOfWork: optionalStringSchema,
+    nameOfWorkMalayalam: optionalStringSchema,
+    location: optionalStringSchema,
     estimateAmount: optionalNumberSchema,
     tenderFormFee: optionalNumberSchema,
     emd: optionalNumberSchema,
     periodOfCompletion: optionalNumberSchema,
     dateTimeOfReceipt: z.any().optional().nullable(),
     dateTimeOfOpening: z.any().optional().nullable(),
-    tenderType: z.enum(['Work', 'Purchase']).optional(),
-    detailedEstimateUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+    tenderType: z.enum(['Work', 'Purchase']).optional().nullable(),
+    detailedEstimateUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')).nullable(),
     // Descriptions for historical context
-    tenderFeeDescription: z.string().optional(),
-    emdDescription: z.string().optional(),
+    tenderFeeDescription: optionalStringSchema,
+    emdDescription: optionalStringSchema,
 });
 export type BasicDetailsFormData = z.infer<typeof BasicDetailsSchema>;
 
@@ -79,9 +81,9 @@ export type CorrigendumType = typeof corrigendumTypeOptions[number];
 
 export const CorrigendumSchema = z.object({
     id: z.string(),
-    corrigendumType: z.enum(corrigendumTypeOptions).optional(),
+    corrigendumType: z.enum(corrigendumTypeOptions).optional().nullable(),
     corrigendumDate: z.any().optional().nullable(),
-    reason: z.string().optional(),
+    reason: optionalStringSchema,
     lastDateOfReceipt: z.any().optional().nullable(),
     dateOfOpeningTender: z.any().optional().nullable(),
 });
@@ -98,10 +100,10 @@ export type RetenderDetails = z.infer<typeof RetenderDetailsSchema>;
 
 export const NewBidderSchema = z.object({
   name: z.string().min(1, "Bidder Name is required."),
-  address: z.string().optional(),
-  phoneNo: z.string().optional(),
-  secondaryPhoneNo: z.string().optional(),
-  email: z.string().email({ message: "Please enter a valid email." }).optional().or(z.literal('')),
+  address: optionalStringSchema,
+  phoneNo: optionalStringSchema,
+  secondaryPhoneNo: optionalStringSchema,
+  email: z.string().email({ message: "Please enter a valid email." }).optional().or(z.literal('')).nullable(),
   order: z.number().optional(),
 });
 export type NewBidderFormData = z.infer<typeof NewBidderSchema>;
@@ -111,11 +113,11 @@ export const BidderSchema = NewBidderSchema.extend({
   id: z.string(),
   quotedAmount: optionalNumberSchema,
   quotedPercentage: optionalNumberSchema,
-  aboveBelow: z.enum(['Above', 'Below']).optional(),
-  status: z.enum(['Accepted', 'Rejected']).optional(),
-  remarks: z.string().optional(),
+  aboveBelow: z.enum(['Above', 'Below']).optional().nullable(),
+  status: z.enum(['Accepted', 'Rejected']).optional().nullable(),
+  remarks: optionalStringSchema,
   // Deprecated fields - keep for compatibility if needed
-  securityDepositType: z.string().optional(),
+  securityDepositType: optionalStringSchema,
   securityDepositAmount: optionalNumberSchema,
   agreementAmount: optionalNumberSchema,
   additionalSecurityDeposit: optionalNumberSchema,
@@ -142,20 +144,20 @@ export type TenderOpeningDetailsFormData = z.infer<typeof TenderOpeningDetailsSc
 
 export const WorkOrderDetailsSchema = z.object({
     agreementDate: z.any().optional().nullable(),
-    nameOfAssistantEngineer: z.string().optional().nullable(),
+    nameOfAssistantEngineer: optionalStringSchema,
     dateWorkOrder: z.any().optional().nullable(),
     // Supervisor 1
-    supervisor1Id: z.string().optional().nullable(),
-    supervisor1Name: z.string().optional().nullable(),
-    supervisor1Phone: z.string().optional().nullable(),
+    supervisor1Id: optionalStringSchema,
+    supervisor1Name: optionalStringSchema,
+    supervisor1Phone: optionalStringSchema,
     // Supervisor 2
-    supervisor2Id: z.string().optional().nullable(),
-    supervisor2Name: z.string().optional().nullable(),
-    supervisor2Phone: z.string().optional().nullable(),
+    supervisor2Id: optionalStringSchema,
+    supervisor2Name: optionalStringSchema,
+    supervisor2Phone: optionalStringSchema,
     // Supervisor 3
-    supervisor3Id: z.string().optional().nullable(),
-    supervisor3Name: z.string().optional().nullable(),
-    supervisor3Phone: z.string().optional().nullable(),
+    supervisor3Id: optionalStringSchema,
+    supervisor3Name: optionalStringSchema,
+    supervisor3Phone: optionalStringSchema,
 });
 export type WorkOrderDetailsFormData = z.infer<typeof WorkOrderDetailsSchema>;
 
@@ -167,32 +169,32 @@ export const SelectionNoticeDetailsSchema = z.object({
     agreedPercentage: optionalNumberSchema,
     agreedAmount: optionalNumberSchema,
     // Descriptions for historical context
-    performanceGuaranteeDescription: z.string().optional().nullable(),
-    additionalPerformanceGuaranteeDescription: z.string().optional().nullable(),
-    stampPaperDescription: z.string().optional().nullable(),
+    performanceGuaranteeDescription: optionalStringSchema,
+    additionalPerformanceGuaranteeDescription: optionalStringSchema,
+    stampPaperDescription: optionalStringSchema,
 });
 export type SelectionNoticeDetailsFormData = z.infer<typeof SelectionNoticeDetailsSchema>;
 
 // This is the main schema for the entire form
 export const E_tenderSchema = z.object({
     id: z.string().optional(),
-    eTenderNo: z.string().optional(),
+    eTenderNo: optionalStringSchema,
     tenderDate: z.any().optional().nullable(),
-    fileNo: z.string().optional(),
-    fileNo2: z.string().optional(),
-    fileNo3: z.string().optional(),
-    fileNo4: z.string().optional(),
-    nameOfWork: z.string().optional(),
-    nameOfWorkMalayalam: z.string().optional(),
-    location: z.string().optional(),
+    fileNo: optionalStringSchema,
+    fileNo2: optionalStringSchema,
+    fileNo3: optionalStringSchema,
+    fileNo4: optionalStringSchema,
+    nameOfWork: optionalStringSchema,
+    nameOfWorkMalayalam: optionalStringSchema,
+    location: optionalStringSchema,
     estimateAmount: optionalNumberSchema,
     tenderFormFee: optionalNumberSchema,
     emd: optionalNumberSchema,
     periodOfCompletion: optionalNumberSchema,
     dateTimeOfReceipt: z.any().optional().nullable(),
     dateTimeOfOpening: z.any().optional().nullable(),
-    tenderType: z.enum(['Work', 'Purchase']).optional(),
-    detailedEstimateUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
+    tenderType: z.enum(['Work', 'Purchase']).optional().nullable(),
+    detailedEstimateUrl: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')).nullable(),
     
     corrigendums: z.array(CorrigendumSchema).optional(),
     retenders: z.array(RetenderDetailsSchema).optional(),
@@ -200,9 +202,9 @@ export const E_tenderSchema = z.object({
     
     dateOfOpeningBid: z.any().optional().nullable(),
     dateOfTechnicalAndFinancialBidOpening: z.any().optional().nullable(),
-    technicalCommitteeMember1: z.string().optional().nullable(),
-    technicalCommitteeMember2: z.string().optional().nullable(),
-    technicalCommitteeMember3: z.string().optional().nullable(),
+    technicalCommitteeMember1: optionalStringSchema,
+    technicalCommitteeMember2: optionalStringSchema,
+    technicalCommitteeMember3: optionalStringSchema,
     
     selectionNoticeDate: z.any().optional().nullable(),
     performanceGuaranteeAmount: optionalNumberSchema,
@@ -213,30 +215,30 @@ export const E_tenderSchema = z.object({
     
     agreementDate: z.any().optional().nullable(),
     dateWorkOrder: z.any().optional().nullable(),
-    nameOfAssistantEngineer: z.string().optional().nullable(),
+    nameOfAssistantEngineer: optionalStringSchema,
     
     // Supervisor 1
-    supervisor1Id: z.string().optional().nullable(),
-    supervisor1Name: z.string().optional().nullable(),
-    supervisor1Phone: z.string().optional().nullable(),
+    supervisor1Id: optionalStringSchema,
+    supervisor1Name: optionalStringSchema,
+    supervisor1Phone: optionalStringSchema,
     // Supervisor 2
-    supervisor2Id: z.string().optional().nullable(),
-    supervisor2Name: z.string().optional().nullable(),
-    supervisor2Phone: z.string().optional().nullable(),
+    supervisor2Id: optionalStringSchema,
+    supervisor2Name: optionalStringSchema,
+    supervisor2Phone: optionalStringSchema,
     // Supervisor 3
-    supervisor3Id: z.string().optional().nullable(),
-    supervisor3Name: z.string().optional().nullable(),
-    supervisor3Phone: z.string().optional().nullable(),
+    supervisor3Id: optionalStringSchema,
+    supervisor3Name: optionalStringSchema,
+    supervisor3Phone: optionalStringSchema,
 
-    presentStatus: z.enum(eTenderStatusOptions).optional(),
-    remarks: z.string().optional(),
+    presentStatus: z.enum(eTenderStatusOptions).optional().nullable(),
+    remarks: optionalStringSchema,
     
     // Historical Descriptions
-    tenderFeeDescription: z.string().optional().nullable(),
-    emdDescription: z.string().optional().nullable(),
-    performanceGuaranteeDescription: z.string().optional().nullable(),
-    additionalPerformanceGuaranteeDescription: z.string().optional().nullable(),
-    stampPaperDescription: z.string().optional().nullable(),
+    tenderFeeDescription: optionalStringSchema,
+    emdDescription: optionalStringSchema,
+    performanceGuaranteeDescription: optionalStringSchema,
+    additionalPerformanceGuaranteeDescription: optionalStringSchema,
+    stampPaperDescription: optionalStringSchema,
     
     // Deprecated fields that may exist in old data
     lastDateOfReceipt: z.any().optional(),
@@ -248,8 +250,8 @@ export const E_tenderSchema = z.object({
     noOfSuccessfulTenderers: z.any().optional(),
     quotedPercentage: z.any().optional(),
     aboveBelow: z.any().optional(),
-    nameOfSupervisor: z.string().optional(),
-    supervisorPhoneNo: z.string().optional(),
+    nameOfSupervisor: optionalStringSchema,
+    supervisorPhoneNo: optionalStringSchema,
 });
 
 export type E_tenderFormData = z.infer<typeof E_tenderSchema>;
